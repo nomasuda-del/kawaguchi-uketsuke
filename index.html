@@ -4,8 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>川口弥平センター 受付システム</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+// Firebase読み込みエラー時のフォールバック
+window.firebase = window.firebase || null;
+window.onerror = function(msg, src, line, col, err) {
+  var el = document.getElementById('error-display');
+  if(el) { el.style.display='block'; el.textContent='エラー: ' + msg + ' (' + line + '行)'; }
+  return false;
+};
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" onerror="console.warn('Firebase app load failed')"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" onerror="console.warn('Firebase db load failed')"></script>
 <style>
 /* ===== RESET & BASE ===== */
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -724,6 +733,7 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 </style>
 </head>
 <body>
+<div id="error-display" style="display:none;padding:20px;background:#fdeaea;color:#b02020;font-size:14px;font-family:sans-serif;position:fixed;top:0;left:0;right:0;z-index:99999;border-bottom:2px solid #e89090;"></div>
 <div id="app">
   <div id="root"></div>
 </div>
@@ -969,10 +979,14 @@ function viewed(){return S.db[S.viewDate]||ensureDay(S.db,S.viewDate);}
 //  RENDER ENGINE
 // ============================================================
 const root = document.getElementById('root');
-const modalContainer = document.getElementById('modal-container');
+var modalContainer = document.getElementById('modal-container') || document.body;
 
 function render(){
-  modalContainer.innerHTML = '';
+  try {
+    var mc = document.getElementById('modal-container');
+    if(mc) mc.innerHTML = '';
+    modalContainer = mc || modalContainer;
+  } catch(e) {}
   if(WIZ.active){ renderWizard(); return; }
   if(S.modal){ renderModal(); return; }
   root.innerHTML = '';
@@ -2543,11 +2557,22 @@ function timeInputBlur(el, saveFn) {
   el.title = '時刻は HH:MM 形式で入力してください（例: 14:30）';
 }
 
-initFirebase();
-render();
-// Refresh alert status every 30s
-setInterval(()=>{
-  if(!S.modal && ['nyuuka','shukka','lotte','home'].includes(S.screen)) render();
+try {
+  initFirebase();
+} catch(e) {
+  console.warn('Firebase init error:', e);
+}
+try {
+  render();
+} catch(e) {
+  var el = document.getElementById('error-display');
+  if(el) { el.style.display='block'; el.textContent='画面表示エラー: ' + e.message; }
+  console.error('render error:', e);
+}
+setInterval(function(){
+  try {
+    if(!S.modal && ['nyuuka','shukka','lotte','home'].includes(S.screen)) render();
+  } catch(e) { console.warn('interval render error:', e); }
 }, 30000);
 </script>
 </body>

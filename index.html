@@ -11,6 +11,12 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:14px;background:#f5f4f0;color:#1a1a1a;}
 input,select,button,textarea{font-family:inherit;}
+/* iPad Safari: 全ボタンのタッチ遅延を除去 */
+button,a,[onclick]{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  cursor:pointer;
+}
 
 /* ===== CSS VARS ===== */
 :root{
@@ -140,10 +146,12 @@ input,select,button,textarea{font-family:inherit;}
 .mod-bar.editing{background:var(--amber-bg);color:var(--amber);}
 .mod-bar-msg{flex:1;font-weight:600;}
 .toggle-edit-btn{
-  font-size:12px;padding:5px 12px;border-radius:var(--radius);
+  font-size:12px;padding:8px 14px;border-radius:var(--radius);
   border:1px solid currentColor;background:var(--surface);
   cursor:pointer;font-weight:600;white-space:nowrap;color:inherit;
+  min-height:36px;
 }
+.toggle-edit-btn:active{opacity:.7;}
 
 /* ===== ALERT BAR ===== */
 .alert-bar{
@@ -194,38 +202,36 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 .time-inp:disabled{opacity:.45;}
 .time-inp::placeholder{font-size:11px;font-weight:400;letter-spacing:0;color:#bbb;}
 .stamp-btn{
-  font-size:11px;padding:5px 8px;
+  font-size:12px;padding:7px 10px;
   border:1px solid var(--border2);border-radius:6px;
   background:var(--surface2);color:var(--text2);
   white-space:nowrap;cursor:pointer;transition:background .1s;font-weight:600;
+  min-height:36px;
 }
 .stamp-btn:hover{background:var(--border);}
+.stamp-btn:active{background:var(--border);transform:scale(.96);}
 .stamp-btn.stamped{background:var(--green-bg);border-color:var(--green-bd);color:var(--green);font-weight:700;}
-.stamp-btn:disabled{opacity:.35;cursor:not-allowed;}
+.stamp-btn:disabled{opacity:.35;pointer-events:none;}
 
 /* ===== DELETE BTN ===== */
 .del-btn{
-  width:36px;height:36px;border-radius:50%;
+  width:44px;height:44px;border-radius:50%;
   border:1px solid var(--red-bd);background:var(--red-bg);
-  color:var(--red);font-size:16px;cursor:pointer;
+  color:var(--red);font-size:18px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
   transition:background .1s;
-  -webkit-tap-highlight-color:rgba(0,0,0,0);
-  touch-action:manipulation;
 }
 .del-btn:hover{background:#f7c1c1;}
-.del-btn:active{background:#f7c1c1;transform:scale(.92);}
-.del-btn:disabled{opacity:.3;cursor:not-allowed;}
+.del-btn:active{background:#f7c1c1;transform:scale(.90);}
+.del-btn:disabled{opacity:.3;pointer-events:none;}
 .restore-btn{
-  width:36px;height:36px;border-radius:50%;
+  width:44px;height:44px;border-radius:50%;
   border:1px solid var(--border2);background:var(--surface2);
-  color:var(--text2);font-size:14px;cursor:pointer;
+  color:var(--text2);font-size:16px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  -webkit-tap-highlight-color:rgba(0,0,0,0);
-  touch-action:manipulation;
 }
 .restore-btn:hover{background:var(--border);}
-.restore-btn:active{transform:scale(.92);}
+.restore-btn:active{transform:scale(.90);}
 
 /* ===== STATUS DOT ===== */
 .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;flex-shrink:0;}
@@ -296,9 +302,10 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 /* ===== MODAL ===== */
 .modal-overlay{
   position:fixed;inset:0;
-  background:rgba(0,0,0,.45);
+  background:rgba(0,0,0,.5);
   display:flex;align-items:center;justify-content:center;
-  padding:16px;z-index:500;
+  padding:16px;z-index:9999;
+  -webkit-overflow-scrolling:touch;
 }
 .modal{
   background:var(--surface);border-radius:var(--radius-lg);
@@ -324,21 +331,26 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 .fg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .modal-actions{display:flex;gap:8px;margin-top:18px;}
 .btn-ok{
-  flex:1;padding:11px;
+  flex:1;padding:14px;
   background:var(--text);color:var(--surface);
-  border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;
+  border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;
+  min-height:50px;
 }
-.btn-ok:hover{opacity:.88;}
+.btn-ok:active{opacity:.85;}
 .btn-danger{
-  flex:1;padding:11px;
+  flex:1;padding:14px;
   background:var(--red);color:#fff;
-  border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;
+  border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;
+  min-height:50px;
 }
+.btn-danger:active{opacity:.85;}
 .btn-cancel{
-  padding:11px 16px;background:transparent;
+  padding:14px 18px;background:transparent;
   border:1px solid var(--border2);border-radius:var(--radius);
-  font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;
+  font-size:15px;font-weight:600;color:var(--text2);cursor:pointer;
+  min-height:50px;
 }
+.btn-cancel:active{opacity:.7;}
 
 /* ===== HISTORY / MISC ===== */
 .list-wrap{padding:0 14px 80px;}
@@ -397,8 +409,9 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 .login-fg label{font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;}
 .login-fg input{width:100%;font-size:15px;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);}
 .login-fg input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);}
-.login-btn{width:100%;padding:12px;background:var(--text);color:var(--surface);border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.login-btn{width:100%;padding:16px;background:var(--text);color:var(--surface);border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;margin-top:4px;min-height:52px;}
 .login-btn:hover{opacity:.88;}
+.login-btn:active{opacity:.85;}
 .login-err{font-size:12px;color:var(--red);text-align:center;margin-top:10px;min-height:18px;}
 
 /* ===== PIN PAD ===== */
@@ -439,7 +452,7 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
   position:fixed;inset:0;
   background:rgba(0,0,0,.55);
   display:flex;align-items:flex-end;justify-content:center;
-  z-index:600;
+  z-index:9998;
   padding:0;
 }
 .tel-modal{
@@ -730,7 +743,7 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
   user-select:none;
 }
 .wiz-next-btn:active{opacity:.85;transform:scale(.98);}
-.wiz-next-btn:disabled{opacity:.35;transform:none;}
+.wiz-next-btn:disabled{opacity:.35;transform:none;pointer-events:none;}
 .wiz-next-btn.stamp{background:var(--green);border-color:var(--green);}
 .wiz-next-btn.stamp:active{opacity:.85;}
 
@@ -1032,7 +1045,7 @@ function renderAdminLogin(destScreen){
       <button class="login-btn" onclick="doAdminLogin('${destScreen}')">ログイン</button>
       <div class="login-err" id="admin-err"></div>
       <div style="text-align:center;margin-top:16px;">
-        <button class="back-btn" onpointerup="go('home')" onpointerup="go('home')" onclick="go('home')" style="font-size:13px;color:var(--text2);">← ホームに戻る</button>
+        <button class="back-btn" onclick="go('home')" onclick="go('home')" style="font-size:13px;color:var(--text2);">← ホームに戻る</button>
       </div>
     </div>
   </div>`;
@@ -1087,23 +1100,23 @@ function renderHome(){
   <!-- 管理者モード -->
   <div style="background:#1a1a1a;color:#fff;padding:8px 16px;font-size:12px;display:flex;align-items:center;gap:8px;">
     <span style="flex:1;">🔐 管理者モードでログイン中</span>
-    <button class="logout-btn" onpointerup="adminLogout()" onclick="adminLogout()">ログアウト</button>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
   </div>
 
   <div class="menu-grid">
-    <div class="menu-card" onpointerup="S.viewDate='${tk}';S.editMode=false;go('nyuuka')" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
       <div class="menu-card-icon">📥</div>
       <div class="menu-card-label">入荷受付</div>
       <div class="menu-card-sub">作業中 ${actN}件</div>
       ${alertN>0?`<div class="menu-card-alert">要対応 ${alertN}件</div>`:''}
     </div>
-    <div class="menu-card" onpointerup="S.viewDate='${tk}';S.editMode=false;go('shukka')" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
       <div class="menu-card-icon">📤</div>
       <div class="menu-card-label">出荷受付</div>
       <div class="menu-card-sub">作業中 ${actS}件</div>
       ${alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
     </div>
-    <div class="menu-card full lotte-card" onpointerup="S.viewDate='${tk}';S.editMode=false;go('lotte')" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
+    <div class="menu-card full lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="menu-card-icon">⭐</div>
         <div>
@@ -1112,17 +1125,17 @@ function renderHome(){
         </div>
       </div>
     </div>
-    <div class="menu-card" onpointerup="go('history')" onclick="go('history')">
+    <div class="menu-card" onclick="go('history')">
       <div class="menu-card-icon">📅</div>
       <div class="menu-card-label">過去データ</div>
       <div class="menu-card-sub">${allDates().length}日分 ／ 後日修正可</div>
     </div>
-    <div class="menu-card" onpointerup="go('drivers')" onclick="go('drivers')">
+    <div class="menu-card" onclick="go('drivers')">
       <div class="menu-card-icon">👤</div>
       <div class="menu-card-label">ドライバーDB</div>
       <div class="menu-card-sub">${S.drivers.length}名登録</div>
     </div>
-    <div class="menu-card full" onpointerup="go('export')" onclick="go('export')">
+    <div class="menu-card full" onclick="go('export')">
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="menu-card-icon">📄</div>
         <div>
@@ -1146,19 +1159,19 @@ function renderHome(){
   ` : `
   <!-- 一般スタッフモード -->
   <div class="menu-grid">
-    <div class="menu-card" onpointerup="S.viewDate='${tk}';S.editMode=false;go('nyuuka')" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
       <div class="menu-card-icon">📥</div>
       <div class="menu-card-label">入荷受付</div>
       <div class="menu-card-sub">作業中 ${actN}件</div>
       ${alertN>0?`<div class="menu-card-alert">要対応 ${alertN}件</div>`:''}
     </div>
-    <div class="menu-card" onpointerup="S.viewDate='${tk}';S.editMode=false;go('shukka')" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
       <div class="menu-card-icon">📤</div>
       <div class="menu-card-label">出荷受付</div>
       <div class="menu-card-sub">作業中 ${actS}件</div>
       ${alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
     </div>
-    <div class="menu-card full lotte-card" onpointerup="S.viewDate='${tk}';S.editMode=false;go('lotte')" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
+    <div class="menu-card full lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="menu-card-icon">⭐</div>
         <div>
@@ -1167,7 +1180,7 @@ function renderHome(){
         </div>
       </div>
     </div>
-    <div class="menu-card full" style="border-style:dashed;cursor:pointer;" onpointerup="go('history')" onclick="go('history')">
+    <div class="menu-card full" style="border-style:dashed;cursor:pointer;" onclick="go('history')">
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="menu-card-icon">🔑</div>
         <div>
@@ -1207,7 +1220,7 @@ function renderTable(type){
   const alertRows=arr.filter(r=>rowStatus(r,type)==='alert');
   let html=`
   <div class="app-bar">
-    <button class="back-btn" onpointerup="go('home')" onclick="go('home')">← ホーム</button>
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
     <div class="app-bar-title">${label}</div>
     ${syncStatus==='live'?'<span class="bar-badge sync">同期中</span>':'<span class="bar-badge offline">オフライン</span>'}
   </div>
@@ -1237,8 +1250,8 @@ function renderTable(type){
     html+=`<tr class="${rowCls(st)}">
       <td style="text-align:center;padding:4px 2px;">
         ${isDel
-          ?`<button class="restore-btn" title="削除を取り消す" onpointerup="confirmRestore('${type}','${r.id}')" onclick="confirmRestore('${type}','${r.id}')">↩</button>`
-          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onpointerup="confirmDelete('${type}','${r.id}')" onclick="confirmDelete('${type}','${r.id}')">×</button>`
+          ?`<button class="restore-btn" title="削除を取り消す" onclick="confirmRestore('${type}','${r.id}')">↩</button>`
+          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onclick="confirmDelete('${type}','${r.id}')">×</button>`
         }
       </td>
       <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
@@ -1249,7 +1262,7 @@ function renderTable(type){
         ${dis
           ? `<span style="font-size:12px;color:var(--text2);">${e(r.tel||'―')}</span>`
           : `<button style="min-width:100px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
-              onpointerup="openTelModal('${type}','${r.id}')"
+              onclick="openTelModal('${type}','${r.id}')"
               onclick="openTelModal('${type}','${r.id}')"
             >${r.tel?e(r.tel):'タップして入力'}</button>`
         }
@@ -1272,7 +1285,7 @@ function renderTable(type){
   html+=`</tbody></table></div>
   <div class="fab-area">
     <button class="fab-driver" ${!isToday()?'disabled':''}
-      onpointerup="if(!this.disabled){startWizard('${type}')}"
+      onclick="if(!this.disabled){startWizard('${type}')}"
       onclick="if(!this.disabled){startWizard('${type}')}">
       <span class="fab-driver-icon">📋</span>
       <span>ドライバー受付 ／ 新規登録</span>
@@ -1280,7 +1293,7 @@ function renderTable(type){
     <div class="fab-sub-row">
       ${ed&&isToday()?`
       <button class="fab-sub"
-        onpointerup="addRows('${type}')"
+        onclick="addRows('${type}')"
         onclick="addRows('${type}')">＋ 行を追加</button>`:''}
     </div>
   </div>`;
@@ -1295,7 +1308,7 @@ function renderLotte(){
   const alertRows=arr.filter(r=>rowStatus(r,'lotte')==='alert');
   let html=`
   <div class="app-bar">
-    <button class="back-btn" onpointerup="go('home')" onclick="go('home')">← ホーム</button>
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
     <div class="app-bar-title">ロッテ様専用受付</div>
     ${syncStatus==='live'?'<span class="bar-badge sync">同期中</span>':'<span class="bar-badge offline">オフライン</span>'}
   </div>
@@ -1327,8 +1340,8 @@ function renderLotte(){
     html+=`<tr class="${rowCls(st)}">
       <td style="text-align:center;padding:4px 2px;">
         ${isDel
-          ?`<button class="restore-btn" title="削除を取り消す" onpointerup="confirmRestore('lotte','${r.id}')" onclick="confirmRestore('lotte','${r.id}')">↩</button>`
-          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onpointerup="confirmDelete('lotte','${r.id}')" onclick="confirmDelete('lotte','${r.id}')">×</button>`
+          ?`<button class="restore-btn" title="削除を取り消す" onclick="confirmRestore('lotte','${r.id}')">↩</button>`
+          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onclick="confirmDelete('lotte','${r.id}')">×</button>`
         }
       </td>
       <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
@@ -1338,7 +1351,7 @@ function renderLotte(){
         ${dis
           ? `<span style="font-size:12px;color:var(--text2);">${e(r.tel||'―')}</span>`
           : `<button style="min-width:96px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
-              onpointerup="openTelModal('lotte','${r.id}')"
+              onclick="openTelModal('lotte','${r.id}')"
               onclick="openTelModal('lotte','${r.id}')"
             >${r.tel?e(r.tel):'タップして入力'}</button>`
         }
@@ -1376,14 +1389,14 @@ function renderLotte(){
   html+=`</tbody></table></div>
   <div class="fab-area">
     <button class="fab-driver" ${!isToday()?'disabled':''}
-      onpointerup="if(!this.disabled){startWizard('lotte')}"
-      onclick="if(!this.disabled){startWizard('lotte')}">
+      onclick="startWizard('lotte')"
+      onclick="startWizard('lotte')">
       <span class="fab-driver-icon">⭐</span>
       <span>ドライバー受付 ／ 新規登録</span>
     </button>
     <div class="fab-sub-row">
       ${ed&&isToday()?`<button class="fab-sub"
-        onpointerup="addRows('lotte')"
+        onclick="addRows('lotte')"
         onclick="addRows('lotte')">＋ 行を追加</button>`:''}
     </div>
   </div>`;
@@ -1395,12 +1408,12 @@ function renderHistory(){
   const dates=allDates();
   root.innerHTML=`
   <div class="app-bar">
-    <button class="back-btn" onpointerup="go('home')" onclick="go('home')">← ホーム</button>
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
     <div class="app-bar-title">過去データ一覧 <span class="admin-tag">管理者</span></div>
   </div>
   <div class="admin-bar">
     <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
-    <button class="logout-btn" onpointerup="adminLogout()" onclick="adminLogout()">ログアウト</button>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
   </div>
   <div style="padding:10px 14px 6px;font-size:12px;color:var(--text2);">${dates.length}日分の記録。選択すると各画面で閲覧・後日修正できます。</div>
   <div class="list-wrap">
@@ -1412,7 +1425,7 @@ function renderHistory(){
       const nDel=d.nyuuka.concat(d.shukka,d.lotte).filter(r=>r.deleted).length;
       const nEdit=d.nyuuka.concat(d.shukka,d.lotte).filter(r=>r.editLog&&r.editLog.length>0).length;
       const isT=k===todayKey();
-      return `<div class="list-item" onpointerup="S.viewDate='${k}';S.editMode=false;go('nyuuka')" onclick="S.viewDate='${k}';S.editMode=false;go('nyuuka')">
+      return `<div class="list-item" onclick="S.viewDate='${k}';S.editMode=false;go('nyuuka')">
         <div>
           <div class="list-item-title">${fmtKey(k)} ${isT?'<span class="mode-tag today" style="font-size:10px;">本日</span>':''}</div>
           <div class="list-item-sub">入荷 ${nC}件 ／ 出荷 ${sC}件 ／ ロッテ ${lC}件${nDel>0?` ／ 削除 ${nDel}件`:''}${nEdit>0?` ／ 修正 ${nEdit}件`:''}</div>
@@ -1427,12 +1440,12 @@ function renderHistory(){
 function renderDrivers(){
   root.innerHTML=`
   <div class="app-bar">
-    <button class="back-btn" onpointerup="go('home')" onclick="go('home')">← ホーム</button>
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
     <div class="app-bar-title">ドライバーDB <span class="admin-tag">管理者</span></div>
   </div>
   <div class="admin-bar">
     <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
-    <button class="logout-btn" onpointerup="adminLogout()" onclick="adminLogout()">ログアウト</button>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
   </div>
   <div class="fab-area" style="position:static;border-top:none;border-bottom:1px solid var(--border);background:var(--surface2);">
     <button class="fab fab-primary" onclick="openModal('driver')">＋ 新規登録</button>
@@ -1455,12 +1468,12 @@ function renderExport(){
   const dates=allDates();
   root.innerHTML=`
   <div class="app-bar">
-    <button class="back-btn" onpointerup="go('home')" onclick="go('home')">← ホーム</button>
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
     <div class="app-bar-title">データ出力 <span class="admin-tag">管理者</span></div>
   </div>
   <div class="admin-bar">
     <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
-    <button class="logout-btn" onpointerup="adminLogout()" onclick="adminLogout()">ログアウト</button>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
   </div>
   <div style="padding:14px;">
     <div class="export-card">
@@ -1517,7 +1530,7 @@ function renderModal(){
     const day=S.db[S.viewDate];
     const r=day?.lotte?.find(x=>x.id===id);
     const cur=r?.srcOther||'';
-    modalContainer.innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeSrcOther('${id}');">
+    modalContainer.innerHTML=`<div class="modal-overlay" >
       <div class="modal" style="max-width:360px;">
         <h3>出発元 / 入荷元（その他）</h3>
         <div class="fg">
@@ -1556,14 +1569,14 @@ function renderModal(){
           <div class="pin-dot" id="pd3"></div>
         </div>
         <div class="pin-pad">
-          ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-key" onpointerup="pinPress(${n})" onclick="pinPress(${n})">${n}</button>`).join('')}
-          <button class="pin-key pin-del-key pin-zero" onpointerup="pinDel()" onclick="pinDel()">⌫</button>
+          ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-key" onclick="pinPress(${n})">${n}</button>`).join('')}
+          <button class="pin-key pin-del-key pin-zero" onclick="pinDel()">⌫</button>
         </div>
         <div class="pin-err" id="pin-err"></div>
       </div>`:
       `<div class="modal-actions" style="margin-top:16px;">
-        <button class="btn-cancel" onpointerup="closeModal()" onclick="closeModal()">キャンセル</button>
-        <button class="btn-danger" onpointerup="doDelete()" onclick="doDelete()">削除する</button>
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-danger" onclick="doDelete()">削除する</button>
       </div>`;
     html=`<div class="modal">
       <h3>⚠ この行を削除しますか？</h3>
@@ -1582,8 +1595,8 @@ function renderModal(){
       <div class="modal-record"><strong>No.${r.no}　${e(r.company||'')}</strong>　${e(r.name||'')}</div>
       <div class="modal-body">元の状態に復元します。</div>
       <div class="modal-actions">
-        <button class="btn-cancel" onpointerup="closeModal()" onclick="closeModal()">キャンセル</button>
-        <button class="btn-ok" onpointerup="doRestore()" onclick="doRestore()">復元する</button>
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-ok" onclick="doRestore()">復元する</button>
       </div>
     </div>`;
   } else if(m==='confirmDelDriver'){
@@ -1655,7 +1668,7 @@ function renderModal(){
     </div>`;
   }
 
-  modalContainer.innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal();">${html}</div>`;
+  modalContainer.innerHTML=`<div class="modal-overlay" >${html}</div>`;
 
   // Src other toggle
   const mSrc=document.getElementById('m-src');
@@ -1783,7 +1796,7 @@ function renderTelModal(){
 
   const keysHtml = keyLabels.map(([n,s])=>`
     <button class="tel-key"
-      onpointerup="telKeyPress('${n}')"
+      onclick="telKeyPress('${n}')"
       onclick="telKeyPress('${n}')">
       ${n}<span class="tel-key-sub">${s}</span>
     </button>`).join('');
@@ -1799,7 +1812,7 @@ function renderTelModal(){
       <div class="tel-modal-header">
         <div class="tel-modal-title">電話番号を入力</div>
         <button class="tel-modal-close"
-          onpointerup="closeTelModal()"
+          onclick="closeTelModal()"
           onclick="closeTelModal()">✕</button>
       </div>
       <div class="tel-display ${buf.length===0?'placeholder':''}" id="tel-disp">
@@ -1810,10 +1823,10 @@ function renderTelModal(){
         ${keysHtml}
         <button class="tel-key" style="visibility:hidden;"></button>
         <button class="tel-key"
-          onpointerup="telKeyPress('0')"
+          onclick="telKeyPress('0')"
           onclick="telKeyPress('0')">0</button>
         <button class="tel-key tel-del"
-          onpointerup="telKeyDel()"
+          onclick="telKeyDel()"
           onclick="telKeyDel()">⌫</button>
       </div>
       <div class="tel-fields ${showFields?'show':''}" id="tel-fields">
@@ -1839,7 +1852,7 @@ function renderTelModal(){
       </div>
       <button class="tel-confirm-btn" id="tel-confirm-btn"
         ${buf.length<10?'disabled style="opacity:.4;"':''}
-        onpointerup="confirmTelInput()"
+        onclick="confirmTelInput()"
         onclick="confirmTelInput()">
         ${buf.length<10 ? '電話番号を入力してください' : '確定して受付に反映'}
       </button>
@@ -2165,7 +2178,7 @@ function renderWizard(){
 
     const keyLabels=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ']];
     const keysHtml=keyLabels.map(([n,s])=>`
-      <button class="wiz-key" onpointerup="wizTelKey('${n}')" onclick="wizTelKey('${n}')">
+      <button class="wiz-key" onclick="wizTelKey('${n}')">
         ${n}<span class="wiz-key-sub">${s}</span>
       </button>`).join('');
 
@@ -2174,7 +2187,7 @@ function renderWizard(){
     root.innerHTML=`
     <div class="wiz-screen">
       <div class="wiz-header">
-        <button class="wiz-back" onpointerup="wizBack()" onclick="wizBack()">←</button>
+        <button class="wiz-back" onclick="wizBack()">←</button>
         <div class="wiz-header-info">
           <div class="wiz-title">${label} 受付</div>
           <div class="wiz-step-label">${stepLabels['tel']}</div>
@@ -2195,15 +2208,15 @@ function renderWizard(){
       <div class="wiz-keypad-fixed">
         ${keysHtml}
         <button class="wiz-key" style="visibility:hidden;"></button>
-        <button class="wiz-key" onpointerup="wizTelKey('0')" onclick="wizTelKey('0')">0</button>
-        <button class="wiz-key wiz-del" onpointerup="wizTelDel()" onclick="wizTelDel()">⌫</button>
+        <button class="wiz-key" onclick="wizTelKey('0')">0</button>
+        <button class="wiz-key wiz-del" onclick="wizTelDel()">⌫</button>
       </div>
 
       <div class="wiz-footer">
         <button class="wiz-next-btn"
           ${nextDisabled?'disabled':''}
-          onpointerup="if(!this.disabled){wizNext()}"
-          onclick="if(!this.disabled){wizNext()}">${nextLabel}</button>
+          onclick="wizNext()"
+          onclick="wizNext()">${nextLabel}</button>
       </div>
     </div>`;
     return; // 独自レイアウトなので早期リターン
@@ -2301,7 +2314,7 @@ function renderWizard(){
         情報の確認・修正・削除をご希望の場合は、センター管理者までお申し付けください。
       </div>
       <div style="background:var(--surface);border:2px solid ${WIZ.consent?'var(--green)':'var(--border2)'};border-radius:var(--radius-lg);padding:18px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:border-color .15s;"
-        onpointerup="WIZ.consent=!WIZ.consent;renderWizard()"
+        onclick="WIZ.consent=!WIZ.consent;renderWizard()"
         onclick="WIZ.consent=!WIZ.consent;renderWizard()">
         <div style="width:28px;height:28px;border-radius:6px;border:2px solid ${WIZ.consent?'var(--green)':'var(--border2)'};background:${WIZ.consent?'var(--green)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;">
           ${WIZ.consent?'<span style="color:#fff;font-size:18px;font-weight:800;">✓</span>':''}
@@ -2398,7 +2411,7 @@ function renderWizard(){
   root.innerHTML=`
   <div class="wiz-screen">
     <div class="wiz-header">
-      <button class="wiz-back" onpointerup="wizBack()" onclick="wizBack()">←</button>
+      <button class="wiz-back" onclick="wizBack()">←</button>
       <div class="wiz-header-info">
         <div class="wiz-title">${label} 受付</div>
         <div class="wiz-step-label">${stepLabels[WIZ.step]||''}</div>
@@ -2409,12 +2422,12 @@ function renderWizard(){
     <div class="wiz-footer">
       ${isStampStep
         ? `<button class="wiz-next-btn stamp"
-             onpointerup="wizComplete()"
+             onclick="wizComplete()"
              onclick="wizComplete()">${WIZ.type==='lotte'?'受付完了 ＋ 到着打刻':'受付完了 ＋ 入庫打刻'}</button>`
         : `<button class="wiz-next-btn"
              ${nextDisabled?'disabled':''}
-             onpointerup="if(!this.disabled){wizNext()}"
-             onclick="if(!this.disabled){wizNext()}">${nextLabel}</button>`
+             onclick="wizNext()"
+             onclick="wizNext()">${nextLabel}</button>`
       }
     </div>
   </div>`;
@@ -2464,25 +2477,6 @@ function wizNext(){
 }
 
 function wizComplete(){
-  // confirm_existing の場合、入力修正をWIZに反映
-  if(WIZ.step==='confirm_existing'){
-    const c=document.getElementById('wiz-company');
-    const n=document.getElementById('wiz-name');
-    const car=document.getElementById('wiz-car');
-    const sha=document.getElementById('wiz-shakaku');
-    if(c) WIZ.company=c.value.trim();
-    if(n) WIZ.name=n.value.trim();
-    if(car) WIZ.car=car.value.trim();
-    if(sha) WIZ.shakaku=sha.value;
-    // 登録済みドライバーのDB情報を最新に更新
-    if(WIZ.driver){
-      WIZ.driver.company=WIZ.company;
-      WIZ.driver.name=WIZ.name;
-      WIZ.driver.car=WIZ.car;
-      WIZ.driver.shakaku=WIZ.shakaku;
-    }
-  }
-
   const day=todayData();
   const arr=day[WIZ.type];
   if(WIZ.type==='lotte'){

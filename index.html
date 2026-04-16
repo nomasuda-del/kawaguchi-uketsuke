@@ -36,14 +36,20 @@ input,select,button,textarea{font-family:inherit;}
   background:var(--surface);
   border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:100;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
 }
 .app-bar-title{font-size:15px;font-weight:700;flex:1;letter-spacing:-.01em;}
 .back-btn{
   display:flex;align-items:center;gap:4px;
   font-size:13px;color:var(--text2);
-  background:none;border:none;padding:4px 0;cursor:pointer;
+  background:none;border:none;padding:8px 4px;cursor:pointer;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  user-select:none;
+  min-height:44px;
 }
 .back-btn:hover{color:var(--text);}
+.back-btn:active{opacity:.6;}
 .bar-badge{
   font-size:11px;font-weight:700;padding:3px 8px;
   border-radius:999px;white-space:nowrap;
@@ -84,9 +90,12 @@ input,select,button,textarea{font-family:inherit;}
   border-radius:var(--radius-lg);padding:16px 14px;
   cursor:pointer;transition:border-color .15s,transform .1s;
   display:flex;flex-direction:column;gap:5px;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  user-select:none;
 }
 .menu-card:hover{border-color:var(--border2);transform:translateY(-1px);}
-.menu-card:active{transform:scale(.98);}
+.menu-card:active{transform:scale(.97);background:var(--surface2);}
 .menu-card.full{grid-column:1/-1;}
 .menu-card.lotte-card{border-color:var(--lotte);background:var(--lotte-bg);}
 .menu-card-icon{font-size:22px;line-height:1;}
@@ -338,8 +347,12 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
   padding:11px 14px;background:var(--surface);
   border:1px solid var(--border);border-radius:var(--radius);
   margin-bottom:7px;cursor:pointer;transition:border-color .1s;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  user-select:none;
 }
 .list-item:hover{border-color:var(--border2);}
+.list-item:active{background:var(--surface2);}
 .list-item-title{font-size:14px;font-weight:700;}
 .list-item-sub{font-size:12px;color:var(--text2);margin-top:2px;}
 .list-arrow{font-size:18px;color:var(--text3);}
@@ -534,8 +547,10 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 .admin-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:#1a1a1a;color:#fff;margin-left:6px;vertical-align:middle;}
 .admin-bar{display:flex;align-items:center;gap:8px;padding:7px 14px;background:#1a1a1a;color:#fff;font-size:12px;}
 .admin-bar-msg{flex:1;font-size:11px;opacity:.8;}
-.logout-btn{font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;cursor:pointer;}
+.logout-btn{font-size:11px;padding:6px 12px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;cursor:pointer;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;user-select:none;min-height:36px;}
 .logout-btn:hover{background:rgba(255,255,255,.1);}
+.logout-btn:active{background:rgba(255,255,255,.2);}
 
 /* ===== FIREBASE CONFIG NOTICE ===== */
 .config-notice{
@@ -870,8 +885,7 @@ function adminLogout(){
 // ===== WIZARD STATE =====
 const WIZ = {
   active: false,
-  type: 'nyuuka',
-  // step: 'tel' | 'confirm_existing' | 'name' | 'car' | 'consent' | 'final'
+  type: 'nyuuka', // nyuuka | shukka | lotte
   step: 'tel',
   tel: '',
   company: '',
@@ -881,9 +895,14 @@ const WIZ = {
   tsumi: 'バラ',
   fuda: '',
   biko: '',
-  driver: null,   // DB照合結果（登録済みの場合）
-  isNew: false,   // 新規ドライバーかどうか
-  consent: false, // 個人情報同意
+  // lotte専用
+  order: '',
+  nyukaType: '入荷',
+  src: '狭山工場',
+  srcOther: '',
+  driver: null,
+  isNew: false,
+  consent: false,
 };
 
 const S = {
@@ -978,7 +997,7 @@ function renderAdminLogin(destScreen){
       <button class="login-btn" onclick="doAdminLogin('${destScreen}')">ログイン</button>
       <div class="login-err" id="admin-err"></div>
       <div style="text-align:center;margin-top:16px;">
-        <button class="back-btn" onclick="go('home')" style="font-size:13px;color:var(--text2);">← ホームに戻る</button>
+        <button class="back-btn" onpointerup="go('home')" onpointerup="go('home')" onclick="go('home')" style="font-size:13px;color:var(--text2);">← ホームに戻る</button>
       </div>
     </div>
   </div>`;
@@ -1033,23 +1052,23 @@ function renderHome(){
   <!-- 管理者モード -->
   <div style="background:#1a1a1a;color:#fff;padding:8px 16px;font-size:12px;display:flex;align-items:center;gap:8px;">
     <span style="flex:1;">🔐 管理者モードでログイン中</span>
-    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+    <button class="logout-btn" onpointerup="adminLogout()" onclick="adminLogout()">ログアウト</button>
   </div>
 
   <div class="menu-grid">
-    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
+    <div class="menu-card" onpointerup="S.viewDate='${tk}';S.editMode=false;go('nyuuka')" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
       <div class="menu-card-icon">📥</div>
       <div class="menu-card-label">入荷受付</div>
       <div class="menu-card-sub">作業中 ${actN}件</div>
       ${alertN>0?`<div class="menu-card-alert">要対応 ${alertN}件</div>`:''}
     </div>
-    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
+    <div class="menu-card" onpointerup="S.viewDate='${tk}';S.editMode=false;go('shukka')" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
       <div class="menu-card-icon">📤</div>
       <div class="menu-card-label">出荷受付</div>
       <div class="menu-card-sub">作業中 ${actS}件</div>
       ${alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
     </div>
-    <div class="menu-card full lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
+    <div class="menu-card full lotte-card" onpointerup="S.viewDate='${tk}';S.editMode=false;go('lotte')" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="menu-card-icon">⭐</div>
         <div>
@@ -1058,17 +1077,17 @@ function renderHome(){
         </div>
       </div>
     </div>
-    <div class="menu-card" onclick="go('history')">
+    <div class="menu-card" onpointerup="go('history')" onclick="go('history')">
       <div class="menu-card-icon">📅</div>
       <div class="menu-card-label">過去データ</div>
       <div class="menu-card-sub">${allDates().length}日分 ／ 後日修正可</div>
     </div>
-    <div class="menu-card" onclick="go('drivers')">
+    <div class="menu-card" onpointerup="go('drivers')" onclick="go('drivers')">
       <div class="menu-card-icon">👤</div>
       <div class="menu-card-label">ドライバーDB</div>
       <div class="menu-card-sub">${S.drivers.length}名登録</div>
     </div>
-    <div class="menu-card full" onclick="go('export')">
+    <div class="menu-card full" onpointerup="go('export')" onclick="go('export')">
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="menu-card-icon">📄</div>
         <div>
@@ -1092,19 +1111,19 @@ function renderHome(){
   ` : `
   <!-- 一般スタッフモード -->
   <div class="menu-grid">
-    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
+    <div class="menu-card" onpointerup="S.viewDate='${tk}';S.editMode=false;go('nyuuka')" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
       <div class="menu-card-icon">📥</div>
       <div class="menu-card-label">入荷受付</div>
       <div class="menu-card-sub">作業中 ${actN}件</div>
       ${alertN>0?`<div class="menu-card-alert">要対応 ${alertN}件</div>`:''}
     </div>
-    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
+    <div class="menu-card" onpointerup="S.viewDate='${tk}';S.editMode=false;go('shukka')" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
       <div class="menu-card-icon">📤</div>
       <div class="menu-card-label">出荷受付</div>
       <div class="menu-card-sub">作業中 ${actS}件</div>
       ${alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
     </div>
-    <div class="menu-card full lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
+    <div class="menu-card full lotte-card" onpointerup="S.viewDate='${tk}';S.editMode=false;go('lotte')" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="menu-card-icon">⭐</div>
         <div>
@@ -1113,7 +1132,7 @@ function renderHome(){
         </div>
       </div>
     </div>
-    <div class="menu-card full" style="border-style:dashed;cursor:pointer;" onclick="go('history')">
+    <div class="menu-card full" style="border-style:dashed;cursor:pointer;" onpointerup="go('history')" onclick="go('history')">
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="menu-card-icon">🔑</div>
         <div>
@@ -1153,7 +1172,7 @@ function renderTable(type){
   const alertRows=arr.filter(r=>rowStatus(r,type)==='alert');
   let html=`
   <div class="app-bar">
-    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <button class="back-btn" onpointerup="go('home')" onclick="go('home')">← ホーム</button>
     <div class="app-bar-title">${label}</div>
     ${syncStatus==='live'?'<span class="bar-badge sync">同期中</span>':'<span class="bar-badge offline">オフライン</span>'}
   </div>
@@ -1241,7 +1260,7 @@ function renderLotte(){
   const alertRows=arr.filter(r=>rowStatus(r,'lotte')==='alert');
   let html=`
   <div class="app-bar">
-    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <button class="back-btn" onpointerup="go('home')" onclick="go('home')">← ホーム</button>
     <div class="app-bar-title">ロッテ様専用受付</div>
     ${syncStatus==='live'?'<span class="bar-badge sync">同期中</span>':'<span class="bar-badge offline">オフライン</span>'}
   </div>
@@ -1321,8 +1340,17 @@ function renderLotte(){
   });
   html+=`</tbody></table></div>
   <div class="fab-area">
-    <button class="fab fab-primary" ${!ed||!isToday()?'disabled':''} onclick="openModal('lotte')">＋ 新規受付</button>
-    <button class="fab" ${!ed||!isToday()?'disabled':''} onclick="addRows('lotte')">行を追加</button>
+    <button class="fab-driver" ${!isToday()?'disabled':''}
+      onpointerup="if(!this.disabled){startWizard('lotte')}"
+      onclick="if(!this.disabled){startWizard('lotte')}">
+      <span class="fab-driver-icon">⭐</span>
+      <span>ドライバー受付 ／ 新規登録</span>
+    </button>
+    <div class="fab-sub-row">
+      ${ed&&isToday()?`<button class="fab-sub"
+        onpointerup="addRows('lotte')"
+        onclick="addRows('lotte')">＋ 行を追加</button>`:''}
+    </div>
   </div>`;
   root.innerHTML=html;
 }
@@ -1332,12 +1360,12 @@ function renderHistory(){
   const dates=allDates();
   root.innerHTML=`
   <div class="app-bar">
-    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <button class="back-btn" onpointerup="go('home')" onclick="go('home')">← ホーム</button>
     <div class="app-bar-title">過去データ一覧 <span class="admin-tag">管理者</span></div>
   </div>
   <div class="admin-bar">
     <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
-    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+    <button class="logout-btn" onpointerup="adminLogout()" onclick="adminLogout()">ログアウト</button>
   </div>
   <div style="padding:10px 14px 6px;font-size:12px;color:var(--text2);">${dates.length}日分の記録。選択すると各画面で閲覧・後日修正できます。</div>
   <div class="list-wrap">
@@ -1349,7 +1377,7 @@ function renderHistory(){
       const nDel=d.nyuuka.concat(d.shukka,d.lotte).filter(r=>r.deleted).length;
       const nEdit=d.nyuuka.concat(d.shukka,d.lotte).filter(r=>r.editLog&&r.editLog.length>0).length;
       const isT=k===todayKey();
-      return `<div class="list-item" onclick="S.viewDate='${k}';S.editMode=false;go('nyuuka')">
+      return `<div class="list-item" onpointerup="S.viewDate='${k}';S.editMode=false;go('nyuuka')" onclick="S.viewDate='${k}';S.editMode=false;go('nyuuka')">
         <div>
           <div class="list-item-title">${fmtKey(k)} ${isT?'<span class="mode-tag today" style="font-size:10px;">本日</span>':''}</div>
           <div class="list-item-sub">入荷 ${nC}件 ／ 出荷 ${sC}件 ／ ロッテ ${lC}件${nDel>0?` ／ 削除 ${nDel}件`:''}${nEdit>0?` ／ 修正 ${nEdit}件`:''}</div>
@@ -1364,12 +1392,12 @@ function renderHistory(){
 function renderDrivers(){
   root.innerHTML=`
   <div class="app-bar">
-    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <button class="back-btn" onpointerup="go('home')" onclick="go('home')">← ホーム</button>
     <div class="app-bar-title">ドライバーDB <span class="admin-tag">管理者</span></div>
   </div>
   <div class="admin-bar">
     <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
-    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+    <button class="logout-btn" onpointerup="adminLogout()" onclick="adminLogout()">ログアウト</button>
   </div>
   <div class="fab-area" style="position:static;border-top:none;border-bottom:1px solid var(--border);background:var(--surface2);">
     <button class="fab fab-primary" onclick="openModal('driver')">＋ 新規登録</button>
@@ -1392,12 +1420,12 @@ function renderExport(){
   const dates=allDates();
   root.innerHTML=`
   <div class="app-bar">
-    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <button class="back-btn" onpointerup="go('home')" onclick="go('home')">← ホーム</button>
     <div class="app-bar-title">データ出力 <span class="admin-tag">管理者</span></div>
   </div>
   <div class="admin-bar">
     <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
-    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+    <button class="logout-btn" onpointerup="adminLogout()" onclick="adminLogout()">ログアウト</button>
   </div>
   <div style="padding:14px;">
     <div class="export-card">
@@ -2021,6 +2049,7 @@ function startWizard(type){
   WIZ.tel=''; WIZ.company=''; WIZ.name='';
   WIZ.car=''; WIZ.shakaku='2t'; WIZ.tsumi='バラ';
   WIZ.fuda=''; WIZ.biko='';
+  WIZ.order=''; WIZ.nyukaType='入荷'; WIZ.src='狭山工場'; WIZ.srcOther='';
   WIZ.driver=null; WIZ.isNew=false; WIZ.consent=false;
   renderWizard();
 }
@@ -2033,8 +2062,14 @@ function wizBack(){
   renderWizard();
 }
 function wizFlow(){
-  // 登録済み: tel → confirm_existing → final
-  // 新規:     tel → name → car → consent → final
+  // lotte登録済み: tel → confirm_existing → lotte_info → final
+  // lotte新規:     tel → name → car → lotte_info → consent → final
+  // 通常登録済み: tel → confirm_existing → final
+  // 通常新規:     tel → name → car → consent → final
+  if(WIZ.type==='lotte'){
+    if(!WIZ.isNew) return ['tel','confirm_existing','lotte_info','final'];
+    return ['tel','name','car','lotte_info','consent','final'];
+  }
   if(!WIZ.isNew) return ['tel','confirm_existing','final'];
   return ['tel','name','car','consent','final'];
 }
@@ -2042,7 +2077,7 @@ function wizFlow(){
 function renderWizard(){
   root.innerHTML='';
   modalContainer.innerHTML='';
-  const label=WIZ.type==='nyuuka'?'入荷受付':'出荷受付';
+  const label=WIZ.type==='nyuuka'?'入荷受付':WIZ.type==='shukka'?'出荷受付':'ロッテ様受付';
   const flow=wizFlow();
   const idx=flow.indexOf(WIZ.step);
   const total=flow.length;
@@ -2205,6 +2240,40 @@ function renderWizard(){
         <div style="font-size:15px;font-weight:700;color:${WIZ.consent?'var(--green)':'var(--text)'};">上記の内容に同意します</div>
       </div>`;
 
+  // ===== STEP: ロッテ情報（オーダーNo・入荷出荷・出発元） =====
+  } else if(WIZ.step==='lotte_info'){
+    const srcOtherVisible = WIZ.src==='その他';
+    body=`
+      <div class="wiz-section-title">オーダー情報を<br>入力してください</div>
+      <div class="wiz-field">
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">オーダーNo</div>
+          <input class="wiz-field-input" id="wiz-order" type="text" value="${e(WIZ.order)}" placeholder="例: 12345" oninput="WIZ.order=this.value">
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">入荷 / 出荷</div>
+          <select class="wiz-field-select" id="wiz-nyuka-type" onchange="WIZ.nyukaType=this.value">
+            <option${WIZ.nyukaType==='入荷'?' selected':''}>入荷</option>
+            <option${WIZ.nyukaType==='出荷'?' selected':''}>出荷</option>
+          </select>
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">出発元/<br>入荷元</div>
+          <select class="wiz-field-select" id="wiz-src"
+            onchange="WIZ.src=this.value;renderWizard()">
+            ${['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'].map(s=>`<option${WIZ.src===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        ${srcOtherVisible?`
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">その他<br>（入力）</div>
+          <input class="wiz-field-input" id="wiz-src-other" type="text" value="${e(WIZ.srcOther)}" placeholder="出発元を入力" oninput="WIZ.srcOther=this.value">
+        </div>`:''}
+      </div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7;padding:4px 0;">
+        ※ バース着車・作業終了・出発時間は一覧画面から打刻してください
+      </div>`;
+
   // ===== STEP: 最終確認 =====
   } else if(WIZ.step==='final'){
     isStampStep=true;
@@ -2231,13 +2300,29 @@ function renderWizard(){
           <div class="wiz-confirm-label">車格</div>
           <div class="wiz-confirm-val">${WIZ.shakaku}</div>
         </div>
+        ${WIZ.type==='lotte'?`
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">オーダーNo</div>
+          <div class="wiz-confirm-val">${e(WIZ.order||'―')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">入荷/出荷</div>
+          <div class="wiz-confirm-val">${WIZ.nyukaType}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">出発元</div>
+          <div class="wiz-confirm-val">${WIZ.src==='その他'?e(WIZ.srcOther||'その他'):WIZ.src}</div>
+        </div>`:`
         <div class="wiz-confirm-row">
           <div class="wiz-confirm-label">積み方</div>
           <div class="wiz-confirm-val">${WIZ.tsumi||'バラ'}</div>
-        </div>
+        </div>`}
       </div>
       <div style="background:var(--green-bg);border:1px solid var(--green-bd);border-radius:var(--radius-lg);padding:14px 16px;font-size:14px;color:var(--green);font-weight:600;line-height:1.7;">
-        「受付完了 ＋ 入庫打刻」を押すと現在時刻で入庫時間が登録されます。
+        ${WIZ.type==='lotte'
+          ?'「受付完了 ＋ 到着打刻」を押すと現在時刻で到着時間が登録されます。バース着車・作業終了・出発は一覧画面で打刻してください。'
+          :'「受付完了 ＋ 入庫打刻」を押すと現在時刻で入庫時間が登録されます。'
+        }
       </div>`;
   }
 
@@ -2256,7 +2341,7 @@ function renderWizard(){
       ${isStampStep
         ? `<button class="wiz-next-btn stamp"
              onpointerup="wizComplete()"
-             onclick="wizComplete()">受付完了 ＋ 入庫打刻</button>`
+             onclick="wizComplete()">${WIZ.type==='lotte'?'受付完了 ＋ 到着打刻':'受付完了 ＋ 入庫打刻'}</button>`
         : `<button class="wiz-next-btn"
              ${nextDisabled?'disabled':''}
              onpointerup="if(!this.disabled){wizNext()}"
@@ -2331,17 +2416,34 @@ function wizComplete(){
 
   const day=todayData();
   const arr=day[WIZ.type];
-  const slot=arr.find(r=>!r.company&&!r.nyuuko&&!r.deleted);
-  const r=slot||mkNRow(arr.length+1);
-  r.tel=WIZ.tel;
-  r.company=WIZ.company;
-  r.name=WIZ.name;
-  r.car=WIZ.car;
-  r.shakaku=WIZ.shakaku;
-  r.tsumi=WIZ.tsumi||'バラ';
-  r.fuda=WIZ.fuda||'';
-  r.nyuuko=nowStr();
-  if(!slot) arr.push(r);
+  if(WIZ.type==='lotte'){
+    const slot=arr.find(r=>!r.company&&!r.tochaku&&!r.deleted);
+    const r=slot||mkLRow(arr.length+1);
+    r.tel=WIZ.tel;
+    r.company=WIZ.company;
+    r.name=WIZ.name;
+    r.car=WIZ.car;
+    r.shakaku=WIZ.shakaku;
+    r.order=WIZ.order||'';
+    r.type=WIZ.nyukaType||'入荷';
+    r.src=WIZ.src||'狭山工場';
+    r.srcOther=WIZ.src==='その他'?WIZ.srcOther:'';
+    r.tochaku=nowStr(); // 到着時間を打刻
+    r.basu=''; r.sakuEnd=''; r.shuppatsu='';
+    if(!slot) arr.push(r);
+  } else {
+    const slot=arr.find(r=>!r.company&&!r.nyuuko&&!r.deleted);
+    const r=slot||mkNRow(arr.length+1);
+    r.tel=WIZ.tel;
+    r.company=WIZ.company;
+    r.name=WIZ.name;
+    r.car=WIZ.car;
+    r.shakaku=WIZ.shakaku;
+    r.tsumi=WIZ.tsumi||'バラ';
+    r.fuda=WIZ.fuda||'';
+    r.nyuuko=nowStr();
+    if(!slot) arr.push(r);
+  }
 
   // 新規ドライバーは同意済みなのでDBに自動登録
   if(WIZ.isNew && WIZ.consent && WIZ.tel && WIZ.name){

@@ -192,8 +192,22 @@ td.no-col{font-size:11px;color:#999;text-align:center;width:26px;}
 <div id="root"></div>
 <div id="mc"></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+// Firebase を動的に読み込む（失敗してもアプリは動く）
+function loadFirebase() {
+  var s1 = document.createElement('script');
+  s1.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
+  s1.onload = function() {
+    var s2 = document.createElement('script');
+    s2.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js';
+    s2.onload = function() { initFb(); };
+    s2.onerror = function() { console.warn('Firebase DB load failed'); };
+    document.head.appendChild(s2);
+  };
+  s1.onerror = function() { console.warn('Firebase App load failed'); };
+  document.head.appendChild(s1);
+}
+</script>
 <script>
 // ============================================================
 // FIREBASE CONFIG
@@ -319,7 +333,7 @@ function save() {
 }
 function initFb() {
   try {
-    if (typeof firebase === 'undefined') return;
+    if (typeof firebase === 'undefined' || typeof firebase.initializeApp === 'undefined') return;
     firebase.initializeApp(FBCFG);
     fbDb = firebase.database();
     syncStatus = 'live';
@@ -1729,8 +1743,8 @@ function renderWiz(){
 // ============================================================
 // BOOT
 // ============================================================
-initFb();
 render();
+loadFirebase();
 setInterval(function(){
   if(!S.modal&&!WIZ.active&&['nyuuka','shukka','lotte','home'].indexOf(S.screen)>=0) render();
 }, 30000);

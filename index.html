@@ -679,6 +679,16 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 }
 
 /* ウィザード フッターボタン */
+.wiz-result-inline{
+  font-size:14px;font-weight:600;
+  padding:10px 20px;
+  text-align:center;
+  min-height:44px;
+  display:flex;align-items:center;justify-content:center;
+  border-top:1px solid var(--border);
+  background:var(--surface);
+  line-height:1.4;
+}
 .wiz-footer{
   padding:12px 20px env(safe-area-inset-bottom,12px);
   background:var(--surface);border-top:1px solid var(--border);
@@ -2103,20 +2113,7 @@ function renderWizard(){
       : '';
     const driver=buf.length>=10?findDriver(buf):null;
     nextDisabled=buf.length<10;
-    nextLabel=driver?'登録情報を確認する　→':'情報を入力する　→';
-
-    const foundHtml=buf.length>=10
-      ? (driver
-        ? `<div class="wiz-found-card">
-            <div class="wiz-found-name">✓ ${e(driver.name)}</div>
-            <div class="wiz-found-sub">${e(driver.company||'')} ／ 車番:${e(driver.car||'―')} ／ ${e(driver.shakaku)}</div>
-            <div style="font-size:13px;color:var(--green);margin-top:8px;font-weight:600;">登録済みドライバーです。次へ進んで内容を確認してください。</div>
-          </div>`
-        : `<div style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:var(--radius-lg);padding:14px 16px;">
-            <div class="wiz-new-badge">新規ドライバー</div>
-            <div style="font-size:14px;color:var(--amber);font-weight:600;">DBに登録がありません。次の画面で会社名・お名前を入力してください。</div>
-          </div>`)
-      : '';
+    nextLabel=driver?'登録情報を確認する →':'情報を入力する →';
 
     const keyLabels=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ']];
     const keysHtml=keyLabels.map(([n,s])=>`
@@ -2124,19 +2121,68 @@ function renderWizard(){
         ${n}<span class="wiz-key-sub">${s}</span>
       </button>`).join('');
 
-    body=`
-      <div class="wiz-section-title">電話番号を<br>入力してください</div>
-      <div class="wiz-tel-display">
-        <div class="wiz-tel-number ${buf.length===0?'empty':''}">${buf.length===0?'090-0000-0000':disp}</div>
-        <div class="wiz-tel-hint">${buf.length}/11桁</div>
+    // 照合結果：テンキーの下に配置（ズレない）
+    const resultHtml=buf.length>=10
+      ? (driver
+        ? `<div style="background:#e8f5ea;border:1px solid #90c896;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px;color:#2d7a3a;">✓</span>
+            <div>
+              <div style="font-size:15px;font-weight:800;color:#2d7a3a;">${e(driver.name)}</div>
+              <div style="font-size:12px;color:#666;">${e(driver.company||'')} ／ 車番:${e(driver.car||'―')}</div>
+            </div>
+          </div>`
+        : `<div style="background:#fdf3d8;border:1px solid #e8c96a;border-radius:10px;padding:10px 14px;">
+            <div style="font-size:14px;font-weight:700;color:#8a5c00;">新規ドライバー</div>
+            <div style="font-size:12px;color:#8a5c00;">次の画面で会社名・お名前を入力してください</div>
+          </div>`)
+      : '';
+
+    // テンキーが常に同じ位置になるよう固定レイアウト
+    root.innerHTML=`
+    <div style="display:flex;flex-direction:column;height:100vh;background:#f5f4f0;overflow:hidden;">
+      <div style="background:#fff;border-bottom:1px solid #e0ddd5;position:sticky;top:0;z-index:10;">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;">
+          <button class="wiz-back" onclick="wizBack()">←</button>
+          <div>
+            <div style="font-size:17px;font-weight:800;">${label} 受付</div>
+            <div style="font-size:12px;color:#666;">電話番号入力</div>
+          </div>
+        </div>
+        <div style="height:4px;background:#e0ddd5;"><div style="height:4px;background:#1a1a1a;width:${prog}%;transition:width .3s;"></div></div>
       </div>
-      ${foundHtml}
-      <div class="wiz-keypad">
+
+      <!-- 電話番号表示（常に固定位置） -->
+      <div style="background:#fff;text-align:center;padding:16px 20px 12px;border-bottom:1px solid #e0ddd5;">
+        <div style="font-size:${buf.length===0?'20px':'34px'};font-weight:800;letter-spacing:.08em;color:${buf.length===0?'#ccc':'#1a1a1a'};min-height:48px;display:flex;align-items:center;justify-content:center;">
+          ${buf.length===0?'090-0000-0000':disp}
+        </div>
+        <div style="font-size:12px;color:#999;margin-top:4px;">${buf.length}/11桁</div>
+      </div>
+
+      <!-- テンキー（固定） -->
+      <div style="background:#f5f4f0;padding:10px 14px 6px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex-shrink:0;">
         ${keysHtml}
         <button class="wiz-key" style="visibility:hidden;"></button>
         <button class="wiz-key" onclick="wizTelKey('0')">0</button>
         <button class="wiz-key wiz-del" onclick="wizTelDel()">⌫</button>
-      </div>`;
+      </div>
+
+      <!-- 照合結果（テンキーの下・スクロールしない固定エリア） -->
+      <div style="padding:8px 14px;flex-shrink:0;min-height:64px;">
+        ${resultHtml}
+      </div>
+
+      <!-- 次へボタン -->
+      <div style="padding:10px 16px;background:#fff;border-top:1px solid #e0ddd5;margin-top:auto;">
+        <button style="width:100%;padding:18px;background:${nextDisabled?'#ccc':'#1a1a1a'};color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:800;cursor:${nextDisabled?'not-allowed':'pointer'};"
+          ${nextDisabled?'disabled':''}
+          onclick="${nextDisabled?'':'wizNext()'}">
+          ${nextLabel}
+        </button>
+      </div>
+    </div>`;
+    return;
+  }
 
   // ===== STEP: 登録済み確認 =====
   } else if(WIZ.step==='confirm_existing'){
@@ -2342,9 +2388,7 @@ function renderWizard(){
              onclick="wizComplete()">${WIZ.type==='lotte'?'受付完了 ＋ 到着打刻':'受付完了 ＋ 入庫打刻'}</button>`
         : `<button class="wiz-next-btn"
              ${nextDisabled?'disabled':''}
-             onclick="wizNext()"
              onclick="wizNext()">${nextLabel}</button>`
-      }
     </div>
   </div>`;
 }

@@ -519,6 +519,147 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
   .menu-grid{grid-template-columns:1fr;}
   .menu-card.full{grid-column:1;}
 }
+
+/* ===== WIZARD ===== */
+.wiz-screen{
+  min-height:100vh;display:flex;flex-direction:column;
+  background:var(--bg);
+}
+.wiz-header{
+  padding:14px 16px 10px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+}
+.wiz-back{
+  width:40px;height:40px;border-radius:50%;border:none;
+  background:var(--surface2);font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;
+  flex-shrink:0;color:var(--text);
+}
+.wiz-back:active{transform:scale(.92);}
+.wiz-header-info{flex:1;}
+.wiz-title{font-size:17px;font-weight:800;letter-spacing:-.01em;}
+.wiz-step-label{font-size:12px;color:var(--text2);margin-top:2px;}
+.wiz-progress{
+  height:4px;background:var(--border);
+}
+.wiz-progress-bar{
+  height:4px;background:var(--text);
+  transition:width .3s ease;
+}
+.wiz-body{
+  flex:1;padding:24px 20px 16px;
+  display:flex;flex-direction:column;gap:16px;
+  overflow-y:auto;
+}
+.wiz-section-title{
+  font-size:22px;font-weight:800;letter-spacing:-.02em;
+  line-height:1.3;
+}
+.wiz-section-sub{
+  font-size:14px;color:var(--text2);margin-top:4px;line-height:1.6;
+}
+
+/* ウィザード テンキー */
+.wiz-tel-display{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:16px 20px;
+  text-align:center;
+}
+.wiz-tel-number{
+  font-size:36px;font-weight:800;letter-spacing:.08em;
+  color:var(--text);min-height:52px;display:flex;
+  align-items:center;justify-content:center;
+}
+.wiz-tel-number.empty{color:var(--border2);font-size:22px;font-weight:400;letter-spacing:.04em;}
+.wiz-tel-hint{font-size:12px;color:var(--text2);margin-top:6px;}
+
+.wiz-keypad{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+}
+.wiz-key{
+  height:72px;border-radius:14px;
+  border:1px solid var(--border2);background:var(--surface);
+  font-size:28px;font-weight:700;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transition:background .08s,transform .08s;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;
+  color:var(--text);user-select:none;
+}
+.wiz-key:active{background:var(--surface2);transform:scale(.93);}
+.wiz-key-sub{font-size:10px;font-weight:400;color:var(--text3);letter-spacing:.06em;}
+.wiz-key.wiz-del{background:var(--surface2);color:var(--text2);font-size:22px;}
+.wiz-key.wiz-del:active{background:var(--border);}
+
+/* ウィザード 確認カード */
+.wiz-confirm-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;
+}
+.wiz-confirm-row{
+  display:flex;align-items:center;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+}
+.wiz-confirm-row:last-child{border-bottom:none;}
+.wiz-confirm-label{font-size:13px;color:var(--text2);width:80px;flex-shrink:0;font-weight:600;}
+.wiz-confirm-val{font-size:16px;font-weight:700;flex:1;}
+
+/* ウィザード フィールド */
+.wiz-field{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;
+}
+.wiz-field-row{
+  display:flex;align-items:center;padding:0 16px;
+  border-bottom:1px solid var(--border);
+}
+.wiz-field-row:last-child{border-bottom:none;}
+.wiz-field-label{font-size:13px;color:var(--text2);width:80px;flex-shrink:0;font-weight:600;padding:14px 0;}
+.wiz-field-input{
+  flex:1;font-size:17px;font-weight:500;padding:14px 8px;
+  border:none;background:transparent;color:var(--text);
+  outline:none;width:100%;
+}
+.wiz-field-input::placeholder{color:var(--border2);font-weight:400;font-size:15px;}
+.wiz-field-select{
+  flex:1;font-size:17px;font-weight:500;padding:14px 8px;
+  border:none;background:transparent;color:var(--text);
+  outline:none;width:100%;-webkit-appearance:none;
+}
+
+/* ウィザード フッターボタン */
+.wiz-footer{
+  padding:12px 20px env(safe-area-inset-bottom,12px);
+  background:var(--surface);border-top:1px solid var(--border);
+}
+.wiz-next-btn{
+  width:100%;padding:18px;
+  background:var(--text);color:var(--surface);
+  border:none;border-radius:var(--radius-lg);
+  font-size:18px;font-weight:800;cursor:pointer;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;
+  letter-spacing:-.01em;
+}
+.wiz-next-btn:active{opacity:.85;transform:scale(.98);}
+.wiz-next-btn:disabled{opacity:.35;transform:none;}
+.wiz-next-btn.stamp{background:var(--green);border-color:var(--green);}
+.wiz-next-btn.stamp:active{opacity:.85;}
+
+/* DB照合結果 */
+.wiz-found-card{
+  background:var(--green-bg);border:1px solid var(--green-bd);
+  border-radius:var(--radius-lg);padding:16px 18px;
+}
+.wiz-found-name{font-size:22px;font-weight:800;color:var(--green);}
+.wiz-found-sub{font-size:14px;color:var(--text2);margin-top:4px;line-height:1.7;}
+.wiz-new-badge{
+  display:inline-block;font-size:11px;font-weight:700;
+  padding:3px 9px;border-radius:999px;
+  background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd);
+  margin-bottom:8px;
+}
+
 </style>
 </head>
 <body>
@@ -688,6 +829,21 @@ function adminLogout(){
   render();
 }
 
+// ===== WIZARD STATE =====
+const WIZ = {
+  active: false,
+  type: 'nyuuka',   // nyuuka | shukka
+  step: 1,          // 1=電話 2=会社名・氏名 3=車番・車格 4=確認
+  tel: '',
+  company: '',
+  name: '',
+  car: '',
+  shakaku: '2t',
+  fuda: '',
+  biko: '',
+  driver: null,     // DB照合結果
+};
+
 const S = {
   screen: 'home',
   viewDate: todayKey(),
@@ -748,6 +904,7 @@ const modalContainer = document.getElementById('modal-container');
 
 function render(){
   modalContainer.innerHTML = '';
+  if(WIZ.active){ renderWizard(); return; }
   if(S.modal){ renderModal(); return; }
   root.innerHTML = '';
   const adminRequired = ['drivers','history','export'];
@@ -1018,8 +1175,8 @@ function renderTable(type){
   });
   html+=`</tbody></table></div>
   <div class="fab-area">
-    <button class="fab fab-primary" ${!ed||!isToday()?'disabled':''} onclick="openModal('${type}')">＋ 新規受付</button>
-    <button class="fab" ${!ed||!isToday()?'disabled':''} onclick="addRows('${type}')">行を追加</button>
+    <button class="fab fab-primary" style="flex:1;" ${!isToday()?'disabled':''} ontouchend="event.preventDefault();startWizard('${type}')" onclick="startWizard('${type}')">＋ ドライバー受付</button>
+    ${ed&&isToday()?`<button class="fab" onclick="addRows('${type}')">行追加</button>`:''}
   </div>`;
   root.innerHTML=html;
 }
@@ -1802,6 +1959,251 @@ function checkPin(){
     }, 1200);
   }
 }
+
+
+// ============================================================
+//  WIZARD
+// ============================================================
+function startWizard(type){
+  WIZ.active=true; WIZ.type=type; WIZ.step=1;
+  WIZ.tel=''; WIZ.company=''; WIZ.name='';
+  WIZ.car=''; WIZ.shakaku='2t'; WIZ.fuda=''; WIZ.biko='';
+  WIZ.driver=null;
+  renderWizard();
+}
+
+function wizBack(){
+  if(WIZ.step===1){ WIZ.active=false; render(); return; }
+  WIZ.step--;
+  renderWizard();
+}
+
+function renderWizard(){
+  root.innerHTML='';
+  modalContainer.innerHTML='';
+  const steps=['電話番号','会社名・氏名','車番・車格','登録確認'];
+  const label=WIZ.type==='nyuuka'?'入荷受付':'出荷受付';
+  const prog=Math.round((WIZ.step/4)*100);
+
+  let body='';
+
+  if(WIZ.step===1){
+    // --- STEP 1: 電話番号 ---
+    const buf=WIZ.tel;
+    const disp=buf.length>0
+      ? buf.replace(/^(\d{3})(\d{4})(\d{0,4})$/,'$1-$2-$3').replace(/-$/,'')
+      : '';
+    const driver=buf.length>=10?findDriver(buf):null;
+    WIZ.driver=driver;
+    const foundHtml=buf.length>=10
+      ? (driver
+        ? `<div class="wiz-found-card">
+            <div class="wiz-found-name">✓ ${e(driver.name)}</div>
+            <div class="wiz-found-sub">${e(driver.company||'')} ／ 車番:${e(driver.car||'―')} ／ ${e(driver.shakaku)}</div>
+            <div style="font-size:12px;color:var(--green);margin-top:6px;font-weight:600;">登録済みドライバーです。次へ進むと情報が自動入力されます。</div>
+          </div>`
+        : `<div style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:var(--radius-lg);padding:14px 16px;">
+            <div class="wiz-new-badge">新規ドライバー</div>
+            <div style="font-size:14px;color:var(--amber);font-weight:600;">DBに登録がありません。次の画面で会社名・氏名を入力してください。</div>
+          </div>`)
+      : '';
+
+    const keyLabels=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ']];
+    const keysHtml=keyLabels.map(([n,s])=>`
+      <button class="wiz-key" ontouchend="event.preventDefault();wizTelKey('${n}')" onclick="wizTelKey('${n}')">
+        ${n}<span class="wiz-key-sub">${s}</span>
+      </button>`).join('');
+
+    body=`
+      <div class="wiz-section-title">電話番号を<br>入力してください</div>
+      <div class="wiz-tel-display">
+        <div class="wiz-tel-number ${buf.length===0?'empty':''}">${buf.length===0?'090-0000-0000':disp}</div>
+        <div class="wiz-tel-hint">${buf.length}/11桁</div>
+      </div>
+      ${foundHtml}
+      <div class="wiz-keypad">
+        ${keysHtml}
+        <button class="wiz-key" style="visibility:hidden;"></button>
+        <button class="wiz-key" ontouchend="event.preventDefault();wizTelKey('0')" onclick="wizTelKey('0')">0</button>
+        <button class="wiz-key wiz-del" ontouchend="event.preventDefault();wizTelDel()" onclick="wizTelDel()">⌫</button>
+      </div>`;
+
+  } else if(WIZ.step===2){
+    // --- STEP 2: 会社名・氏名 ---
+    body=`
+      <div class="wiz-section-title">会社名と<br>お名前を入力</div>
+      <div class="wiz-field">
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">運送会社名</div>
+          <input class="wiz-field-input" id="wiz-company" type="text" value="${e(WIZ.company)}" placeholder="（株）〇〇運輸" oninput="WIZ.company=this.value">
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">お名前</div>
+          <input class="wiz-field-input" id="wiz-name" type="text" value="${e(WIZ.name)}" placeholder="山田 太郎" oninput="WIZ.name=this.value">
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7;">
+        ※ 登録済みの場合は自動入力されています。違う場合は修正してください。
+      </div>`;
+
+  } else if(WIZ.step===3){
+    // --- STEP 3: 車番・車格 ---
+    body=`
+      <div class="wiz-section-title">車番と<br>車格を入力</div>
+      <div class="wiz-field">
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">車番</div>
+          <input class="wiz-field-input" id="wiz-car" type="text" value="${e(WIZ.car)}" placeholder="1234" oninput="WIZ.car=this.value">
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">車格</div>
+          <select class="wiz-field-select" id="wiz-shakaku" onchange="WIZ.shakaku=this.value">
+            ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${WIZ.shakaku===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">積み方</div>
+          <select class="wiz-field-select" id="wiz-tsumi" onchange="WIZ.tsumi=this.value">
+            ${['バラ','PL'].map(s=>`<option${(WIZ.tsumi||'バラ')===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">番号札</div>
+          <input class="wiz-field-input" id="wiz-fuda" type="number" value="${WIZ.fuda||''}" placeholder="夜間番号（任意）" oninput="WIZ.fuda=this.value">
+        </div>
+      </div>`;
+
+  } else if(WIZ.step===4){
+    // --- STEP 4: 確認 + 入庫打刻 ---
+    body=`
+      <div class="wiz-section-title">内容を確認して<br>受付を完了</div>
+      <div class="wiz-confirm-card">
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">電話番号</div>
+          <div class="wiz-confirm-val">${WIZ.tel.replace(/^(\d{3})(\d{4})(\d{4})$/,'$1-$2-$3')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">運送会社名</div>
+          <div class="wiz-confirm-val">${e(WIZ.company||'―')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">お名前</div>
+          <div class="wiz-confirm-val">${e(WIZ.name||'―')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">車番</div>
+          <div class="wiz-confirm-val">${e(WIZ.car||'―')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">車格</div>
+          <div class="wiz-confirm-val">${WIZ.shakaku}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">積み方</div>
+          <div class="wiz-confirm-val">${WIZ.tsumi||'バラ'}</div>
+        </div>
+      </div>
+      <div style="background:var(--green-bg);border:1px solid var(--green-bd);border-radius:var(--radius-lg);padding:14px 16px;font-size:14px;color:var(--green);font-weight:600;line-height:1.7;">
+        「受付完了 ＋ 入庫打刻」を押すと現在時刻で入庫時間が登録されます。
+      </div>`;
+  }
+
+  root.innerHTML=`
+  <div class="wiz-screen">
+    <div class="wiz-header">
+      <button class="wiz-back" ontouchend="event.preventDefault();wizBack()" onclick="wizBack()">←</button>
+      <div class="wiz-header-info">
+        <div class="wiz-title">${label} 受付</div>
+        <div class="wiz-step-label">STEP ${WIZ.step} / 4 ー ${steps[WIZ.step-1]}</div>
+      </div>
+    </div>
+    <div class="wiz-progress"><div class="wiz-progress-bar" style="width:${prog}%;"></div></div>
+    <div class="wiz-body">${body}</div>
+    <div class="wiz-footer">
+      ${WIZ.step===4
+        ? `<button class="wiz-next-btn stamp"
+             ontouchend="event.preventDefault();wizComplete()"
+             onclick="wizComplete()">受付完了 ＋ 入庫打刻</button>`
+        : `<button class="wiz-next-btn"
+             ${WIZ.step===1&&WIZ.tel.length<10?'disabled':''}
+             ontouchend="event.preventDefault();wizNext()"
+             onclick="wizNext()">次へ　→</button>`
+      }
+    </div>
+  </div>`;
+}
+
+function wizTelKey(n){
+  if(WIZ.tel.length>=11) return;
+  WIZ.tel+=n;
+  renderWizard();
+}
+function wizTelDel(){
+  WIZ.tel=WIZ.tel.slice(0,-1);
+  renderWizard();
+}
+
+function wizNext(){
+  if(WIZ.step===1){
+    // DB照合して自動入力
+    const d=findDriver(WIZ.tel);
+    if(d){
+      if(!WIZ.company) WIZ.company=d.company||'';
+      if(!WIZ.name)    WIZ.name=d.name||'';
+      if(!WIZ.car)     WIZ.car=d.car||'';
+      WIZ.shakaku=d.shakaku||'2t';
+      WIZ.driver=d;
+    }
+  }
+  if(WIZ.step===2){
+    const c=document.getElementById('wiz-company');
+    const n=document.getElementById('wiz-name');
+    if(c) WIZ.company=c.value.trim();
+    if(n) WIZ.name=n.value.trim();
+  }
+  if(WIZ.step===3){
+    const car=document.getElementById('wiz-car');
+    const sha=document.getElementById('wiz-shakaku');
+    const tsu=document.getElementById('wiz-tsumi');
+    const fud=document.getElementById('wiz-fuda');
+    if(car) WIZ.car=car.value.trim();
+    if(sha) WIZ.shakaku=sha.value;
+    if(tsu) WIZ.tsumi=tsu.value;
+    if(fud) WIZ.fuda=fud.value;
+  }
+  WIZ.step++;
+  renderWizard();
+}
+
+function wizComplete(){
+  const day=todayData();
+  const arr=day[WIZ.type];
+  const slot=arr.find(r=>!r.company&&!r.nyuuko&&!r.deleted);
+  const r=slot||mkNRow(arr.length+1);
+  r.tel=WIZ.tel;
+  r.company=WIZ.company;
+  r.name=WIZ.name;
+  r.car=WIZ.car;
+  r.shakaku=WIZ.shakaku;
+  r.tsumi=WIZ.tsumi||'バラ';
+  r.fuda=WIZ.fuda||'';
+  r.nyuuko=nowStr();
+  if(!slot) arr.push(r);
+  // ドライバーDBに未登録なら自動登録するか確認
+  if(!WIZ.driver && WIZ.tel && WIZ.name){
+    const autoReg=confirm(`${WIZ.name}さんをドライバーDBに登録しますか？
+（次回から自動入力されます）`);
+    if(autoReg){
+      S.drivers.push({id:uid(),company:WIZ.company,name:WIZ.name,tel:WIZ.tel,car:WIZ.car,shakaku:WIZ.shakaku});
+    }
+  }
+  save();
+  WIZ.active=false;
+  S.viewDate=todayKey();
+  S.screen=WIZ.type;
+  render();
+}
+
 
 function closeSrcOther(id){
   const el=document.getElementById('src-other-modal-input');

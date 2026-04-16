@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>川口弥平センター 受付システム</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+/* ===== RESET & BASE ===== */
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:14px;background:#f5f4f0;color:#1a1a1a;}
+input,select,button,textarea{font-family:inherit;}
+
+/* ===== CSS VARS ===== */
+:root{
+  --bg:#f5f4f0;--surface:#ffffff;--surface2:#f0efe9;--border:#e0ddd5;--border2:#ccc9be;
+  --text:#1a1a1a;--text2:#666;--text3:#999;
+  --blue:#1a5fa8;--blue-bg:#e8f0fb;--blue-bd:#a8c4e8;
+  --green:#2d7a3a;--green-bg:#e8f5ea;--green-bd:#90c896;
+  --amber:#8a5c00;--amber-bg:#fdf3d8;--amber-bd:#e8c96a;
+  --red:#b02020;--red-bg:#fdeaea;--red-bd:#e89090;
+  --gray-bg:#f0efe9;--gray-bd:#ccc9be;
+  --lotte:#7a2c00;--lotte-bg:#fdf0ea;
+  --radius:8px;--radius-lg:12px;
+}
+
+/* ===== LAYOUT ===== */
+#app{display:flex;flex-direction:column;min-height:100vh;}
+.screen{flex:1;display:flex;flex-direction:column;}
+
+/* ===== APP BAR ===== */
+.app-bar{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+}
+.app-bar-title{font-size:15px;font-weight:700;flex:1;letter-spacing:-.01em;}
+.back-btn{
+  display:flex;align-items:center;gap:4px;
+  font-size:13px;color:var(--text2);
+  background:none;border:none;padding:4px 0;cursor:pointer;
+}
+.back-btn:hover{color:var(--text);}
+.bar-badge{
+  font-size:11px;font-weight:700;padding:3px 8px;
+  border-radius:999px;white-space:nowrap;
+}
+.bar-badge.alert{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);}
+.bar-badge.ok{background:var(--green-bg);color:var(--green);}
+.bar-badge.sync{background:var(--blue-bg);color:var(--blue);}
+.bar-badge.offline{background:var(--amber-bg);color:var(--amber);}
+
+/* ===== HOME ===== */
+.home-hero{
+  padding:20px 16px 14px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.home-title{font-size:22px;font-weight:800;letter-spacing:-.02em;}
+.home-subtitle{font-size:12px;color:var(--text2);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.sync-dot.live{background:#2d7a3a;animation:pulse 2s infinite;}
+.sync-dot.offline{background:#8a5c00;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+.home-alert-bar{
+  margin:12px 16px 0;
+  padding:10px 14px;
+  background:var(--red-bg);border:1px solid var(--red-bd);border-radius:var(--radius);
+  font-size:13px;color:var(--red);font-weight:600;
+  display:none;
+}
+.home-alert-bar.show{display:block;}
+
+.menu-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  padding:16px;
+}
+.menu-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:16px 14px;
+  cursor:pointer;transition:border-color .15s,transform .1s;
+  display:flex;flex-direction:column;gap:5px;
+}
+.menu-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.menu-card:active{transform:scale(.98);}
+.menu-card.full{grid-column:1/-1;}
+.menu-card.lotte-card{border-color:var(--lotte);background:var(--lotte-bg);}
+.menu-card-icon{font-size:22px;line-height:1;}
+.menu-card-label{font-size:14px;font-weight:700;}
+.menu-card-sub{font-size:12px;color:var(--text2);}
+.menu-card-alert{
+  font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;
+  background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);
+  width:fit-content;margin-top:2px;
+}
+
+/* ===== DATE NAV ===== */
+.date-nav{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.date-nav select{
+  font-size:13px;padding:5px 8px;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  background:var(--surface);color:var(--text);
+  flex:1;min-width:0;max-width:240px;
+}
+.mode-tag{
+  font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;
+}
+.mode-tag.today{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+.mode-tag.past{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd);}
+.mode-tag.editing{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd);}
+
+/* ===== MOD BAR ===== */
+.mod-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;font-size:12px;
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.mod-bar.today{background:var(--green-bg);color:var(--green);}
+.mod-bar.past{background:var(--blue-bg);color:var(--blue);}
+.mod-bar.editing{background:var(--amber-bg);color:var(--amber);}
+.mod-bar-msg{flex:1;font-weight:600;}
+.toggle-edit-btn{
+  font-size:12px;padding:5px 12px;border-radius:var(--radius);
+  border:1px solid currentColor;background:var(--surface);
+  cursor:pointer;font-weight:600;white-space:nowrap;color:inherit;
+}
+
+/* ===== ALERT BAR ===== */
+.alert-bar{
+  margin:8px 14px;padding:8px 12px;
+  background:var(--red-bg);border:1px solid var(--red-bd);
+  border-radius:var(--radius);font-size:12px;color:var(--red);font-weight:600;
+}
+
+/* ===== TABLE ===== */
+.tbl-wrap{overflow-x:auto;flex:1;}
+table{width:100%;border-collapse:collapse;min-width:800px;}
+thead th{
+  background:var(--surface2);padding:7px 5px;
+  font-size:11px;font-weight:700;color:var(--text2);
+  text-align:left;border-bottom:1px solid var(--border);
+  white-space:nowrap;position:sticky;top:0;z-index:10;
+}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:hover{background:var(--surface2);}
+tbody tr.row-ok{background:#e8f5ea;}
+tbody tr.row-alert{background:#fdeaea;}
+tbody tr.row-warn{background:#fdf3d8;}
+tbody tr.row-deleted{background:var(--gray-bg);opacity:.55;}
+td{padding:5px 4px;vertical-align:middle;}
+td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
+
+/* ===== FORM ELEMENTS ===== */
+.t-input{
+  width:100%;font-size:12px;padding:4px 5px;
+  border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface);color:var(--text);min-width:0;
+}
+.t-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);}
+.t-select{
+  font-size:12px;padding:4px 3px;
+  border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface);color:var(--text);width:100%;
+}
+.t-input:disabled,.t-select:disabled{opacity:.45;cursor:not-allowed;}
+.time-wrap{display:flex;align-items:center;gap:3px;min-width:102px;}
+.time-inp{
+  width:63px;font-size:12px;padding:4px 3px;
+  border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface);color:var(--text);
+}
+.time-inp.err{border-color:var(--red);background:var(--red-bg);}
+.time-inp:disabled{opacity:.45;}
+.stamp-btn{
+  font-size:10px;padding:4px 6px;
+  border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface2);color:var(--text2);
+  white-space:nowrap;cursor:pointer;transition:background .1s;
+}
+.stamp-btn:hover{background:var(--border);}
+.stamp-btn.stamped{background:var(--green-bg);border-color:var(--green-bd);color:var(--green);font-weight:700;}
+.stamp-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* ===== DELETE BTN ===== */
+.del-btn{
+  width:26px;height:26px;border-radius:50%;
+  border:1px solid var(--red-bd);background:var(--red-bg);
+  color:var(--red);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:background .1s;
+}
+.del-btn:hover{background:#f7c1c1;}
+.del-btn:disabled{opacity:.3;cursor:not-allowed;}
+.restore-btn{
+  width:26px;height:26px;border-radius:50%;
+  border:1px solid var(--border2);background:var(--surface2);
+  color:var(--text2);font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.restore-btn:hover{background:var(--border);}
+
+/* ===== STATUS DOT ===== */
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;flex-shrink:0;}
+.dot-empty{background:#ccc;}.dot-active{background:#2d7a3a;}
+.dot-warn{background:#d4a017;}.dot-alert{background:#b02020;}
+.dot-done{background:#1a7a4a;}.dot-del{background:#bbb;}
+
+/* ===== FAB AREA ===== */
+.fab-area{
+  padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;
+  background:var(--surface);border-top:1px solid var(--border);
+  position:sticky;bottom:0;
+}
+.fab{
+  padding:9px 16px;border-radius:var(--radius);
+  border:1px solid var(--border2);background:var(--surface);
+  font-size:13px;font-weight:700;cursor:pointer;transition:background .1s;
+}
+.fab:hover{background:var(--surface2);}
+.fab-primary{background:var(--text);color:var(--surface);border-color:var(--text);}
+.fab-primary:hover{opacity:.88;}
+.fab:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ===== EDIT LOG ROW ===== */
+.edit-log-row td{
+  font-size:11px;color:var(--text2);
+  padding:2px 4px 5px;border-bottom:none;
+  background:transparent!important;
+}
+
+/* ===== MODAL ===== */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.45);
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;z-index:500;
+}
+.modal{
+  background:var(--surface);border-radius:var(--radius-lg);
+  border:1px solid var(--border);width:100%;max-width:460px;
+  padding:22px;max-height:90vh;overflow-y:auto;
+}
+.modal h3{font-size:17px;font-weight:800;margin-bottom:16px;letter-spacing:-.01em;}
+.modal-record{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:10px 12px;
+  margin-bottom:14px;font-size:13px;line-height:1.8;
+}
+.modal-record strong{font-weight:700;}
+.modal-body{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:4px;}
+.fg{margin-bottom:11px;}
+.fg label{font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;letter-spacing:.03em;}
+.fg input,.fg select{
+  width:100%;font-size:14px;padding:8px 10px;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  background:var(--surface);color:var(--text);
+}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-actions{display:flex;gap:8px;margin-top:18px;}
+.btn-ok{
+  flex:1;padding:11px;
+  background:var(--text);color:var(--surface);
+  border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;
+}
+.btn-ok:hover{opacity:.88;}
+.btn-danger{
+  flex:1;padding:11px;
+  background:var(--red);color:#fff;
+  border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;
+}
+.btn-cancel{
+  padding:11px 16px;background:transparent;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;
+}
+
+/* ===== HISTORY / MISC ===== */
+.list-wrap{padding:0 14px 80px;}
+.list-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:7px;cursor:pointer;transition:border-color .1s;
+}
+.list-item:hover{border-color:var(--border2);}
+.list-item-title{font-size:14px;font-weight:700;}
+.list-item-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+.list-arrow{font-size:18px;color:var(--text3);}
+
+.driver-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:11px 14px;
+  margin-bottom:8px;display:flex;align-items:center;gap:12px;
+}
+.driver-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--blue-bg);border:1px solid var(--blue-bd);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:var(--blue);flex-shrink:0;
+}
+.export-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;
+}
+.export-card h4{font-size:14px;font-weight:700;margin-bottom:4px;}
+.export-card p{font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6;}
+.export-btn{
+  padding:7px 14px;border:1px solid var(--border2);
+  border-radius:var(--radius);font-size:13px;font-weight:600;
+  background:var(--surface2);cursor:pointer;margin-right:6px;margin-bottom:4px;
+}
+.export-btn:hover{background:var(--border);}
+
+.section-label{
+  font-size:11px;font-weight:700;color:var(--text2);
+  padding:10px 16px 4px;letter-spacing:.06em;
+}
+.hidden{display:none!important;}
+
+/* ===== FIREBASE CONFIG NOTICE ===== */
+.config-notice{
+  margin:16px;padding:14px 16px;
+  background:var(--amber-bg);border:1px solid var(--amber-bd);
+  border-radius:var(--radius-lg);font-size:13px;line-height:1.7;
+}
+.config-notice strong{font-weight:700;display:block;margin-bottom:4px;}
+.config-notice code{
+  display:block;background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;padding:8px 10px;font-size:11px;
+  font-family:monospace;margin-top:8px;word-break:break-all;
+  color:var(--text2);
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:480px){
+  .menu-grid{grid-template-columns:1fr;}
+  .menu-card.full{grid-column:1;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="root"></div>
+</div>
+
+<!-- MODAL CONTAINER (outside root for z-index) -->
+<div id="modal-container"></div>
+
+<script>
+// ============================================================
+//  ★ FIREBASE CONFIG ★
+//  Firebaseコンソール > プロジェクト設定 > マイアプリ から
+//  コピーしたconfigに書き換えてください
+// ============================================================
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA5wKvTnqeZ0zug5Jgmwklw7hOlR91zZYc",
+  authDomain: "kawaguchi-uketsuke.firebaseapp.com",
+  databaseURL: "https://kawaguchi-uketsuke-default-rtdb.firebaseio.com",
+  projectId: "kawaguchi-uketsuke",
+  storageBucket: "kawaguchi-uketsuke.firebasestorage.app",
+  messagingSenderId: "332721520087",
+  appId: "1:332721520087:web:4130e818983bfeffb0df92"
+};
+const FIREBASE_CONFIGURED = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+
+// ============================================================
+//  CONSTANTS
+// ============================================================
+const SHAKAKU = ['2t','4t','大型','コンテナ','軽'];
+const TSUMI   = ['バラ','PL'];
+const LOTTE_SRC = ['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'];
+
+// ============================================================
+//  FIREBASE / LOCAL STORAGE ABSTRACTION
+// ============================================================
+let fbDb = null;
+let syncStatus = 'offline'; // 'live' | 'offline'
+
+function initFirebase() {
+  if (!FIREBASE_CONFIGURED) return;
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbDb = firebase.database();
+    syncStatus = 'live';
+    // Listen for realtime updates from Firebase
+    fbDb.ref('kawaguchi').on('value', snap => {
+      const data = snap.val();
+      if (!data) return;
+      if (data.db) {
+        S.db = data.db;
+        // Ensure today exists
+        ensureDay(S.db, todayKey());
+      }
+      if (data.drivers) S.drivers = data.drivers;
+      if (!S.modal) render();
+    });
+  } catch(e) {
+    console.warn('Firebase init failed:', e);
+    syncStatus = 'offline';
+  }
+}
+
+function remoteSave() {
+  if (!fbDb) { localSave(); return; }
+  try {
+    fbDb.ref('kawaguchi').set({ db: S.db, drivers: S.drivers });
+  } catch(e) {
+    localSave();
+  }
+}
+
+function localSave() {
+  try {
+    localStorage.setItem('kw_db_v5', JSON.stringify(S.db));
+    localStorage.setItem('kw_dr_v5', JSON.stringify(S.drivers));
+  } catch(e) {}
+}
+
+function save() {
+  localSave();   // always save locally as backup
+  remoteSave();  // also push to Firebase if configured
+}
+
+function loadLocal() {
+  let db={}, drivers=[];
+  try { db = JSON.parse(localStorage.getItem('kw_db_v5')||'{}'); } catch{}
+  try { drivers = JSON.parse(localStorage.getItem('kw_dr_v5')||'[]'); } catch{}
+  return {db, drivers};
+}
+
+// ============================================================
+//  HELPERS
+// ============================================================
+function todayKey(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtKey(k){
+  const[y,m,d]=k.split('-');
+  const wd=['日','月','火','水','木','金','土'];
+  const dt=new Date(+y,+m-1,+d);
+  return `${y}年${m}月${d}日（${wd[dt.getDay()]}）`;
+}
+function nowStr(){
+  const d=new Date();
+  return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+function nowFull(){
+  const d=new Date();
+  return `${d.getMonth()+1}/${d.getDate()} ${nowStr()}`;
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+
+function mkNRow(no){ return {id:uid(),no,fuda:'',company:'',name:'',tel:'',car:'',shakaku:'2t',tsumi:'バラ',nyuuko:'',shukko:'',biko:'',deleted:false,editLog:[]}; }
+function mkLRow(no){ return {id:uid(),no,company:'',name:'',tel:'',car:'',shakaku:'2t',order:'',type:'入荷',src:'狭山工場',srcOther:'',tochaku:'',basu:'',sakuEnd:'',shuppatsu:'',deleted:false,editLog:[]}; }
+
+function ensureDay(db, key) {
+  if (!db[key]) {
+    db[key] = {
+      nyuuka: Array.from({length:20},(_,i)=>mkNRow(i+1)),
+      shukka: Array.from({length:20},(_,i)=>mkNRow(i+1)),
+      lotte:  Array.from({length:15},(_,i)=>mkLRow(i+1)),
+      created: key
+    };
+  }
+  // Ensure arrays exist (for older data)
+  ['nyuuka','shukka'].forEach(t=>{ if(!db[key][t]) db[key][t]=Array.from({length:20},(_,i)=>mkNRow(i+1)); });
+  if (!db[key].lotte) db[key].lotte = Array.from({length:15},(_,i)=>mkLRow(i+1));
+  return db[key];
+}
+
+// ============================================================
+//  STATE
+// ============================================================
+const {db: initDb, drivers: initDrivers} = loadLocal();
+const S = {
+  screen: 'home',
+  viewDate: todayKey(),
+  editMode: false,
+  modal: null,
+  modalData: {},
+  alertWarn: 60,
+  alertDanger: 90,
+  db: initDb,
+  drivers: initDrivers,
+};
+ensureDay(S.db, todayKey());
+localSave();
+
+// ============================================================
+//  STATUS LOGIC
+// ============================================================
+function toMin(t){if(!t)return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
+function elapsed(t){if(!t)return null;const b=toMin(t);const n=new Date();return n.getHours()*60+n.getMinutes()-b;}
+function timeOk(a,b){if(!a||!b)return true;return toMin(a)<=toMin(b);}
+
+function rowStatus(r,type){
+  if(r.deleted)return 'deleted';
+  if(type==='lotte'){
+    const times=[r.tochaku,r.basu,r.sakuEnd,r.shuppatsu];
+    const hasAny=times.some(Boolean)||r.company;
+    if(!hasAny)return 'empty';
+    for(let i=1;i<times.length;i++){
+      if(times[i-1]&&times[i]&&toMin(times[i-1])>toMin(times[i]))return 'alert';
+    }
+    if(r.shuppatsu)return 'done';
+    if(r.tochaku){const e=elapsed(r.tochaku);if(e>=S.alertDanger)return 'alert';if(e>=S.alertWarn)return 'warn';}
+    return hasAny?'active':'empty';
+  }
+  if(!r.company&&!r.nyuuko)return 'empty';
+  if(r.nyuuko&&r.shukko){if(!timeOk(r.nyuuko,r.shukko))return 'alert';return 'done';}
+  if(r.nyuuko){const e=elapsed(r.nyuuko);if(e>=S.alertDanger)return 'alert';if(e>=S.alertWarn)return 'warn';}
+  return r.company?'active':'empty';
+}
+function dotCls(st){
+  return 'dot dot-'+({empty:'empty',active:'active',warn:'warn',alert:'alert',done:'done',deleted:'del'}[st]||'empty');
+}
+function rowCls(st){
+  return ({alert:'row-alert',warn:'row-warn',done:'row-ok',deleted:'row-deleted'}[st]||'');
+}
+function findDriver(tel){const t=(tel||'').replace(/[-\s]/g,'');return S.drivers.find(d=>d.tel===t);}
+function allDates(){return Object.keys(S.db).filter(k=>k.match(/^\d{4}-\d{2}-\d{2}$/)).sort().reverse();}
+function isToday(){return S.viewDate===todayKey();}
+function canEdit(){return isToday()||S.editMode;}
+function todayData(){return S.db[todayKey()];}
+function viewed(){return S.db[S.viewDate]||ensureDay(S.db,S.viewDate);}
+
+// ============================================================
+//  RENDER ENGINE
+// ============================================================
+const root = document.getElementById('root');
+const modalContainer = document.getElementById('modal-container');
+
+function render(){
+  modalContainer.innerHTML = '';
+  if(S.modal){ renderModal(); return; }
+  root.innerHTML = '';
+  if(S.screen==='home')       renderHome();
+  else if(S.screen==='nyuuka') renderTable('nyuuka');
+  else if(S.screen==='shukka') renderTable('shukka');
+  else if(S.screen==='lotte')  renderLotte();
+  else if(S.screen==='drivers') renderDrivers();
+  else if(S.screen==='history') renderHistory();
+  else if(S.screen==='export')  renderExport();
+}
+
+function go(sc){ S.screen=sc; S.editMode=false; render(); }
+function e(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ---------- HOME ----------
+function renderHome(){
+  const tk=todayKey();
+  const td=todayData()||ensureDay(S.db,tk);
+  const alertN=td.nyuuka.filter(r=>rowStatus(r,'nyuuka')==='alert').length;
+  const alertS=td.shukka.filter(r=>rowStatus(r,'shukka')==='alert').length;
+  const alertL=td.lotte.filter(r=>rowStatus(r,'lotte')==='alert').length;
+  const total=alertN+alertS+alertL;
+  const actN=td.nyuuka.filter(r=>['active','warn','alert'].includes(rowStatus(r,'nyuuka'))).length;
+  const actS=td.shukka.filter(r=>['active','warn','alert'].includes(rowStatus(r,'shukka'))).length;
+  const actL=td.lotte.filter(r=>['active','warn','alert'].includes(rowStatus(r,'lotte'))).length;
+  const syncLabel=syncStatus==='live'?'リアルタイム同期中':'オフライン（ローカル保存）';
+  const syncCls=syncStatus==='live'?'live':'offline';
+
+  root.innerHTML=`
+  <div class="app-bar">
+    <div class="app-bar-title">川口弥平センター</div>
+    <span class="bar-badge ${syncStatus==='live'?'sync':'offline'}">
+      <span class="sync-dot ${syncCls}" style="display:inline-block;vertical-align:middle;margin-right:4px;"></span>${syncLabel}
+    </span>
+  </div>
+  ${!FIREBASE_CONFIGURED ? renderConfigNotice() : ''}
+  <div class="home-hero">
+    <div class="home-title">${fmtKey(tk)}</div>
+    <div class="home-subtitle">受付管理システム${total>0?` &nbsp;<span style="color:var(--red);font-weight:700;">⚠ 要対応 ${total}件</span>`:''}</div>
+  </div>
+  <div class="home-alert-bar${total>0?' show':''}" id="home-alert-bar">
+    ⚠ 要対応: 入荷 ${alertN}件 / 出荷 ${alertS}件 / ロッテ ${alertL}件
+  </div>
+  <div class="menu-grid">
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
+      <div class="menu-card-icon">📥</div>
+      <div class="menu-card-label">入荷受付</div>
+      <div class="menu-card-sub">作業中 ${actN}件</div>
+      ${alertN>0?`<div class="menu-card-alert">要対応 ${alertN}件</div>`:''}
+    </div>
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
+      <div class="menu-card-icon">📤</div>
+      <div class="menu-card-label">出荷受付</div>
+      <div class="menu-card-sub">作業中 ${actS}件</div>
+      ${alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
+    </div>
+    <div class="menu-card full lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="menu-card-icon">⭐</div>
+        <div>
+          <div class="menu-card-label">ロッテ様専用受付</div>
+          <div class="menu-card-sub">作業中 ${actL}件${alertL>0?` &nbsp;<span style="color:var(--red);font-weight:700;">要対応 ${alertL}件</span>`:''}</div>
+        </div>
+      </div>
+    </div>
+    <div class="menu-card" onclick="go('history')">
+      <div class="menu-card-icon">📅</div>
+      <div class="menu-card-label">過去データ</div>
+      <div class="menu-card-sub">${allDates().length}日分 / 後日修正可</div>
+    </div>
+    <div class="menu-card" onclick="go('drivers')">
+      <div class="menu-card-icon">👤</div>
+      <div class="menu-card-label">ドライバーDB</div>
+      <div class="menu-card-sub">${S.drivers.length}名登録</div>
+    </div>
+    <div class="menu-card full" onclick="go('export')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="menu-card-icon">📄</div>
+        <div>
+          <div class="menu-card-label">データ出力（取適法対応）</div>
+          <div class="menu-card-sub">CSV ダウンロード / 印刷</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="section-label">アラート設定</div>
+  <div style="display:flex;align-items:center;gap:10px;padding:6px 16px 20px;flex-wrap:wrap;font-size:12px;color:var(--text2);">
+    警告（黄） <input type="number" value="${S.alertWarn}" min="10" max="480"
+      style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;"
+      onchange="S.alertWarn=+this.value"> 分 &nbsp;&nbsp;
+    アラート（赤） <input type="number" value="${S.alertDanger}" min="10" max="480"
+      style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;"
+      onchange="S.alertDanger=+this.value"> 分
+  </div>`;
+}
+
+function renderConfigNotice(){
+  return `<div class="config-notice">
+    <strong>⚙️ Firebase未設定（ローカルモードで動作中）</strong>
+    このHTMLファイルの先頭にある <code>FIREBASE_CONFIG</code> を<br>
+    Firebaseコンソールの設定値に書き換えると複数端末でリアルタイム同期できます。
+    <code>apiKey: "AIzaSy..."
+databaseURL: "https://your-project-default-rtdb.firebaseio.com"
+...</code>
+  </div>`;
+}
+
+// ---------- DATE NAV & MOD BAR ----------
+function dateNavHtml(label){
+  const dates=allDates();
+  const opts=dates.map(k=>`<option value="${k}"${k===S.viewDate?' selected':''}>${fmtKey(k)}${k===todayKey()?' 【本日】':''}</option>`).join('');
+  const tagCls=isToday()?'today':S.editMode?'editing':'past';
+  const tagLabel=isToday()?'本日':S.editMode?'修正モード':'閲覧中';
+  return `<div class="date-nav">
+    <select onchange="S.viewDate=this.value;S.editMode=false;render();">${opts}</select>
+    <span class="mode-tag ${tagCls}">${tagLabel}</span>
+  </div>`;
+}
+function modBarHtml(){
+  if(isToday()) return `<div class="mod-bar today"><span class="mod-bar-msg">✓ 本日のデータを編集中</span></div>`;
+  if(S.editMode) return `<div class="mod-bar editing"><span class="mod-bar-msg">✎ 後日修正モード — 変更は修正記録に残ります</span><button class="toggle-edit-btn" onclick="S.editMode=false;render();">修正を終了</button></div>`;
+  return `<div class="mod-bar past"><span class="mod-bar-msg">閲覧のみ（読み取り専用）</span><button class="toggle-edit-btn" onclick="S.editMode=true;render();">後日修正を行う</button></div>`;
+}
+
+// ---------- TABLE (入荷/出荷) ----------
+function renderTable(type){
+  const day=viewed();
+  const arr=day[type];
+  const ed=canEdit();
+  const label=type==='nyuuka'?'入荷受付':'出荷受付';
+  const alertRows=arr.filter(r=>rowStatus(r,type)==='alert');
+  let html=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">${label}</div>
+    ${syncStatus==='live'?'<span class="bar-badge sync">同期中</span>':'<span class="bar-badge offline">オフライン</span>'}
+  </div>
+  ${dateNavHtml(label)}
+  ${modBarHtml()}
+  ${alertRows.length>0&&ed?`<div class="alert-bar">⚠ 要対応: ${alertRows.map(r=>`No.${r.no} ${e(r.company||'')}`).join('、')}</div>`:''}
+  <div class="tbl-wrap"><table>
+  <thead><tr>
+    <th style="width:28px;"></th>
+    <th>No</th><th>札</th>
+    <th style="min-width:108px;">運送会社名</th>
+    <th style="min-width:62px;">氏名</th>
+    <th style="min-width:94px;">電話番号</th>
+    <th>車番</th><th>車格</th><th>積み方</th>
+    <th style="min-width:104px;">入庫時間</th>
+    <th style="min-width:104px;">出庫時間</th>
+    <th style="min-width:74px;">備考</th>
+  </tr></thead><tbody>`;
+
+  arr.forEach(r=>{
+    const st=rowStatus(r,type);
+    const isDel=r.deleted;
+    const dis=!ed||isDel;
+    const tErr=r.nyuuko&&r.shukko&&!timeOk(r.nyuuko,r.shukko)?'err':'';
+    const hasLog=r.editLog&&r.editLog.length>0;
+    html+=`<tr class="${rowCls(st)}">
+      <td style="text-align:center;padding:4px 2px;">
+        ${isDel
+          ?`<button class="restore-btn" title="削除を取り消す" onclick="confirmRestore('${type}','${r.id}')">↩</button>`
+          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onclick="confirmDelete('${type}','${r.id}')">×</button>`
+        }
+      </td>
+      <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
+      <td><input class="t-input" style="width:36px;" type="number" value="${r.fuda||''}" ${dis?'disabled':''} placeholder="―" onchange="upd('${type}','${r.id}','fuda',this.value)"></td>
+      <td><input class="t-input" style="min-width:98px;" type="text" value="${e(r.company||'')}" ${dis?'disabled':''} placeholder="運送会社名" onchange="upd('${type}','${r.id}','company',this.value)"></td>
+      <td><input class="t-input" type="text" value="${e(r.name||'')}" ${dis?'disabled':''} placeholder="氏名" onchange="upd('${type}','${r.id}','name',this.value)"></td>
+      <td><input class="t-input" type="tel" value="${e(r.tel||'')}" ${dis?'disabled':''} placeholder="090-..." onchange="telLookup('${type}','${r.id}',this.value)"></td>
+      <td><input class="t-input" style="width:46px;" type="text" value="${e(r.car||'')}" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','car',this.value)"></td>
+      <td><select class="t-select" style="width:62px;" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','shakaku',this.value)">${SHAKAKU.map(s=>`<option${r.shakaku===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><select class="t-select" style="width:50px;" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','tsumi',this.value)">${TSUMI.map(s=>`<option${r.tsumi===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><div class="time-wrap">
+        <input class="time-inp" type="time" value="${r.nyuuko||''}" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','nyuuko',this.value);render()">
+        <button class="stamp-btn${r.nyuuko?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('${type}','${r.id}','nyuuko')">${r.nyuuko||'打刻'}</button>
+      </div></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${tErr}" type="time" value="${r.shukko||''}" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','shukko',this.value);render()">
+        <button class="stamp-btn${r.shukko?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('${type}','${r.id}','shukko')">${r.shukko||'打刻'}</button>
+      </div></td>
+      <td><input class="t-input" style="min-width:64px;" type="text" value="${e(r.biko||'')}" ${dis?'disabled':''} placeholder="メーカー名" onchange="upd('${type}','${r.id}','biko',this.value)"></td>
+    </tr>
+    ${hasLog?`<tr class="edit-log-row"><td colspan="12">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
+  });
+  html+=`</tbody></table></div>
+  <div class="fab-area">
+    <button class="fab fab-primary" ${!ed||!isToday()?'disabled':''} onclick="openModal('${type}')">＋ 新規受付</button>
+    <button class="fab" ${!ed||!isToday()?'disabled':''} onclick="addRows('${type}')">行を追加</button>
+  </div>`;
+  root.innerHTML=html;
+}
+
+// ---------- LOTTE ----------
+function renderLotte(){
+  const day=viewed();
+  const arr=day.lotte;
+  const ed=canEdit();
+  const alertRows=arr.filter(r=>rowStatus(r,'lotte')==='alert');
+  let html=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">ロッテ様専用受付</div>
+    ${syncStatus==='live'?'<span class="bar-badge sync">同期中</span>':'<span class="bar-badge offline">オフライン</span>'}
+  </div>
+  ${dateNavHtml('ロッテ様')}
+  ${modBarHtml()}
+  ${alertRows.length>0&&ed?`<div class="alert-bar">⚠ 時間逆転または長時間滞留: ${alertRows.map(r=>`No.${r.no}`).join('、')}</div>`:''}
+  <div class="tbl-wrap"><table>
+  <thead><tr>
+    <th style="width:28px;"></th>
+    <th>No</th>
+    <th style="min-width:102px;">運送会社名</th>
+    <th style="min-width:60px;">氏名</th>
+    <th style="min-width:90px;">電話番号</th>
+    <th>車番</th><th>車格</th>
+    <th>オーダーNo</th><th>入/出荷</th>
+    <th style="min-width:112px;">出発元/入荷元</th>
+    <th style="min-width:104px;">到着時間</th>
+    <th style="min-width:104px;">バース着車</th>
+    <th style="min-width:104px;">作業終了</th>
+    <th style="min-width:104px;">出発時間</th>
+  </tr></thead><tbody>`;
+
+  arr.forEach(r=>{
+    const st=rowStatus(r,'lotte');
+    const isDel=r.deleted;
+    const dis=!ed||isDel;
+    const tC=(a,b)=>a&&b&&toMin(a)>toMin(b)?'err':'';
+    const hasLog=r.editLog&&r.editLog.length>0;
+    html+=`<tr class="${rowCls(st)}">
+      <td style="text-align:center;padding:4px 2px;">
+        ${isDel
+          ?`<button class="restore-btn" title="削除を取り消す" onclick="confirmRestore('lotte','${r.id}')">↩</button>`
+          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onclick="confirmDelete('lotte','${r.id}')">×</button>`
+        }
+      </td>
+      <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
+      <td><input class="t-input" style="min-width:94px;" type="text" value="${e(r.company||'')}" ${dis?'disabled':''} placeholder="会社名" onchange="upd('lotte','${r.id}','company',this.value)"></td>
+      <td><input class="t-input" type="text" value="${e(r.name||'')}" ${dis?'disabled':''} placeholder="氏名" onchange="upd('lotte','${r.id}','name',this.value)"></td>
+      <td><input class="t-input" type="tel" value="${e(r.tel||'')}" ${dis?'disabled':''} placeholder="090-..." onchange="telLookup('lotte','${r.id}',this.value)"></td>
+      <td><input class="t-input" style="width:44px;" type="text" value="${e(r.car||'')}" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','car',this.value)"></td>
+      <td><select class="t-select" style="width:62px;" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','shakaku',this.value)">${SHAKAKU.map(s=>`<option${r.shakaku===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><input class="t-input" style="width:66px;" type="text" value="${e(r.order||'')}" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','order',this.value)"></td>
+      <td><select class="t-select" style="width:52px;" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','type',this.value)"><option${r.type==='入荷'?' selected':''}>入荷</option><option${r.type==='出荷'?' selected':''}>出荷</option></select></td>
+      <td>
+        <select class="t-select" style="width:98px;" ${dis?'disabled':''} onchange="lotSrc('${r.id}',this.value)">${LOTTE_SRC.map(s=>`<option${r.src===s?' selected':''}>${s}</option>`).join('')}</select>
+        ${r.src==='その他'?`<input class="t-input" style="margin-top:3px;" type="text" value="${e(r.srcOther||'')}" ${dis?'disabled':''} placeholder="入力" onchange="upd('lotte','${r.id}','srcOther',this.value)">`:''}
+      </td>
+      <td><div class="time-wrap">
+        <input class="time-inp" type="time" value="${r.tochaku||''}" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','tochaku',this.value);render()">
+        <button class="stamp-btn${r.tochaku?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','tochaku')">${r.tochaku||'打刻'}</button>
+      </div></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${tC(r.tochaku,r.basu)}" type="time" value="${r.basu||''}" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','basu',this.value);render()">
+        <button class="stamp-btn${r.basu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','basu')">${r.basu||'打刻'}</button>
+      </div></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${tC(r.basu,r.sakuEnd)}" type="time" value="${r.sakuEnd||''}" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','sakuEnd',this.value);render()">
+        <button class="stamp-btn${r.sakuEnd?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','sakuEnd')">${r.sakuEnd||'打刻'}</button>
+      </div></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${tC(r.sakuEnd,r.shuppatsu)}" type="time" value="${r.shuppatsu||''}" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','shuppatsu',this.value);render()">
+        <button class="stamp-btn${r.shuppatsu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','shuppatsu')">${r.shuppatsu||'打刻'}</button>
+      </div></td>
+    </tr>
+    ${hasLog?`<tr class="edit-log-row"><td colspan="14">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
+  });
+  html+=`</tbody></table></div>
+  <div class="fab-area">
+    <button class="fab fab-primary" ${!ed||!isToday()?'disabled':''} onclick="openModal('lotte')">＋ 新規受付</button>
+    <button class="fab" ${!ed||!isToday()?'disabled':''} onclick="addRows('lotte')">行を追加</button>
+  </div>`;
+  root.innerHTML=html;
+}
+
+// ---------- HISTORY ----------
+function renderHistory(){
+  const dates=allDates();
+  root.innerHTML=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">過去データ一覧</div>
+  </div>
+  <div style="padding:10px 14px 6px;font-size:12px;color:var(--text2);">${dates.length}日分の記録。選択すると各画面で閲覧・後日修正できます。</div>
+  <div class="list-wrap">
+    ${dates.map(k=>{
+      const d=S.db[k];
+      const nC=d.nyuuka.filter(r=>r.company&&!r.deleted).length;
+      const sC=d.shukka.filter(r=>r.company&&!r.deleted).length;
+      const lC=d.lotte.filter(r=>r.company&&!r.deleted).length;
+      const nDel=d.nyuuka.concat(d.shukka,d.lotte).filter(r=>r.deleted).length;
+      const nEdit=d.nyuuka.concat(d.shukka,d.lotte).filter(r=>r.editLog&&r.editLog.length>0).length;
+      const isT=k===todayKey();
+      return `<div class="list-item" onclick="S.viewDate='${k}';S.editMode=false;go('nyuuka')">
+        <div>
+          <div class="list-item-title">${fmtKey(k)} ${isT?'<span class="mode-tag today" style="font-size:10px;">本日</span>':''}</div>
+          <div class="list-item-sub">入荷 ${nC}件 ／ 出荷 ${sC}件 ／ ロッテ ${lC}件${nDel>0?` ／ 削除 ${nDel}件`:''}${nEdit>0?` ／ 修正 ${nEdit}件`:''}</div>
+        </div>
+        <span class="list-arrow">›</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ---------- DRIVERS ----------
+function renderDrivers(){
+  root.innerHTML=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">ドライバーDB</div>
+  </div>
+  <div class="fab-area" style="position:static;border-top:none;border-bottom:1px solid var(--border);background:var(--surface2);">
+    <button class="fab fab-primary" onclick="openModal('driver')">＋ 新規登録</button>
+  </div>
+  <div class="list-wrap">
+    ${S.drivers.length===0?'<div style="color:var(--text2);font-size:13px;padding:16px 0;">登録されていません</div>':''}
+    ${S.drivers.map(d=>`<div class="driver-card">
+      <div class="driver-avatar">${e((d.name||'?').slice(0,2))}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:700;">${e(d.name)}</div>
+        <div style="font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e(d.company||'')} ／ ${e(d.tel)} ／ 車番:${e(d.car||'―')} ／ ${e(d.shakaku)}</div>
+      </div>
+      <button class="fab" style="font-size:12px;padding:5px 10px;flex-shrink:0;" onclick="confirmDelDriver('${d.id}','${e(d.name)}')">削除</button>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ---------- EXPORT ----------
+function renderExport(){
+  const dates=allDates();
+  root.innerHTML=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">データ出力</div>
+  </div>
+  <div style="padding:14px;">
+    <div class="export-card">
+      <h4>対象日を選択</h4>
+      <select id="exp-date" style="width:100%;font-size:14px;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);margin-top:6px;">
+        ${dates.map(k=>`<option value="${k}">${fmtKey(k)}${k===todayKey()?' （本日）':''}</option>`).join('')}
+      </select>
+    </div>
+    <div class="export-card">
+      <h4>CSV出力（取適法対応）</h4>
+      <p>削除済みの行は除外。修正記録も含まれます。</p>
+      <button class="export-btn" onclick="dlCsv('nyuuka')">入荷CSV</button>
+      <button class="export-btn" onclick="dlCsv('shukka')">出荷CSV</button>
+      <button class="export-btn" onclick="dlCsv('lotte')">ロッテ様CSV</button>
+    </div>
+    <div class="export-card">
+      <h4>全期間まとめ出力</h4>
+      <p>保存されている全日付を一括でCSV出力します。</p>
+      <button class="export-btn" onclick="dlAllCsv()">全期間 入荷CSV一括</button>
+    </div>
+    <div class="export-card">
+      <h4>印刷プレビュー</h4>
+      <p>選択した日付のデータを印刷用フォーマットで表示します。</p>
+      <button class="export-btn" onclick="printDay()">印刷プレビューを開く</button>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+//  MODAL
+// ============================================================
+function openModal(type){ S.modal=type; render(); }
+function closeModal(){ S.modal=null; S.modalData={}; render(); }
+
+function renderModal(){
+  const m=S.modal;
+  let html='';
+
+  if(m==='confirmDelete'){
+    const {r,type}=S.modalData;
+    const label=type==='lotte'
+      ?`到着:${r.tochaku||'―'} ／ 出発:${r.shuppatsu||'―'}`
+      :`入庫:${r.nyuuko||'―'} ／ 出庫:${r.shukko||'―'}`;
+    html=`<div class="modal">
+      <h3>⚠ この行を削除しますか？</h3>
+      <div class="modal-record">
+        <strong>No.${r.no}　${e(r.company||'（会社名未入力）')}</strong><br>
+        ${e(r.name||'')} ${r.tel?'／ '+e(r.tel):''}<br>
+        ${label}
+      </div>
+      <div class="modal-body">削除してもデータは保持されます（グレー表示）。<br>↩ ボタンからいつでも復元できます。</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-danger" onclick="doDelete()">削除する</button>
+      </div>
+    </div>`;
+  } else if(m==='confirmRestore'){
+    const {r}=S.modalData;
+    html=`<div class="modal">
+      <h3>削除を取り消しますか？</h3>
+      <div class="modal-record"><strong>No.${r.no}　${e(r.company||'')}</strong>　${e(r.name||'')}</div>
+      <div class="modal-body">元の状態に復元します。</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-ok" onclick="doRestore()">復元する</button>
+      </div>
+    </div>`;
+  } else if(m==='confirmDelDriver'){
+    const {name}=S.modalData;
+    html=`<div class="modal">
+      <h3>ドライバーを削除しますか？</h3>
+      <div class="modal-record"><strong>${e(name)}</strong></div>
+      <div class="modal-body">DBから削除します。過去受付データには影響しません。</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-danger" onclick="doDelDriver()">削除する</button>
+      </div>
+    </div>`;
+  } else {
+    // NEW ENTRY / DRIVER FORMS
+    const type=m;
+    let fields='';
+    if(type==='driver'){
+      fields=`
+      <div class="fg"><label>会社名</label><input id="m-company" type="text" placeholder="（株）〇〇運輸"></div>
+      <div class="fg"><label>氏名 ＊</label><input id="m-name" type="text"></div>
+      <div class="fg"><label>電話番号 ＊（ハイフンなし）</label><input id="m-tel" type="tel" placeholder="09012345678"></div>
+      <div class="fg-row">
+        <div class="fg"><label>車番</label><input id="m-car" type="text"></div>
+        <div class="fg"><label>車格</label><select id="m-shakaku">${SHAKAKU.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      </div>`;
+    } else if(type==='lotte'){
+      fields=`
+      <div class="fg"><label>運送会社名 ＊</label><input id="m-company" type="text"></div>
+      <div class="fg-row">
+        <div class="fg"><label>氏名</label><input id="m-name" type="text"></div>
+        <div class="fg"><label>電話番号</label><input id="m-tel" type="tel" placeholder="09012345678"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>車番</label><input id="m-car" type="text"></div>
+        <div class="fg"><label>車格</label><select id="m-shakaku">${SHAKAKU.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>オーダーNo</label><input id="m-order" type="text"></div>
+        <div class="fg"><label>入荷 ／ 出荷</label><select id="m-type"><option>入荷</option><option>出荷</option></select></div>
+      </div>
+      <div class="fg"><label>出発元 ／ 入荷元</label><select id="m-src">${LOTTE_SRC.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div class="fg hidden" id="m-src-other-fg"><label>その他（入力）</label><input id="m-src-other" type="text"></div>`;
+    } else {
+      fields=`
+      <div class="fg"><label>運送会社名 ＊</label><input id="m-company" type="text" placeholder="（株）〇〇運輸"></div>
+      <div class="fg-row">
+        <div class="fg"><label>氏名</label><input id="m-name" type="text"></div>
+        <div class="fg"><label>電話番号</label><input id="m-tel" type="tel" placeholder="09012345678"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>車番</label><input id="m-car" type="text"></div>
+        <div class="fg"><label>番号札</label><input id="m-fuda" type="number" placeholder="夜間番号"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>車格</label><select id="m-shakaku">${SHAKAKU.map(s=>`<option>${s}</option>`).join('')}</select></div>
+        <div class="fg"><label>積み方</label><select id="m-tsumi">${TSUMI.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      </div>
+      <div class="fg"><label>備考（メーカー名）</label><input id="m-biko" type="text"></div>`;
+    }
+    const titles={driver:'ドライバー登録',lotte:'ロッテ様 新規受付',nyuuka:'入荷受付 新規登録',shukka:'出荷受付 新規登録'};
+    const okLabels={driver:'登録',lotte:'受付 ＋ 到着打刻',nyuuka:'受付 ＋ 入庫打刻',shukka:'受付 ＋ 入庫打刻'};
+    html=`<div class="modal">
+      <h3>${titles[type]}</h3>${fields}
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-ok" onclick="submitModal('${type}')">${okLabels[type]}</button>
+      </div>
+    </div>`;
+  }
+
+  modalContainer.innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal();">${html}</div>`;
+
+  // Src other toggle
+  const mSrc=document.getElementById('m-src');
+  if(mSrc)mSrc.addEventListener('change',function(){
+    document.getElementById('m-src-other-fg')?.classList.toggle('hidden',this.value!=='その他');
+  });
+  // Driver auto-fill
+  const mTel=document.getElementById('m-tel');
+  if(mTel)mTel.addEventListener('blur',function(){
+    const d=findDriver(this.value);
+    if(!d)return;
+    const mc=document.getElementById('m-company');if(mc&&!mc.value)mc.value=d.company||'';
+    const mn=document.getElementById('m-name');if(mn&&!mn.value)mn.value=d.name;
+    const mcar=document.getElementById('m-car');if(mcar&&!mcar.value)mcar.value=d.car||'';
+    const msh=document.getElementById('m-shakaku');if(msh)msh.value=d.shakaku;
+  });
+}
+
+// ============================================================
+//  ACTIONS
+// ============================================================
+function confirmDelete(type,id){
+  const day=S.db[S.viewDate];
+  const r=day[type].find(x=>x.id===id);
+  if(!r)return;
+  S.modal='confirmDelete'; S.modalData={type,id,r}; render();
+}
+function confirmRestore(type,id){
+  const day=S.db[S.viewDate];
+  const r=day[type].find(x=>x.id===id);
+  if(!r)return;
+  S.modal='confirmRestore'; S.modalData={type,id,r}; render();
+}
+function confirmDelDriver(id,name){
+  S.modal='confirmDelDriver'; S.modalData={id,name}; render();
+}
+function doDelete(){
+  const {type,id}=S.modalData;
+  const r=S.db[S.viewDate][type].find(x=>x.id===id);
+  if(r){r.deleted=true;if(!r.editLog)r.editLog=[];r.editLog.push(`${nowFull()} 削除`);save();}
+  closeModal();
+}
+function doRestore(){
+  const {type,id}=S.modalData;
+  const r=S.db[S.viewDate][type].find(x=>x.id===id);
+  if(r){r.deleted=false;if(!r.editLog)r.editLog=[];r.editLog.push(`${nowFull()} 削除取消`);save();}
+  closeModal();
+}
+function doDelDriver(){
+  S.drivers=S.drivers.filter(d=>d.id!==S.modalData.id);
+  save(); closeModal(); go('drivers');
+}
+
+function upd(type,id,field,val){
+  const day=S.db[S.viewDate];if(!day)return;
+  const r=day[type].find(x=>x.id===id);
+  if(!r||r.deleted)return;
+  const old=r[field];
+  r[field]=val;
+  if(!isToday()&&old!==val&&old!==undefined){
+    if(!r.editLog)r.editLog=[];
+    r.editLog.push(`${nowFull()} ${field}「${old||'空'}」→「${val}」`);
+  }
+  save();
+}
+function stamp(type,id,field){
+  if(!isToday())return;
+  const r=todayData()[type].find(x=>x.id===id);
+  if(!r||r.deleted)return;
+  r[field]=nowStr(); save(); render();
+}
+function lotSrc(id,val){ upd('lotte',id,'src',val); render(); }
+function telLookup(type,id,tel){
+  upd(type,id,'tel',tel);
+  if(!canEdit())return;
+  const d=findDriver(tel);if(!d)return;
+  const r=S.db[S.viewDate][type].find(x=>x.id===id);
+  if(!r||r.deleted)return;
+  if(!r.company)r.company=d.company||'';
+  if(!r.name)r.name=d.name;
+  if(!r.car)r.car=d.car||'';
+  if(d.shakaku)r.shakaku=d.shakaku;
+  save(); render();
+}
+function addRows(type){
+  if(!isToday())return;
+  const day=todayData();
+  const base=day[type].length;
+  for(let i=0;i<5;i++) day[type].push(type==='lotte'?mkLRow(base+i+1):mkNRow(base+i+1));
+  save(); render();
+}
+
+function submitModal(type){
+  const g=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
+  if(type==='driver'){
+    const name=g('m-name'),tel=g('m-tel').replace(/[-\s]/g,'');
+    if(!name||!tel){alert('氏名と電話番号は必須です');return;}
+    S.drivers.push({id:uid(),company:g('m-company'),name,tel,car:g('m-car'),shakaku:g('m-shakaku')||'2t'});
+    save(); closeModal(); return;
+  }
+  const company=g('m-company');
+  if(!company){alert('運送会社名は必須です');return;}
+  const tel=g('m-tel').replace(/[-\s]/g,'');
+  const day=todayData();
+  const arr=day[type];
+  const slot=arr.find(r=>!r.company&&!r.deleted&&(type==='lotte'?!r.tochaku:!r.nyuuko));
+  const r=slot||(type==='lotte'?mkLRow(arr.length+1):mkNRow(arr.length+1));
+  r.company=company;r.name=g('m-name');r.tel=tel;r.car=g('m-car');
+  r.shakaku=g('m-shakaku')||'2t';
+  if(type==='lotte'){
+    r.order=g('m-order');r.type=g('m-type')||'入荷';
+    const src=g('m-src');r.src=src;r.srcOther=src==='その他'?g('m-src-other'):'';
+    r.tochaku=nowStr();
+  } else {
+    r.tsumi=g('m-tsumi')||'バラ';r.fuda=g('m-fuda');r.biko=g('m-biko');
+    r.nyuuko=nowStr();
+  }
+  if(!slot)arr.push(r);
+  save(); S.modal=null; S.viewDate=todayKey(); S.screen=type; render();
+}
+
+// ============================================================
+//  EXPORT
+// ============================================================
+function getExpDate(){return document.getElementById('exp-date')?.value||todayKey();}
+function toCsvNS(arr){
+  const h='No,番号札,会社名,氏名,電話番号,車番,車格,積み方,入庫時間,出庫時間,備考,修正記録';
+  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[r.no,r.fuda||'',r.company,r.name||'',r.tel||'',r.car||'',r.shakaku,r.tsumi,r.nyuuko||'',r.shukko||'',r.biko||'',(r.editLog&&r.editLog.length?r.editLog.join('|'):'')].join(','));
+  return h+'\n'+rows.join('\n');
+}
+function toCsvL(arr){
+  const h='No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,出発元,到着時間,バース着車,作業終了,出発時間,修正記録';
+  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[r.no,r.company,r.name||'',r.tel||'',r.car||'',r.shakaku,r.order||'',r.type,r.src==='その他'?r.srcOther:r.src,r.tochaku||'',r.basu||'',r.sakuEnd||'',r.shuppatsu||'',(r.editLog&&r.editLog.length?r.editLog.join('|'):'')].join(','));
+  return h+'\n'+rows.join('\n');
+}
+function dlCsv(type){
+  const dk=getExpDate();const day=S.db[dk];if(!day)return;
+  const content=type==='lotte'?toCsvL(day.lotte):toCsvNS(day[type]);
+  const label=type==='nyuuka'?'入荷受付':type==='shukka'?'出荷受付':'ロッテ受付';
+  _dl(`${label}_${dk}.csv`,content);
+}
+function dlAllCsv(){
+  const dates=allDates().reverse();
+  const h='日付,No,番号札,会社名,氏名,電話番号,車番,車格,積み方,入庫時間,出庫時間,備考,修正記録';
+  const rows=dates.flatMap(k=>{const d=S.db[k];return d?d.nyuuka.filter(r=>r.company&&!r.deleted).map(r=>[k,r.no,r.fuda||'',r.company,r.name||'',r.tel||'',r.car||'',r.shakaku,r.tsumi,r.nyuuko||'',r.shukko||'',r.biko||'',(r.editLog&&r.editLog.length?r.editLog.join('|'):'')].join(',')):[];});
+  _dl('入荷受付_全期間.csv',h+'\n'+rows.join('\n'));
+}
+function _dl(fname,content){
+  const blob=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+}
+function printDay(){
+  const dk=getExpDate();const day=S.db[dk];if(!day)return;
+  const win=window.open('','_blank','width=950,height=750');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>入荷受付表 ${dk}</title>
+  <style>body{font-family:'Hiragino Sans',sans-serif;font-size:11px;margin:16px;}
+  h2{font-size:15px;margin-bottom:8px;}
+  table{border-collapse:collapse;width:100%;}
+  th,td{border:1px solid #999;padding:4px 6px;text-align:left;}
+  th{background:#eee;font-size:10px;}
+  @media print{button{display:none;}}</style></head><body>`);
+  win.document.write(`<h2>入荷受付表　${fmtKey(dk)}</h2>`);
+  win.document.write(`<table><tr><th>No</th><th>会社名</th><th>氏名</th><th>電話</th><th>車番</th><th>車格</th><th>積み方</th><th>入庫</th><th>出庫</th><th>備考</th></tr>`);
+  day.nyuuka.filter(r=>r.company&&!r.deleted).forEach(r=>{
+    win.document.write(`<tr><td>${r.no}</td><td>${r.company}</td><td>${r.name||''}</td><td>${r.tel||''}</td><td>${r.car||''}</td><td>${r.shakaku}</td><td>${r.tsumi}</td><td>${r.nyuuko||''}</td><td>${r.shukko||''}</td><td>${r.biko||''}</td></tr>`);
+  });
+  win.document.write(`</table><br><button onclick="window.print()">印刷</button></body></html>`);
+  win.document.close();
+}
+
+// ============================================================
+//  BOOT
+// ============================================================
+initFirebase();
+render();
+// Refresh alert status every 30s
+setInterval(()=>{
+  if(!S.modal && ['nyuuka','shukka','lotte','home'].includes(S.screen)) render();
+}, 30000);
+</script>
+</body>
+</html>

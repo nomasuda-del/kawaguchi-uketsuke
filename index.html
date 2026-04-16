@@ -765,13 +765,12 @@ function render(){
 }
 
 function renderAdminLogin(destScreen){
-  const labels = {drivers:'ドライバーDB', history:'過去データ', export:'データ出力'};
   root.innerHTML = `
   <div class="login-screen">
     <div class="login-card">
       <div class="login-logo">🔐</div>
       <div class="login-title">管理者ログイン</div>
-      <div class="login-sub">${labels[destScreen] || destScreen} にアクセスするには管理者パスワードが必要です</div>
+      <div class="login-sub">管理者パスワードを入力してください</div>
       <div class="login-fg">
         <label>パスワード</label>
         <input type="password" id="admin-pw-input" placeholder="管理者パスワードを入力"
@@ -790,7 +789,7 @@ function renderAdminLogin(destScreen){
 function doAdminLogin(destScreen){
   const pw = document.getElementById('admin-pw-input')?.value || '';
   if(adminLogin(pw)){
-    S.screen = destScreen;
+    S.screen = 'home'; // ログイン後はホームに戻してメニューを表示
     render();
   } else {
     document.getElementById('admin-err').textContent = 'パスワードが違います';
@@ -813,24 +812,31 @@ function renderHome(){
   const actN=td.nyuuka.filter(r=>['active','warn','alert'].includes(rowStatus(r,'nyuuka'))).length;
   const actS=td.shukka.filter(r=>['active','warn','alert'].includes(rowStatus(r,'shukka'))).length;
   const actL=td.lotte.filter(r=>['active','warn','alert'].includes(rowStatus(r,'lotte'))).length;
-  const syncLabel=syncStatus==='live'?'リアルタイム同期中':'オフライン（ローカル保存）';
-  const syncCls=syncStatus==='live'?'live':'offline';
+  const syncLabel=syncStatus==='live'?'リアルタイム同期中':'オフライン';
+  const isAdmin=isAdminLoggedIn();
 
   root.innerHTML=`
   <div class="app-bar">
     <div class="app-bar-title">川口弥平センター</div>
     <span class="bar-badge ${syncStatus==='live'?'sync':'offline'}">
-      <span class="sync-dot ${syncCls}" style="display:inline-block;vertical-align:middle;margin-right:4px;"></span>${syncLabel}
+      <span class="sync-dot ${syncStatus==='live'?'live':'offline'}" style="display:inline-block;vertical-align:middle;margin-right:4px;"></span>${syncLabel}
     </span>
   </div>
-  ${!FIREBASE_CONFIGURED ? renderConfigNotice() : ''}
+
   <div class="home-hero">
     <div class="home-title">${fmtKey(tk)}</div>
     <div class="home-subtitle">受付管理システム${total>0?` &nbsp;<span style="color:var(--red);font-weight:700;">⚠ 要対応 ${total}件</span>`:''}</div>
   </div>
-  <div class="home-alert-bar${total>0?' show':''}" id="home-alert-bar">
-    ⚠ 要対応: 入荷 ${alertN}件 / 出荷 ${alertS}件 / ロッテ ${alertL}件
+
+  ${total>0?`<div class="home-alert-bar show">⚠ 要対応: 入荷 ${alertN}件 ／ 出荷 ${alertS}件 ／ ロッテ ${alertL}件</div>`:''}
+
+  ${isAdmin ? `
+  <!-- 管理者モード -->
+  <div style="background:#1a1a1a;color:#fff;padding:8px 16px;font-size:12px;display:flex;align-items:center;gap:8px;">
+    <span style="flex:1;">🔐 管理者モードでログイン中</span>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
   </div>
+
   <div class="menu-grid">
     <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
       <div class="menu-card-icon">📥</div>
@@ -849,79 +855,78 @@ function renderHome(){
         <div class="menu-card-icon">⭐</div>
         <div>
           <div class="menu-card-label">ロッテ様専用受付</div>
-          <div class="menu-card-sub">作業中 ${actL}件${alertL>0?` &nbsp;<span style="color:var(--red);font-weight:700;">要対応 ${alertL}件</span>`:''}</div>
+          <div class="menu-card-sub">作業中 ${actL}件${alertL>0?` <span style="color:var(--red);font-weight:700;">要対応 ${alertL}件</span>`:''}</div>
         </div>
       </div>
     </div>
-    ${isAdminLoggedIn() ? `
     <div class="menu-card" onclick="go('history')">
       <div class="menu-card-icon">📅</div>
       <div class="menu-card-label">過去データ</div>
-      <div class="menu-card-sub">${allDates().length}日分 / 後日修正可</div>
+      <div class="menu-card-sub">${allDates().length}日分 ／ 後日修正可</div>
     </div>
     <div class="menu-card" onclick="go('drivers')">
       <div class="menu-card-icon">👤</div>
       <div class="menu-card-label">ドライバーDB</div>
       <div class="menu-card-sub">${S.drivers.length}名登録</div>
-    </div>` : `
-    <div class="menu-card" onclick="go('history')">
-      <div class="menu-card-icon">🔐</div>
-      <div class="menu-card-label">過去データ</div>
-      <div class="menu-card-sub">管理者ログインが必要</div>
     </div>
-    <div class="menu-card" onclick="go('drivers')">
-      <div class="menu-card-icon">🔐</div>
-      <div class="menu-card-label">ドライバーDB</div>
-      <div class="menu-card-sub">管理者ログインが必要</div>
-    </div>`}
     <div class="menu-card full" onclick="go('export')">
       <div style="display:flex;align-items:center;gap:12px;">
-        <div class="menu-card-icon">${isAdminLoggedIn() ? '📄' : '🔐'}</div>
+        <div class="menu-card-icon">📄</div>
         <div>
           <div class="menu-card-label">データ出力（取適法対応）</div>
-          <div class="menu-card-sub">${isAdminLoggedIn() ? 'CSV ダウンロード / 印刷' : '管理者ログインが必要'}</div>
+          <div class="menu-card-sub">CSV ダウンロード ／ 印刷</div>
         </div>
       </div>
     </div>
-    ${isAdminLoggedIn() ? `<div class="menu-card full" style="background:var(--surface2);cursor:pointer;" onclick="adminLogout()">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div class="menu-card-icon" style="font-size:16px;">🔓</div>
-        <div>
-          <div class="menu-card-label" style="font-size:13px;">管理者ログアウト</div>
-          <div class="menu-card-sub">ログアウトすると管理者機能が非表示になります</div>
-        </div>
-      </div>
-    </div>` : `<div class="menu-card full" style="cursor:pointer;border-style:dashed;" onclick="go('history')">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div class="menu-card-icon" style="font-size:16px;">🔑</div>
-        <div>
-          <div class="menu-card-label" style="font-size:13px;">管理者ログイン</div>
-          <div class="menu-card-sub">過去データ・ドライバーDB・データ出力にアクセス</div>
-        </div>
-      </div>
-    </div>`}
   </div>
-  <div class="section-label">アラート設定</div>
+
+  <div class="section-label">アラート設定（入庫後の経過時間）</div>
   <div style="display:flex;align-items:center;gap:10px;padding:6px 16px 20px;flex-wrap:wrap;font-size:12px;color:var(--text2);">
     警告（黄） <input type="number" value="${S.alertWarn}" min="10" max="480"
       style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;"
-      oninput="S.alertWarn=+this.value"> 分 &nbsp;&nbsp;
+      onchange="S.alertWarn=+this.value"> 分 &nbsp;&nbsp;
     アラート（赤） <input type="number" value="${S.alertDanger}" min="10" max="480"
       style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;"
-      oninput="S.alertDanger=+this.value"> 分
-  </div>`;
+      onchange="S.alertDanger=+this.value"> 分
+  </div>
+
+  ` : `
+  <!-- 一般スタッフモード -->
+  <div class="menu-grid">
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
+      <div class="menu-card-icon">📥</div>
+      <div class="menu-card-label">入荷受付</div>
+      <div class="menu-card-sub">作業中 ${actN}件</div>
+      ${alertN>0?`<div class="menu-card-alert">要対応 ${alertN}件</div>`:''}
+    </div>
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
+      <div class="menu-card-icon">📤</div>
+      <div class="menu-card-label">出荷受付</div>
+      <div class="menu-card-sub">作業中 ${actS}件</div>
+      ${alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
+    </div>
+    <div class="menu-card full lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="menu-card-icon">⭐</div>
+        <div>
+          <div class="menu-card-label">ロッテ様専用受付</div>
+          <div class="menu-card-sub">作業中 ${actL}件${alertL>0?` <span style="color:var(--red);font-weight:700;">要対応 ${alertL}件</span>`:''}</div>
+        </div>
+      </div>
+    </div>
+    <div class="menu-card full" style="border-style:dashed;cursor:pointer;" onclick="go('history')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="menu-card-icon">🔑</div>
+        <div>
+          <div class="menu-card-label">管理者ログイン</div>
+          <div class="menu-card-sub">過去データ・ドライバーDB・データ出力・アラート設定</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  `}`;
 }
 
-function renderConfigNotice(){
-  return `<div class="config-notice">
-    <strong>⚙️ Firebase未設定（ローカルモードで動作中）</strong>
-    このHTMLファイルの先頭にある <code>FIREBASE_CONFIG</code> を<br>
-    Firebaseコンソールの設定値に書き換えると複数端末でリアルタイム同期できます。
-    <code>apiKey: "AIzaSy..."
-databaseURL: "https://your-project-default-rtdb.firebaseio.com"
-...</code>
-  </div>`;
-}
 
 // ---------- DATE NAV & MOD BAR ----------
 function dateNavHtml(label){

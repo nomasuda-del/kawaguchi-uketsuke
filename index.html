@@ -1187,8 +1187,8 @@ function renderTable(type){
     html+=`<tr class="${rowCls(st)}">
       <td style="text-align:center;padding:4px 2px;">
         ${isDel
-          ?`<button class="restore-btn" title="削除を取り消す" onclick="confirmRestore('${type}','${r.id}')">↩</button>`
-          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onclick="confirmDelete('${type}','${r.id}')">×</button>`
+          ?`<button class="restore-btn" title="削除を取り消す" onpointerup="confirmRestore('${type}','${r.id}')" onclick="confirmRestore('${type}','${r.id}')">↩</button>`
+          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onpointerup="confirmDelete('${type}','${r.id}')" onclick="confirmDelete('${type}','${r.id}')">×</button>`
         }
       </td>
       <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
@@ -1199,7 +1199,7 @@ function renderTable(type){
         ${dis
           ? `<span style="font-size:12px;color:var(--text2);">${e(r.tel||'―')}</span>`
           : `<button style="min-width:100px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
-              onclick="openTelModal('${type}','${r.id}')"
+              onpointerup="openTelModal('${type}','${r.id}')"
               onclick="openTelModal('${type}','${r.id}')"
             >${r.tel?e(r.tel):'タップして入力'}</button>`
         }
@@ -1222,7 +1222,7 @@ function renderTable(type){
   html+=`</tbody></table></div>
   <div class="fab-area">
     <button class="fab-driver" ${!isToday()?'disabled':''}
-      onclick="if(!this.disabled){startWizard('${type}')}"
+      onpointerup="if(!this.disabled){startWizard('${type}')}"
       onclick="if(!this.disabled){startWizard('${type}')}">
       <span class="fab-driver-icon">📋</span>
       <span>ドライバー受付 ／ 新規登録</span>
@@ -1230,7 +1230,7 @@ function renderTable(type){
     <div class="fab-sub-row">
       ${ed&&isToday()?`
       <button class="fab-sub"
-        onclick="addRows('${type}')"
+        onpointerup="addRows('${type}')"
         onclick="addRows('${type}')">＋ 行を追加</button>`:''}
     </div>
   </div>`;
@@ -1277,8 +1277,8 @@ function renderLotte(){
     html+=`<tr class="${rowCls(st)}">
       <td style="text-align:center;padding:4px 2px;">
         ${isDel
-          ?`<button class="restore-btn" title="削除を取り消す" onclick="confirmRestore('lotte','${r.id}')">↩</button>`
-          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onclick="confirmDelete('lotte','${r.id}')">×</button>`
+          ?`<button class="restore-btn" title="削除を取り消す" onpointerup="confirmRestore('lotte','${r.id}')" onclick="confirmRestore('lotte','${r.id}')">↩</button>`
+          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onpointerup="confirmDelete('lotte','${r.id}')" onclick="confirmDelete('lotte','${r.id}')">×</button>`
         }
       </td>
       <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
@@ -1288,7 +1288,7 @@ function renderLotte(){
         ${dis
           ? `<span style="font-size:12px;color:var(--text2);">${e(r.tel||'―')}</span>`
           : `<button style="min-width:96px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
-              onclick="openTelModal('lotte','${r.id}')"
+              onpointerup="openTelModal('lotte','${r.id}')"
               onclick="openTelModal('lotte','${r.id}')"
             >${r.tel?e(r.tel):'タップして入力'}</button>`
         }
@@ -1326,14 +1326,14 @@ function renderLotte(){
   html+=`</tbody></table></div>
   <div class="fab-area">
     <button class="fab-driver" ${!isToday()?'disabled':''}
-      onclick="startWizard('lotte')"
-      onclick="startWizard('lotte')">
+      onpointerup="if(!this.disabled){startWizard('lotte')}"
+      onclick="if(!this.disabled){startWizard('lotte')}">
       <span class="fab-driver-icon">⭐</span>
       <span>ドライバー受付 ／ 新規登録</span>
     </button>
     <div class="fab-sub-row">
       ${ed&&isToday()?`<button class="fab-sub"
-        onclick="addRows('lotte')"
+        onpointerup="addRows('lotte')"
         onclick="addRows('lotte')">＋ 行を追加</button>`:''}
     </div>
   </div>`;
@@ -1506,14 +1506,14 @@ function renderModal(){
           <div class="pin-dot" id="pd3"></div>
         </div>
         <div class="pin-pad">
-          ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-key" onclick="pinPress(${n})">${n}</button>`).join('')}
-          <button class="pin-key pin-del-key pin-zero" onclick="pinDel()">⌫</button>
+          ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-key" onpointerup="pinPress(${n})" onclick="pinPress(${n})">${n}</button>`).join('')}
+          <button class="pin-key pin-del-key pin-zero" onpointerup="pinDel()" onclick="pinDel()">⌫</button>
         </div>
         <div class="pin-err" id="pin-err"></div>
       </div>`:
       `<div class="modal-actions" style="margin-top:16px;">
-        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
-        <button class="btn-danger" onclick="doDelete()">削除する</button>
+        <button class="btn-cancel" onpointerup="closeModal()" onclick="closeModal()">キャンセル</button>
+        <button class="btn-danger" onpointerup="doDelete()" onclick="doDelete()">削除する</button>
       </div>`;
     html=`<div class="modal">
       <h3>⚠ この行を削除しますか？</h3>
@@ -1532,8 +1532,8 @@ function renderModal(){
       <div class="modal-record"><strong>No.${r.no}　${e(r.company||'')}</strong>　${e(r.name||'')}</div>
       <div class="modal-body">元の状態に復元します。</div>
       <div class="modal-actions">
-        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
-        <button class="btn-ok" onclick="doRestore()">復元する</button>
+        <button class="btn-cancel" onpointerup="closeModal()" onclick="closeModal()">キャンセル</button>
+        <button class="btn-ok" onpointerup="doRestore()" onclick="doRestore()">復元する</button>
       </div>
     </div>`;
   } else if(m==='confirmDelDriver'){
@@ -1733,7 +1733,7 @@ function renderTelModal(){
 
   const keysHtml = keyLabels.map(([n,s])=>`
     <button class="tel-key"
-      onclick="telKeyPress('${n}')"
+      onpointerup="telKeyPress('${n}')"
       onclick="telKeyPress('${n}')">
       ${n}<span class="tel-key-sub">${s}</span>
     </button>`).join('');
@@ -1749,7 +1749,7 @@ function renderTelModal(){
       <div class="tel-modal-header">
         <div class="tel-modal-title">電話番号を入力</div>
         <button class="tel-modal-close"
-          onclick="closeTelModal()"
+          onpointerup="closeTelModal()"
           onclick="closeTelModal()">✕</button>
       </div>
       <div class="tel-display ${buf.length===0?'placeholder':''}" id="tel-disp">
@@ -1760,10 +1760,10 @@ function renderTelModal(){
         ${keysHtml}
         <button class="tel-key" style="visibility:hidden;"></button>
         <button class="tel-key"
-          onclick="telKeyPress('0')"
+          onpointerup="telKeyPress('0')"
           onclick="telKeyPress('0')">0</button>
         <button class="tel-key tel-del"
-          onclick="telKeyDel()"
+          onpointerup="telKeyDel()"
           onclick="telKeyDel()">⌫</button>
       </div>
       <div class="tel-fields ${showFields?'show':''}" id="tel-fields">
@@ -1789,7 +1789,7 @@ function renderTelModal(){
       </div>
       <button class="tel-confirm-btn" id="tel-confirm-btn"
         ${buf.length<10?'disabled style="opacity:.4;"':''}
-        onclick="confirmTelInput()"
+        onpointerup="confirmTelInput()"
         onclick="confirmTelInput()">
         ${buf.length<10 ? '電話番号を入力してください' : '確定して受付に反映'}
       </button>
@@ -2085,46 +2085,49 @@ function renderWizard(){
   // ===== STEP: 電話番号 =====
   if(WIZ.step==='tel'){
     const buf=WIZ.tel;
-    const disp=buf.length>0?buf.replace(/^(\d{3})(\d{4})(\d{0,4})$/,'$1-$2-$3').replace(/-$/,''):'';
+    const disp=buf.length>0
+      ? buf.replace(/^(\d{3})(\d{4})(\d{0,4})$/,'$1-$2-$3').replace(/-$/,'')
+      : '';
     const driver=buf.length>=10?findDriver(buf):null;
-    const nextDisabled=buf.length<10;
-    const nextLabel=driver?'登録情報を確認する →':'情報を入力する →';
-    const kl=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ']];
-    let keysHtml='';
-    kl.forEach(function(k){ keysHtml+='<button class="wiz-key" onclick="wizTelKey('+JSON.stringify(k[0])+')">'+k[0]+'<span class="wiz-key-sub">'+k[1]+'</span></button>'; });
+    nextDisabled=buf.length<10;
+    nextLabel=driver?'登録情報を確認する\u3000→':'情報を入力する\u3000→';
+
+    const keyLabels=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ']];
+    const keysHtml=keyLabels.map(([n,s])=>`
+      <button class="wiz-key" onclick="wizTelKey('${n}')">
+        ${n}<span class="wiz-key-sub">${s}</span>
+      </button>`).join('');
+
+    // 照合結果（テンキーの下・固定高さ）
     let resultHtml='';
     if(buf.length>=10){
       if(driver){
-        resultHtml='<div style="background:#e8f5ea;border:1px solid #90c896;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;"><span style="font-size:20px;color:#2d7a3a;">✓</span><div><div style="font-size:15px;font-weight:800;color:#2d7a3a;">'+e(driver.name)+'</div><div style="font-size:12px;color:#666;">'+e(driver.company||'')+'</div></div></div>';
+        resultHtml=`<div style="background:#e8f5ea;border:1px solid #90c896;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:20px;color:#2d7a3a;">✓</span>
+          <div><div style="font-size:15px;font-weight:800;color:#2d7a3a;">${e(driver.name)}</div>
+          <div style="font-size:12px;color:#666;">${e(driver.company||'')} ／ 車番:${e(driver.car||'―')}</div></div>
+        </div>`;
       } else {
-        resultHtml='<div style="background:#fdf3d8;border:1px solid #e8c96a;border-radius:10px;padding:10px 14px;"><div style="font-size:14px;font-weight:700;color:#8a5c00;">新規ドライバー</div><div style="font-size:12px;color:#8a5c00;">次の画面で入力してください</div></div>';
+        resultHtml=`<div style="background:#fdf3d8;border:1px solid #e8c96a;border-radius:10px;padding:10px 14px;">
+          <div style="font-size:14px;font-weight:700;color:#8a5c00;">新規ドライバー</div>
+          <div style="font-size:12px;color:#8a5c00;">次の画面で会社名・お名前を入力してください</div>
+        </div>`;
       }
     }
-    root.innerHTML=
-      '<div style="display:flex;flex-direction:column;height:100vh;background:#f5f4f0;overflow:hidden;">'
-      +'<div style="background:#fff;border-bottom:1px solid #e0ddd5;">'
-      +'<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;">'
-      +'<button class="wiz-back" onclick="wizBack()">←</button>'
-      +'<div><div class="wiz-title">'+label+' 受付</div>'
-      +'<div class="wiz-step-lbl">電話番号入力</div></div></div>'
-      +'<div class="wiz-prog-bg"><div class="wiz-prog-bar" style="width:'+prog+'%;"></div></div></div>'
-      +'<div style="background:#fff;text-align:center;padding:14px 20px 10px;border-bottom:1px solid #e0ddd5;flex-shrink:0;">'
-      +'<div style="font-size:'+(buf.length===0?'20px':'34px')+';font-weight:800;letter-spacing:.08em;color:'+(buf.length===0?'#ccc':'#1a1a1a')+';min-height:46px;display:flex;align-items:center;justify-content:center;">'
-      +(buf.length===0?'090-0000-0000':disp)+'</div>'
-      +'<div style="font-size:12px;color:#999;margin-top:4px;">'+buf.length+'/11桁</div></div>'
-      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 14px 4px;flex-shrink:0;">'
-      +keysHtml
-      +'<button class="wiz-key" style="visibility:hidden;"></button>'
-      +'<button class="wiz-key" onclick="wizTelKey('0')">0</button>'
-      +'<button class="wiz-key wiz-del" onclick="wizTelDel()">⌫</button></div>'
-      +'<div style="padding:8px 14px;flex-shrink:0;min-height:62px;">'+resultHtml+'</div>'
-      +'<div style="padding:10px 16px;background:#fff;border-top:1px solid #e0ddd5;margin-top:auto;">'
-      +'<button style="width:100%;padding:18px;background:'+(nextDisabled?'#ccc':'#1a1a1a')+';color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:800;"'
-      +(nextDisabled?' disabled':' onclick="wizNext()"')+'>'
-      +nextLabel+'</button></div></div>';
-    return;
-  }
 
+    body=`
+      <div class="wiz-section-title">電話番号を<br>入力してください</div>
+      <div class="wiz-tel-display">
+        <div class="wiz-tel-number ${buf.length===0?'empty':''}">${buf.length===0?'090-0000-0000':disp}</div>
+        <div class="wiz-tel-hint">${buf.length}/11桁</div>
+      </div>
+      <div class="wiz-keypad">
+        ${keysHtml}
+        <button class="wiz-key" style="visibility:hidden;"></button>
+        <button class="wiz-key" onclick="wizTelKey('0')">0</button>
+        <button class="wiz-key wiz-del" onclick="wizTelDel()">⌫</button>
+      </div>
+      <div style="padding:8px 0;min-height:70px;">${resultHtml}</div>`;
 
   // ===== STEP: 登録済み確認 =====
   } else if(WIZ.step==='confirm_existing'){
@@ -2218,7 +2221,7 @@ function renderWizard(){
         情報の確認・修正・削除をご希望の場合は、センター管理者までお申し付けください。
       </div>
       <div style="background:var(--surface);border:2px solid ${WIZ.consent?'var(--green)':'var(--border2)'};border-radius:var(--radius-lg);padding:18px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:border-color .15s;"
-        onclick="WIZ.consent=!WIZ.consent;renderWizard()"
+        onpointerup="WIZ.consent=!WIZ.consent;renderWizard()"
         onclick="WIZ.consent=!WIZ.consent;renderWizard()">
         <div style="width:28px;height:28px;border-radius:6px;border:2px solid ${WIZ.consent?'var(--green)':'var(--border2)'};background:${WIZ.consent?'var(--green)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;">
           ${WIZ.consent?'<span style="color:#fff;font-size:18px;font-weight:800;">✓</span>':''}
@@ -2315,7 +2318,7 @@ function renderWizard(){
   root.innerHTML=`
   <div class="wiz-screen">
     <div class="wiz-header">
-      <button class="wiz-back" onclick="wizBack()">←</button>
+      <button class="wiz-back" onpointerup="wizBack()" onclick="wizBack()">←</button>
       <div class="wiz-header-info">
         <div class="wiz-title">${label} 受付</div>
         <div class="wiz-step-label">${stepLabels[WIZ.step]||''}</div>
@@ -2326,11 +2329,13 @@ function renderWizard(){
     <div class="wiz-footer">
       ${isStampStep
         ? `<button class="wiz-next-btn stamp"
-             onclick="wizComplete()"
+             onpointerup="wizComplete()"
              onclick="wizComplete()">${WIZ.type==='lotte'?'受付完了 ＋ 到着打刻':'受付完了 ＋ 入庫打刻'}</button>`
         : `<button class="wiz-next-btn"
              ${nextDisabled?'disabled':''}
-             onclick="wizNext()">${nextLabel}</button>`
+             onpointerup="if(!this.disabled){wizNext()}"
+             onclick="if(!this.disabled){wizNext()}">${nextLabel}</button>`
+      }
     </div>
   </div>`;
 }
@@ -2351,28 +2356,162 @@ function wizNext(){
   const idx=flow.indexOf(WIZ.step);
   if(WIZ.step==='tel'){
     const d=findDriver(WIZ.tel);
-    if(d){ WIZ.driver=d; WIZ.isNew=false; WIZ.company=d.company||''; WIZ.name=d.name||''; WIZ.car=d.car||''; WIZ.shakaku=d.shakaku||'2t'; WIZ.step='confirm_existing'; }
-    else { WIZ.driver=null; WIZ.isNew=true; WIZ.step='name'; }
+    if(d){
+      WIZ.driver=d; WIZ.isNew=false;
+      WIZ.company=d.company||''; WIZ.name=d.name||'';
+      WIZ.car=d.car||''; WIZ.shakaku=d.shakaku||'2t';
+      WIZ.step='confirm_existing';
+    } else {
+      WIZ.driver=null; WIZ.isNew=true; WIZ.step='name';
+    }
   } else if(WIZ.step==='confirm_existing'){
-    const c=document.getElementById('wiz-company'); const n=document.getElementById('wiz-name');
-    const car=document.getElementById('wiz-car'); const sh=document.getElementById('wiz-shakaku');
+    const c=document.getElementById('wiz-company');
+    const n=document.getElementById('wiz-name');
+    const car=document.getElementById('wiz-car');
+    const sh=document.getElementById('wiz-shakaku');
     if(c)WIZ.company=c.value.trim(); if(n)WIZ.name=n.value.trim();
     if(car)WIZ.car=car.value.trim(); if(sh)WIZ.shakaku=sh.value;
     WIZ.step=flow[idx+1];
   } else if(WIZ.step==='name'){
-    const c=document.getElementById('wiz-company'); const n=document.getElementById('wiz-name');
-    if(c)WIZ.company=c.value.trim(); if(n)WIZ.name=n.value.trim(); WIZ.step='car';
+    const c=document.getElementById('wiz-company');
+    const n=document.getElementById('wiz-name');
+    if(c)WIZ.company=c.value.trim(); if(n)WIZ.name=n.value.trim();
+    WIZ.step='car';
   } else if(WIZ.step==='car'){
-    const car=document.getElementById('wiz-car'); const sh=document.getElementById('wiz-shakaku');
-    const ts=document.getElementById('wiz-tsumi'); const fd=document.getElementById('wiz-fuda');
+    const car=document.getElementById('wiz-car');
+    const sh=document.getElementById('wiz-shakaku');
+    const ts=document.getElementById('wiz-tsumi');
+    const fd=document.getElementById('wiz-fuda');
     if(car)WIZ.car=car.value.trim(); if(sh)WIZ.shakaku=sh.value;
-    if(ts)WIZ.tsumi=ts.value; if(fd)WIZ.fuda=fd.value; WIZ.step=flow[idx+1];
+    if(ts)WIZ.tsumi=ts.value; if(fd)WIZ.fuda=fd.value;
+    WIZ.step=flow[idx+1];
   } else if(WIZ.step==='lotte_info'){
-    const ord=document.getElementById('wiz-order'); const typ=document.getElementById('wiz-nyuka-type');
-    const src=document.getElementById('wiz-src'); const sro=document.getElementById('wiz-src-other');
+    const ord=document.getElementById('wiz-order');
+    const typ=document.getElementById('wiz-nyuka-type');
+    const src=document.getElementById('wiz-src');
+    const sro=document.getElementById('wiz-src-other');
     if(ord)WIZ.order=ord.value.trim(); if(typ)WIZ.nyukaType=typ.value;
-    if(src)WIZ.src=src.value; if(sro)WIZ.srcOther=sro.value.trim(); WIZ.step=flow[idx+1];
-  } else if(WIZ.step==='consent'){ WIZ.step='final'; }
+    if(src)WIZ.src=src.value; if(sro)WIZ.srcOther=sro.value.trim();
+    WIZ.step=flow[idx+1];
+  } else if(WIZ.step==='consent'){
+    WIZ.step='final';
+  }
   renderWizard();
 }
 
+function wizComplete(){
+  // confirm_existing の場合、入力修正をWIZに反映
+  if(WIZ.step==='confirm_existing'){
+    const c=document.getElementById('wiz-company');
+    const n=document.getElementById('wiz-name');
+    const car=document.getElementById('wiz-car');
+    const sha=document.getElementById('wiz-shakaku');
+    if(c) WIZ.company=c.value.trim();
+    if(n) WIZ.name=n.value.trim();
+    if(car) WIZ.car=car.value.trim();
+    if(sha) WIZ.shakaku=sha.value;
+    // 登録済みドライバーのDB情報を最新に更新
+    if(WIZ.driver){
+      WIZ.driver.company=WIZ.company;
+      WIZ.driver.name=WIZ.name;
+      WIZ.driver.car=WIZ.car;
+      WIZ.driver.shakaku=WIZ.shakaku;
+    }
+  }
+
+  const day=todayData();
+  const arr=day[WIZ.type];
+  if(WIZ.type==='lotte'){
+    const slot=arr.find(r=>!r.company&&!r.tochaku&&!r.deleted);
+    const r=slot||mkLRow(arr.length+1);
+    r.tel=WIZ.tel;
+    r.company=WIZ.company;
+    r.name=WIZ.name;
+    r.car=WIZ.car;
+    r.shakaku=WIZ.shakaku;
+    r.order=WIZ.order||'';
+    r.type=WIZ.nyukaType||'入荷';
+    r.src=WIZ.src||'狭山工場';
+    r.srcOther=WIZ.src==='その他'?WIZ.srcOther:'';
+    r.tochaku=nowStr(); // 到着時間を打刻
+    r.basu=''; r.sakuEnd=''; r.shuppatsu='';
+    if(!slot) arr.push(r);
+  } else {
+    const slot=arr.find(r=>!r.company&&!r.nyuuko&&!r.deleted);
+    const r=slot||mkNRow(arr.length+1);
+    r.tel=WIZ.tel;
+    r.company=WIZ.company;
+    r.name=WIZ.name;
+    r.car=WIZ.car;
+    r.shakaku=WIZ.shakaku;
+    r.tsumi=WIZ.tsumi||'バラ';
+    r.fuda=WIZ.fuda||'';
+    r.nyuuko=nowStr();
+    if(!slot) arr.push(r);
+  }
+
+  // 新規ドライバーは同意済みなのでDBに自動登録
+  if(WIZ.isNew && WIZ.consent && WIZ.tel && WIZ.name){
+    S.drivers.push({
+      id:uid(),company:WIZ.company,name:WIZ.name,
+      tel:WIZ.tel,car:WIZ.car,shakaku:WIZ.shakaku
+    });
+  }
+  // 登録済みドライバーの情報を更新（修正があれば）
+  if(WIZ.driver){
+    const idx=S.drivers.findIndex(d=>d.tel===WIZ.tel);
+    if(idx>=0) S.drivers[idx]={...S.drivers[idx],company:WIZ.company,name:WIZ.name,car:WIZ.car,shakaku:WIZ.shakaku};
+  }
+
+  save();
+  WIZ.active=false;
+  S.viewDate=todayKey();
+  S.screen=WIZ.type;
+  render();
+}
+
+
+function closeSrcOther(id){
+  const el=document.getElementById('src-other-modal-input');
+  const val=el?el.value.trim():'';
+  if(val){
+    const day=S.db[S.viewDate];
+    const r=day?.lotte?.find(x=>x.id===id);
+    if(r){r.srcOther=val;save();}
+  }
+  S.modal=null;S.modalData={};
+  render();
+}
+
+function timeInputBlur(el, saveFn) {
+  let v = el.value.trim().replace(/[^\d:]/g, '');
+  if (!v) { el.value = ''; saveFn(); return; }
+  // 数字のみ4桁 → HH:MM に変換 (e.g. "1430" → "14:30")
+  if (/^\d{3,4}$/.test(v)) {
+    v = v.length === 3 ? '0' + v : v;
+    v = v.slice(0,2) + ':' + v.slice(2);
+  }
+  // HH:MM バリデーション
+  const m = v.match(/^(\d{1,2}):(\d{2})$/);
+  if (m) {
+    const h = parseInt(m[1]), min = parseInt(m[2]);
+    if (h >= 0 && h <= 23 && min >= 0 && min <= 59) {
+      el.value = String(h).padStart(2,'0') + ':' + String(min).padStart(2,'0');
+      el.classList.remove('err');
+      saveFn();
+      return;
+    }
+  }
+  el.classList.add('err');
+  el.title = '時刻は HH:MM 形式で入力してください（例: 14:30）';
+}
+
+initFirebase();
+render();
+// Refresh alert status every 30s
+setInterval(()=>{
+  if(!S.modal && ['nyuuka','shukka','lotte','home'].includes(S.screen)) render();
+}, 30000);
+</script>
+</body>
+</html>

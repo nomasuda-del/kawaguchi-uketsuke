@@ -2,288 +2,855 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>川口弥平センター 受付システム</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
+/* ===== RESET & BASE ===== */
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;background:#f5f4f0;color:#1a1a1a;font-size:14px;}
-button,input,select{font-family:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
-button{cursor:pointer;}
+html,body{height:100%;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:14px;background:#f5f4f0;color:#1a1a1a;}
+input,select,button,textarea{font-family:inherit;}
+
+/* ===== CSS VARS ===== */
+:root{
+  --bg:#f5f4f0;--surface:#ffffff;--surface2:#f0efe9;--border:#e0ddd5;--border2:#ccc9be;
+  --text:#1a1a1a;--text2:#666;--text3:#999;
+  --blue:#1a5fa8;--blue-bg:#e8f0fb;--blue-bd:#a8c4e8;
+  --green:#2d7a3a;--green-bg:#e8f5ea;--green-bd:#90c896;
+  --amber:#8a5c00;--amber-bg:#fdf3d8;--amber-bd:#e8c96a;
+  --red:#b02020;--red-bg:#fdeaea;--red-bd:#e89090;
+  --gray-bg:#f0efe9;--gray-bd:#ccc9be;
+  --lotte:#7a2c00;--lotte-bg:#fdf0ea;
+  --radius:8px;--radius-lg:12px;
+}
 
 /* ===== LAYOUT ===== */
-.page{min-height:100vh;display:flex;flex-direction:column;}
-.app-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fff;border-bottom:1px solid #e0ddd5;position:sticky;top:0;z-index:100;}
-.app-bar-title{font-size:15px;font-weight:700;flex:1;}
-.back-btn{padding:8px 4px;background:none;border:none;font-size:14px;color:#666;min-height:44px;}
+#app{display:flex;flex-direction:column;min-height:100vh;}
+.screen{flex:1;display:flex;flex-direction:column;}
+
+/* ===== APP BAR ===== */
+.app-bar{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+}
+.app-bar-title{font-size:15px;font-weight:700;flex:1;letter-spacing:-.01em;}
+.back-btn{
+  display:flex;align-items:center;gap:4px;
+  font-size:13px;color:var(--text2);
+  background:none;border:none;padding:4px 0;cursor:pointer;
+}
+.back-btn:hover{color:var(--text);}
+.bar-badge{
+  font-size:11px;font-weight:700;padding:3px 8px;
+  border-radius:999px;white-space:nowrap;
+}
+.bar-badge.alert{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);}
+.bar-badge.ok{background:var(--green-bg);color:var(--green);}
+.bar-badge.sync{background:var(--blue-bg);color:var(--blue);}
+.bar-badge.offline{background:var(--amber-bg);color:var(--amber);}
 
 /* ===== HOME ===== */
-.home-hero{padding:18px 16px 12px;background:#fff;border-bottom:1px solid #e0ddd5;}
-.home-title{font-size:20px;font-weight:800;}
-.home-sub{font-size:12px;color:#666;margin-top:4px;}
-.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;}
-.menu-card{background:#fff;border:1px solid #e0ddd5;border-radius:12px;padding:16px 14px;display:flex;flex-direction:column;gap:6px;min-height:90px;}
+.home-hero{
+  padding:20px 16px 14px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.home-title{font-size:22px;font-weight:800;letter-spacing:-.02em;}
+.home-subtitle{font-size:12px;color:var(--text2);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.sync-dot.live{background:#2d7a3a;animation:pulse 2s infinite;}
+.sync-dot.offline{background:#8a5c00;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+.home-alert-bar{
+  margin:12px 16px 0;
+  padding:10px 14px;
+  background:var(--red-bg);border:1px solid var(--red-bd);border-radius:var(--radius);
+  font-size:13px;color:var(--red);font-weight:600;
+  display:none;
+}
+.home-alert-bar.show{display:block;}
+
+.menu-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  padding:16px;
+}
+.menu-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:16px 14px;
+  cursor:pointer;transition:border-color .15s,transform .1s;
+  display:flex;flex-direction:column;gap:5px;
+}
+.menu-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.menu-card:active{transform:scale(.98);}
 .menu-card.full{grid-column:1/-1;}
-.menu-card.lotte{border-color:#7a2c00;background:#fdf0ea;}
-.menu-card.dashed{border-style:dashed;}
-.menu-icon{font-size:22px;}
-.menu-label{font-size:14px;font-weight:700;}
-.menu-sub{font-size:12px;color:#666;}
-.alert-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#fdeaea;color:#b02020;border:1px solid #e89090;width:fit-content;}
-.admin-bar{background:#1a1a1a;color:#fff;padding:8px 16px;font-size:12px;display:flex;align-items:center;gap:8px;}
-.logout-btn{font-size:11px;padding:6px 12px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;min-height:36px;}
-.sync-badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;}
-.sync-live{background:#e8f5ea;color:#2d7a3a;}
-.sync-off{background:#fdf3d8;color:#8a5c00;}
-.alert-bar-home{margin:10px 16px 0;padding:10px 14px;background:#fdeaea;border:1px solid #e89090;border-radius:8px;font-size:12px;color:#b02020;font-weight:600;}
+.menu-card.lotte-card{border-color:var(--lotte);background:var(--lotte-bg);}
+.menu-card-icon{font-size:22px;line-height:1;}
+.menu-card-label{font-size:14px;font-weight:700;}
+.menu-card-sub{font-size:12px;color:var(--text2);}
+.menu-card-alert{
+  font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;
+  background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);
+  width:fit-content;margin-top:2px;
+}
+
+/* ===== DATE NAV ===== */
+.date-nav{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.date-nav select{
+  font-size:13px;padding:5px 8px;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  background:var(--surface);color:var(--text);
+  flex:1;min-width:0;max-width:240px;
+}
+.mode-tag{
+  font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;
+}
+.mode-tag.today{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+.mode-tag.past{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd);}
+.mode-tag.editing{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd);}
+
+/* ===== MOD BAR ===== */
+.mod-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;font-size:12px;
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.mod-bar.today{background:var(--green-bg);color:var(--green);}
+.mod-bar.past{background:var(--blue-bg);color:var(--blue);}
+.mod-bar.editing{background:var(--amber-bg);color:var(--amber);}
+.mod-bar-msg{flex:1;font-weight:600;}
+.toggle-edit-btn{
+  font-size:12px;padding:5px 12px;border-radius:var(--radius);
+  border:1px solid currentColor;background:var(--surface);
+  cursor:pointer;font-weight:600;white-space:nowrap;color:inherit;
+}
+
+/* ===== ALERT BAR ===== */
+.alert-bar{
+  margin:8px 14px;padding:8px 12px;
+  background:var(--red-bg);border:1px solid var(--red-bd);
+  border-radius:var(--radius);font-size:12px;color:var(--red);font-weight:600;
+}
 
 /* ===== TABLE ===== */
 .tbl-wrap{overflow-x:auto;flex:1;-webkit-overflow-scrolling:touch;}
-table{width:100%;border-collapse:collapse;min-width:780px;}
-thead th{background:#f0efe9;padding:7px 5px;font-size:11px;font-weight:700;color:#666;text-align:left;border-bottom:1px solid #e0ddd5;white-space:nowrap;position:sticky;top:0;z-index:5;}
-tbody tr{border-bottom:1px solid #e0ddd5;}
+table{width:100%;border-collapse:collapse;min-width:800px;}
+thead th{
+  background:var(--surface2);padding:7px 5px;
+  font-size:11px;font-weight:700;color:var(--text2);
+  text-align:left;border-bottom:1px solid var(--border);
+  white-space:nowrap;position:sticky;top:0;z-index:10;
+}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:hover{background:var(--surface2);}
 tbody tr.row-ok{background:#e8f5ea;}
 tbody tr.row-alert{background:#fdeaea;}
 tbody tr.row-warn{background:#fdf3d8;}
-tbody tr.row-del{background:#f0efe9;opacity:.55;}
+tbody tr.row-deleted{background:var(--gray-bg);opacity:.55;}
 td{padding:5px 4px;vertical-align:middle;}
-td.no-col{font-size:11px;color:#999;text-align:center;width:26px;}
-.t-in{width:100%;font-size:12px;padding:4px 5px;border:1px solid #ccc9be;border-radius:6px;background:#fff;color:#1a1a1a;min-width:0;}
-.t-sel{font-size:12px;padding:4px 3px;border:1px solid #ccc9be;border-radius:6px;background:#fff;color:#1a1a1a;width:100%;}
-.t-in:disabled,.t-sel:disabled{opacity:.45;}
-.tw{display:flex;align-items:center;gap:3px;min-width:100px;}
-.ti{width:60px;font-size:12px;padding:4px 3px;border:1px solid #ccc9be;border-radius:6px;background:#fff;color:#1a1a1a;text-align:center;}
-.ti.err{border-color:#b02020;background:#fdeaea;}
-.ti:disabled{opacity:.45;}
-.sp{font-size:11px;padding:5px 8px;border:1px solid #ccc9be;border-radius:6px;background:#f0efe9;color:#666;white-space:nowrap;min-height:34px;}
-.sp.done{background:#e8f5ea;border-color:#90c896;color:#2d7a3a;font-weight:700;}
-.sp:disabled{opacity:.35;}
-.db{width:44px;height:44px;border-radius:50%;border:1px solid #e89090;background:#fdeaea;color:#b02020;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.db:disabled{opacity:.3;}
-.rb{width:44px;height:44px;border-radius:50%;border:1px solid #ccc9be;background:#f0efe9;color:#666;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;}
-.dot-e{background:#ccc;}.dot-a{background:#2d7a3a;}.dot-w{background:#d4a017;}.dot-r{background:#b02020;}.dot-d{background:#1a7a4a;}.dot-x{background:#bbb;}
+td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 
-/* ===== FAB ===== */
-.fab-area{padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;background:#fff;border-top:1px solid #e0ddd5;position:sticky;bottom:0;z-index:20;}
-.fab-drv{width:100%;padding:18px;background:#1a1a1a;color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:10px;min-height:58px;}
-.fab-drv:disabled{opacity:.35;}
-.fab-sm{padding:10px 14px;border:1px solid #ccc9be;border-radius:8px;background:#f0efe9;font-size:13px;font-weight:700;min-height:42px;}
-.mod-bar{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:12px;border-bottom:1px solid #e0ddd5;flex-wrap:wrap;}
-.mod-bar.today{background:#e8f5ea;color:#2d7a3a;}
-.mod-bar.past{background:#e8f0fb;color:#1a5fa8;}
-.mod-bar.edit{background:#fdf3d8;color:#8a5c00;}
-.mod-btn{font-size:12px;padding:6px 12px;border-radius:6px;border:1px solid currentColor;background:#fff;font-weight:600;min-height:34px;}
-.date-nav{display:flex;align-items:center;gap:8px;padding:7px 14px;background:#f0efe9;border-bottom:1px solid #e0ddd5;flex-wrap:wrap;}
-.date-sel{font-size:13px;padding:5px 8px;border:1px solid #ccc9be;border-radius:6px;background:#fff;flex:1;max-width:240px;}
-.dt-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
-.dt-today{background:#e8f5ea;color:#2d7a3a;border:1px solid #90c896;}
-.dt-past{background:#e8f0fb;color:#1a5fa8;border:1px solid #a8c4e8;}
-.dt-edit{background:#fdf3d8;color:#8a5c00;border:1px solid #e8c96a;}
-.alert-strip{background:#fdeaea;border:1px solid #e89090;border-radius:8px;margin:6px 14px;padding:8px 12px;font-size:12px;color:#b02020;font-weight:600;}
-.edit-log-td{font-size:11px;color:#666;padding:2px 4px 5px!important;}
+/* ===== FORM ELEMENTS ===== */
+.t-input{
+  width:100%;font-size:12px;padding:4px 5px;
+  border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface);color:var(--text);min-width:0;
+}
+.t-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);}
+.t-select{
+  font-size:12px;padding:4px 3px;
+  border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface);color:var(--text);width:100%;
+}
+.t-input:disabled,.t-select:disabled{opacity:.45;cursor:not-allowed;}
+.time-wrap{display:flex;align-items:center;gap:3px;min-width:108px;}
+.time-inp{
+  width:56px;font-size:13px;padding:4px 5px;
+  border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface);color:var(--text);
+  text-align:center;letter-spacing:.04em;font-weight:500;
+}
+.time-inp.err{border-color:var(--red);background:var(--red-bg);}
+.time-inp:disabled{opacity:.45;}
+.time-inp::placeholder{font-size:11px;font-weight:400;letter-spacing:0;color:#bbb;}
+.stamp-btn{
+  font-size:11px;padding:5px 8px;
+  border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface2);color:var(--text2);
+  white-space:nowrap;cursor:pointer;transition:background .1s;font-weight:600;
+}
+.stamp-btn:hover{background:var(--border);}
+.stamp-btn.stamped{background:var(--green-bg);border-color:var(--green-bd);color:var(--green);font-weight:700;}
+.stamp-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* ===== DELETE BTN ===== */
+.del-btn{
+  width:36px;height:36px;border-radius:50%;
+  border:1px solid var(--red-bd);background:var(--red-bg);
+  color:var(--red);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:background .1s;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+}
+.del-btn:hover{background:#f7c1c1;}
+.del-btn:active{background:#f7c1c1;transform:scale(.92);}
+.del-btn:disabled{opacity:.3;cursor:not-allowed;}
+.restore-btn{
+  width:36px;height:36px;border-radius:50%;
+  border:1px solid var(--border2);background:var(--surface2);
+  color:var(--text2);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+}
+.restore-btn:hover{background:var(--border);}
+.restore-btn:active{transform:scale(.92);}
+
+/* ===== STATUS DOT ===== */
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;flex-shrink:0;}
+.dot-empty{background:#ccc;}.dot-active{background:#2d7a3a;}
+.dot-warn{background:#d4a017;}.dot-alert{background:#b02020;}
+.dot-done{background:#1a7a4a;}.dot-del{background:#bbb;}
+
+/* ===== FAB AREA ===== */
+.fab-area{
+  padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;
+  background:var(--surface);border-top:1px solid var(--border);
+  position:sticky;bottom:0;z-index:20;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+}
+.fab{
+  padding:9px 16px;border-radius:var(--radius);
+  border:1px solid var(--border2);background:var(--surface);
+  font-size:13px;font-weight:700;cursor:pointer;transition:background .1s;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  user-select:none;
+}
+.fab:hover{background:var(--surface2);}
+.fab:active{transform:scale(.97);}
+.fab-primary{background:var(--text);color:var(--surface);border-color:var(--text);}
+.fab-primary:hover{opacity:.88;}
+.fab-primary:active{opacity:.85;transform:scale(.97);}
+.fab:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+/* ===== EDIT LOG ROW ===== */
+.edit-log-row td{
+  font-size:11px;color:var(--text2);
+  padding:2px 4px 5px;border-bottom:none;
+  background:transparent!important;
+}
 
 /* ===== MODAL ===== */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9999;}
-.modal{background:#fff;border-radius:12px;width:100%;max-width:440px;padding:22px;max-height:88vh;overflow-y:auto;}
-.modal h3{font-size:17px;font-weight:800;margin-bottom:14px;}
-.modal-rec{background:#f0efe9;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.8;}
-.modal-body{font-size:13px;color:#666;line-height:1.7;margin-bottom:4px;}
-.fg{margin-bottom:10px;}
-.fg label{font-size:11px;font-weight:700;color:#666;display:block;margin-bottom:4px;}
-.fg input,.fg select{width:100%;font-size:15px;padding:9px 10px;border:1px solid #ccc9be;border-radius:8px;background:#fff;}
-.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.modal-acts{display:flex;gap:8px;margin-top:16px;}
-.btn-ok{flex:1;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;min-height:50px;}
-.btn-ng{flex:1;padding:14px;background:#b02020;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;min-height:50px;}
-.btn-cl{padding:14px 18px;background:transparent;border:1px solid #ccc9be;border-radius:8px;font-size:15px;font-weight:600;color:#666;min-height:50px;}
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.45);
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;z-index:500;
+}
+.modal{
+  background:var(--surface);border-radius:var(--radius-lg);
+  border:1px solid var(--border);width:100%;max-width:460px;
+  padding:22px;max-height:90vh;overflow-y:auto;
+}
+.modal h3{font-size:17px;font-weight:800;margin-bottom:16px;letter-spacing:-.01em;}
+.modal-record{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:10px 12px;
+  margin-bottom:14px;font-size:13px;line-height:1.8;
+}
+.modal-record strong{font-weight:700;}
+.modal-body{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:4px;}
+.fg{margin-bottom:11px;}
+.fg label{font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;letter-spacing:.03em;}
+.fg input,.fg select{
+  width:100%;font-size:14px;padding:8px 10px;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  background:var(--surface);color:var(--text);
+}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-actions{display:flex;gap:8px;margin-top:18px;}
+.btn-ok{
+  flex:1;padding:11px;
+  background:var(--text);color:var(--surface);
+  border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;
+}
+.btn-ok:hover{opacity:.88;}
+.btn-danger{
+  flex:1;padding:11px;
+  background:var(--red);color:#fff;
+  border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;
+}
+.btn-cancel{
+  padding:11px 16px;background:transparent;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;
+}
 
-/* ===== LOGIN ===== */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f5f4f0;}
-.login-card{background:#fff;border-radius:16px;padding:32px 28px;width:100%;max-width:340px;}
-.login-logo{text-align:center;font-size:36px;margin-bottom:8px;}
-.login-title{font-size:20px;font-weight:800;text-align:center;margin-bottom:4px;}
-.login-sub{font-size:13px;color:#666;text-align:center;margin-bottom:24px;line-height:1.6;}
-.login-inp{width:100%;font-size:16px;padding:12px;border:1px solid #ccc9be;border-radius:8px;background:#fff;margin-bottom:12px;}
-.login-btn{width:100%;padding:16px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:17px;font-weight:800;min-height:54px;}
-.login-err{font-size:13px;color:#b02020;text-align:center;margin-top:8px;min-height:20px;}
+/* ===== HISTORY / MISC ===== */
+.list-wrap{padding:0 14px 80px;}
+.list-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:7px;cursor:pointer;transition:border-color .1s;
+}
+.list-item:hover{border-color:var(--border2);}
+.list-item-title{font-size:14px;font-weight:700;}
+.list-item-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+.list-arrow{font-size:18px;color:var(--text3);}
+
+.driver-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:11px 14px;
+  margin-bottom:8px;display:flex;align-items:center;gap:12px;
+}
+.driver-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--blue-bg);border:1px solid var(--blue-bd);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:var(--blue);flex-shrink:0;
+}
+.export-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;
+}
+.export-card h4{font-size:14px;font-weight:700;margin-bottom:4px;}
+.export-card p{font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6;}
+.export-btn{
+  padding:7px 14px;border:1px solid var(--border2);
+  border-radius:var(--radius);font-size:13px;font-weight:600;
+  background:var(--surface2);cursor:pointer;margin-right:6px;margin-bottom:4px;
+}
+.export-btn:hover{background:var(--border);}
+
+.section-label{
+  font-size:11px;font-weight:700;color:var(--text2);
+  padding:10px 16px 4px;letter-spacing:.06em;
+}
+.hidden{display:none!important;}
+
+/* ===== ADMIN LOGIN ===== */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:16px;}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px 28px;width:100%;max-width:340px;}
+.login-logo{font-size:32px;text-align:center;margin-bottom:8px;}
+.login-title{font-size:18px;font-weight:800;text-align:center;margin-bottom:4px;}
+.login-sub{font-size:12px;color:var(--text2);text-align:center;margin-bottom:24px;}
+.login-fg{margin-bottom:14px;}
+.login-fg label{font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;}
+.login-fg input{width:100%;font-size:15px;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);}
+.login-fg input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);}
+.login-btn{width:100%;padding:12px;background:var(--text);color:var(--surface);border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.login-btn:hover{opacity:.88;}
+.login-err{font-size:12px;color:var(--red);text-align:center;margin-top:10px;min-height:18px;}
+
+/* ===== PIN PAD ===== */
+.pin-display{
+  display:flex;justify-content:center;gap:12px;margin:16px 0;
+}
+.pin-dot{
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid var(--border2);background:transparent;
+  transition:background .15s,border-color .15s;
+}
+.pin-dot.filled{background:var(--text);border-color:var(--text);}
+.pin-dot.err{border-color:var(--red);background:var(--red);}
+.pin-pad{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+  max-width:240px;margin:0 auto;
+}
+.pin-key{
+  height:56px;border-radius:var(--radius);
+  border:1px solid var(--border2);background:var(--surface);
+  font-size:20px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .1s,transform .1s;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  color:var(--text);
+}
+.pin-key:hover{background:var(--surface2);}
+.pin-key:active{background:var(--border);transform:scale(.94);}
+.pin-key.pin-del-key{font-size:16px;color:var(--text2);}
+.pin-key.pin-zero{grid-column:2;}
+.pin-title{font-size:15px;font-weight:700;text-align:center;margin-bottom:4px;}
+.pin-sub{font-size:12px;color:var(--text2);text-align:center;margin-bottom:16px;}
+.pin-err{font-size:12px;color:var(--red);text-align:center;margin-top:8px;min-height:16px;}
+
+/* ===== TEL INPUT MODAL ===== */
+.tel-modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.55);
+  display:flex;align-items:flex-end;justify-content:center;
+  z-index:600;
+  padding:0;
+}
+.tel-modal{
+  background:var(--surface);
+  border-radius:20px 20px 0 0;
+  width:100%;max-width:520px;
+  padding:0 0 env(safe-area-inset-bottom,12px);
+  max-height:96vh;overflow-y:auto;
+}
+.tel-modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px 12px;
+  border-bottom:1px solid var(--border);
+}
+.tel-modal-title{font-size:17px;font-weight:800;letter-spacing:-.01em;}
+.tel-modal-close{
+  width:36px;height:36px;border-radius:50%;
+  border:none;background:var(--surface2);
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  color:var(--text2);
+}
+.tel-display{
+  text-align:center;
+  padding:14px 20px 10px;
+  font-size:34px;font-weight:800;
+  letter-spacing:.1em;
+  color:var(--text);
+  min-height:64px;
+  font-family:'Hiragino Sans','Noto Sans JP',monospace;
+}
+.tel-display.placeholder{color:var(--border2);font-size:22px;font-weight:400;letter-spacing:.04em;}
+.tel-lookup-result{
+  margin:0 16px 12px;
+  padding:12px 16px;
+  border-radius:var(--radius-lg);
+  font-size:14px;line-height:1.8;
+  display:none;
+}
+.tel-lookup-result.found{
+  background:var(--green-bg);border:1px solid var(--green-bd);
+  display:block;
+}
+.tel-lookup-result.notfound{
+  background:var(--surface2);border:1px solid var(--border);
+  display:block;color:var(--text2);
+}
+.tel-lookup-name{font-size:18px;font-weight:800;color:var(--green);line-height:1.3;}
+.tel-lookup-sub{font-size:13px;color:var(--text2);}
+.tel-keypad{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:8px;padding:8px 16px 16px;
+}
+.tel-key{
+  height:64px;border-radius:12px;
+  border:1px solid var(--border2);
+  background:var(--surface);
+  font-size:26px;font-weight:700;
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1px;
+  transition:background .08s,transform .08s;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  color:var(--text);
+  user-select:none;
+}
+.tel-key:active{background:var(--surface2);transform:scale(.94);}
+.tel-key-sub{font-size:9px;font-weight:400;color:var(--text3);letter-spacing:.06em;}
+.tel-key.tel-del{background:var(--surface2);color:var(--text2);font-size:20px;}
+.tel-key.tel-del:active{background:var(--border);}
+.tel-key.tel-ok{
+  background:var(--text);color:var(--surface);
+  font-size:16px;font-weight:700;border-color:var(--text);
+}
+.tel-key.tel-ok:active{opacity:.85;}
+.tel-key.tel-ok:disabled{opacity:.4;}
+.tel-fields{
+  padding:0 16px 8px;
+  display:none;
+}
+.tel-fields.show{display:block;}
+.tel-field-row{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 0;border-bottom:1px solid var(--border);
+}
+.tel-field-row:last-child{border-bottom:none;}
+.tel-field-label{font-size:12px;color:var(--text2);width:70px;flex-shrink:0;font-weight:600;}
+.tel-field-val{
+  flex:1;font-size:16px;padding:7px 10px;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  background:var(--surface);color:var(--text);
+}
+.tel-confirm-btn{
+  display:block;width:calc(100% - 32px);margin:8px 16px 4px;
+  padding:16px;background:var(--text);color:var(--surface);
+  border:none;border-radius:var(--radius-lg);
+  font-size:17px;font-weight:800;cursor:pointer;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+}
+.tel-confirm-btn:active{opacity:.85;}
+.admin-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:#1a1a1a;color:#fff;margin-left:6px;vertical-align:middle;}
+.admin-bar{display:flex;align-items:center;gap:8px;padding:7px 14px;background:#1a1a1a;color:#fff;font-size:12px;}
+.admin-bar-msg{flex:1;font-size:11px;opacity:.8;}
+.logout-btn{font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;cursor:pointer;}
+.logout-btn:hover{background:rgba(255,255,255,.1);}
+
+/* ===== FIREBASE CONFIG NOTICE ===== */
+.config-notice{
+  margin:16px;padding:14px 16px;
+  background:var(--amber-bg);border:1px solid var(--amber-bd);
+  border-radius:var(--radius-lg);font-size:13px;line-height:1.7;
+}
+.config-notice strong{font-weight:700;display:block;margin-bottom:4px;}
+.config-notice code{
+  display:block;background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;padding:8px 10px;font-size:11px;
+  font-family:monospace;margin-top:8px;word-break:break-all;
+  color:var(--text2);
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:480px){
+  .menu-grid{grid-template-columns:1fr;}
+  .menu-card.full{grid-column:1;}
+}
 
 /* ===== WIZARD ===== */
-.wiz-wrap{height:100vh;display:flex;flex-direction:column;background:#f5f4f0;overflow:hidden;}
-.wiz-hdr{background:#fff;border-bottom:1px solid #e0ddd5;flex-shrink:0;}
-.wiz-hdr-row{display:flex;align-items:center;gap:10px;padding:12px 16px;}
-.wiz-back{width:44px;height:44px;border-radius:50%;border:none;background:#f0efe9;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.wiz-title{font-size:17px;font-weight:800;}
-.wiz-step-lbl{font-size:12px;color:#666;margin-top:2px;}
-.wiz-prog-bg{height:4px;background:#e0ddd5;}
-.wiz-prog-bar{height:4px;background:#1a1a1a;transition:width .3s;}
+.wiz-screen{
+  min-height:100vh;display:flex;flex-direction:column;
+  background:var(--bg);
+}
+.wiz-header{
+  padding:14px 16px 10px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+}
+.wiz-back{
+  width:40px;height:40px;border-radius:50%;border:none;
+  background:var(--surface2);font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;
+  flex-shrink:0;color:var(--text);
+}
+.wiz-back:active{transform:scale(.92);}
+.wiz-header-info{flex:1;}
+.wiz-title{font-size:17px;font-weight:800;letter-spacing:-.01em;}
+.wiz-step-label{font-size:12px;color:var(--text2);margin-top:2px;}
+.wiz-progress{
+  height:4px;background:var(--border);
+}
+.wiz-progress-bar{
+  height:4px;background:var(--text);
+  transition:width .3s ease;
+}
+.wiz-body{
+  flex:1;padding:24px 20px 16px;
+  display:flex;flex-direction:column;gap:16px;
+  overflow-y:auto;
+}
+.wiz-section-title{
+  font-size:22px;font-weight:800;letter-spacing:-.02em;
+  line-height:1.3;
+}
+.wiz-section-sub{
+  font-size:14px;color:var(--text2);margin-top:4px;line-height:1.6;
+}
 
-/* tel step 専用 */
-.tel-disp{background:#fff;text-align:center;padding:14px 20px 10px;flex-shrink:0;border-bottom:1px solid #e0ddd5;}
-.tel-num{font-size:34px;font-weight:800;letter-spacing:.08em;color:#1a1a1a;min-height:46px;display:flex;align-items:center;justify-content:center;}
-.tel-num.empty{font-size:20px;color:#ccc;font-weight:400;}
-.tel-hint{font-size:12px;color:#999;margin-top:4px;}
-.tel-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 14px 4px;flex-shrink:0;}
-.tel-key{height:68px;border-radius:12px;border:1px solid #ccc9be;background:#fff;font-size:26px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;}
-.tel-key:active{background:#f0efe9;}
-.tel-key-sub{font-size:9px;font-weight:400;color:#999;letter-spacing:.06em;}
-.tel-del{background:#f0efe9;color:#666;font-size:20px;}
-.tel-result{padding:8px 14px;flex-shrink:0;min-height:62px;}
-.tel-found{background:#e8f5ea;border:1px solid #90c896;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;}
-.tel-new{background:#fdf3d8;border:1px solid #e8c96a;border-radius:10px;padding:10px 14px;}
-.tel-empty{padding:10px 14px;font-size:12px;color:#999;text-align:center;}
+/* ウィザード テンキー */
+.wiz-tel-display{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:16px 20px;
+  text-align:center;
+}
+.wiz-tel-number{
+  font-size:36px;font-weight:800;letter-spacing:.08em;
+  color:var(--text);min-height:52px;display:flex;
+  align-items:center;justify-content:center;
+}
+.wiz-tel-number.empty{color:var(--border2);font-size:22px;font-weight:400;letter-spacing:.04em;}
+.wiz-tel-hint{font-size:12px;color:var(--text2);margin-top:6px;}
 
-/* wizard other steps */
-.wiz-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 18px 16px;}
-.wiz-section-title{font-size:22px;font-weight:800;margin-bottom:16px;line-height:1.3;}
-.wiz-field{background:#fff;border:1px solid #e0ddd5;border-radius:12px;overflow:hidden;margin-bottom:12px;}
-.wiz-row{display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #e0ddd5;}
-.wiz-row:last-child{border-bottom:none;}
-.wiz-lbl{font-size:13px;color:#666;width:80px;flex-shrink:0;font-weight:600;padding:14px 0;}
-.wiz-inp{flex:1;font-size:17px;font-weight:500;padding:14px 8px;border:none;background:transparent;color:#1a1a1a;outline:none;width:100%;}
-.wiz-inp::placeholder{color:#ccc;font-weight:400;font-size:15px;}
-.wiz-sel{flex:1;font-size:17px;font-weight:500;padding:14px 8px;border:none;background:transparent;color:#1a1a1a;outline:none;-webkit-appearance:none;}
-.wiz-confirm-card{background:#fff;border:1px solid #e0ddd5;border-radius:12px;overflow:hidden;margin-bottom:14px;}
-.wiz-confirm-row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #e0ddd5;}
+.wiz-keypad{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+}
+.wiz-key{
+  height:72px;border-radius:14px;
+  border:1px solid var(--border2);background:var(--surface);
+  font-size:28px;font-weight:700;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transition:background .08s,transform .08s;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;
+  color:var(--text);user-select:none;
+}
+.wiz-key:active{background:var(--surface2);transform:scale(.93);}
+.wiz-key-sub{font-size:10px;font-weight:400;color:var(--text3);letter-spacing:.06em;}
+.wiz-key.wiz-del{background:var(--surface2);color:var(--text2);font-size:22px;}
+.wiz-key.wiz-del:active{background:var(--border);}
+
+/* ウィザード 確認カード */
+.wiz-confirm-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;
+}
+.wiz-confirm-row{
+  display:flex;align-items:center;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+}
 .wiz-confirm-row:last-child{border-bottom:none;}
-.wiz-confirm-lbl{font-size:13px;color:#666;width:80px;flex-shrink:0;font-weight:600;}
-.wiz-confirm-val{font-size:16px;font-weight:700;}
-.consent-box{background:#fff;border:2px solid #ccc9be;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:12px;}
-.consent-box.checked{border-color:#2d7a3a;}
-.consent-check{width:28px;height:28px;border-radius:6px;border:2px solid #ccc9be;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;font-weight:800;color:#fff;background:transparent;}
-.consent-check.checked{background:#2d7a3a;border-color:#2d7a3a;}
-.consent-lbl{font-size:15px;font-weight:700;}
-.privacy-box{background:#fff;border:1px solid #e0ddd5;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.9;color:#666;max-height:220px;overflow-y:auto;margin-bottom:14px;}
-.stamp-note{background:#e8f5ea;border:1px solid #90c896;border-radius:10px;padding:12px 14px;font-size:13px;color:#2d7a3a;font-weight:600;line-height:1.7;}
+.wiz-confirm-label{font-size:13px;color:var(--text2);width:80px;flex-shrink:0;font-weight:600;}
+.wiz-confirm-val{font-size:16px;font-weight:700;flex:1;}
 
-.wiz-footer{padding:10px 16px;background:#fff;border-top:1px solid #e0ddd5;flex-shrink:0;}
-.wiz-next-btn{width:100%;padding:18px;background:#1a1a1a;color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:800;min-height:58px;}
-.wiz-next-btn:disabled{opacity:.35;}
-.wiz-next-btn.green{background:#2d7a3a;}
+/* ウィザード フィールド */
+.wiz-field{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;
+}
+.wiz-field-row{
+  display:flex;align-items:center;padding:0 16px;
+  border-bottom:1px solid var(--border);
+}
+.wiz-field-row:last-child{border-bottom:none;}
+.wiz-field-label{font-size:13px;color:var(--text2);width:80px;flex-shrink:0;font-weight:600;padding:14px 0;}
+.wiz-field-input{
+  flex:1;font-size:17px;font-weight:500;padding:14px 8px;
+  border:none;background:transparent;color:var(--text);
+  outline:none;width:100%;
+}
+.wiz-field-input::placeholder{color:var(--border2);font-weight:400;font-size:15px;}
+.wiz-field-select{
+  flex:1;font-size:17px;font-weight:500;padding:14px 8px;
+  border:none;background:transparent;color:var(--text);
+  outline:none;width:100%;-webkit-appearance:none;
+}
 
-/* ===== HISTORY / DRIVERS / EXPORT ===== */
-.list-wrap{padding:0 14px 80px;}
-.list-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#fff;border:1px solid #e0ddd5;border-radius:8px;margin-bottom:7px;}
-.list-title{font-size:14px;font-weight:700;}
-.list-sub{font-size:12px;color:#666;margin-top:2px;}
-.drv-card{background:#fff;border:1px solid #e0ddd5;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
-.drv-av{width:38px;height:38px;border-radius:50%;background:#e8f0fb;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#1a5fa8;flex-shrink:0;}
-.exp-card{background:#fff;border:1px solid #e0ddd5;border-radius:12px;padding:14px;margin-bottom:10px;}
-.exp-card h4{font-size:14px;font-weight:700;margin-bottom:4px;}
-.exp-card p{font-size:12px;color:#666;margin-bottom:10px;line-height:1.6;}
-.exp-btn{padding:8px 14px;border:1px solid #ccc9be;border-radius:8px;font-size:13px;font-weight:600;background:#f0efe9;margin-right:6px;margin-bottom:4px;}
-.section-lbl{font-size:11px;font-weight:700;color:#666;padding:10px 16px 4px;letter-spacing:.06em;}
+/* ウィザード フッターボタン */
+.wiz-footer{
+  padding:12px 20px env(safe-area-inset-bottom,12px);
+  background:var(--surface);border-top:1px solid var(--border);
+}
+.wiz-next-btn{
+  width:100%;padding:18px;
+  background:var(--text);color:var(--surface);
+  border:none;border-radius:var(--radius-lg);
+  font-size:18px;font-weight:800;cursor:pointer;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;
+  letter-spacing:-.01em;
+}
+.wiz-next-btn:active{opacity:.85;transform:scale(.98);}
+.wiz-next-btn:disabled{opacity:.35;transform:none;}
+.wiz-next-btn.stamp{background:var(--green);border-color:var(--green);}
+.wiz-next-btn.stamp:active{opacity:.85;}
 
-/* ===== PIN ===== */
-.pin-disp{display:flex;justify-content:center;gap:14px;margin:16px 0;}
-.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid #ccc9be;}
-.pin-dot.on{background:#1a1a1a;border-color:#1a1a1a;}
-.pin-dot.err{background:#b02020;border-color:#b02020;}
-.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;margin:0 auto;}
-.pin-key{height:58px;border-radius:10px;border:1px solid #ccc9be;background:#fff;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;}
-.pin-key:active{background:#f0efe9;}
-.pin-del{background:#f0efe9;color:#666;font-size:18px;}
-.pin-zero{grid-column:2;}
-.pin-err{font-size:12px;color:#b02020;text-align:center;margin-top:8px;min-height:18px;}
+/* DB照合結果 */
+.wiz-found-card{
+  background:var(--green-bg);border:1px solid var(--green-bd);
+  border-radius:var(--radius-lg);padding:16px 18px;
+}
+.wiz-found-name{font-size:22px;font-weight:800;color:var(--green);}
+.wiz-found-sub{font-size:14px;color:var(--text2);margin-top:4px;line-height:1.7;}
+.wiz-new-badge{
+  display:inline-block;font-size:11px;font-weight:700;
+  padding:3px 9px;border-radius:999px;
+  background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd);
+  margin-bottom:8px;
+}
 
-@media(max-width:480px){.menu-grid{grid-template-columns:1fr;}.menu-card.full{grid-column:1;}}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<div id="mc"></div>
+<div id="app">
+  <div id="root"></div>
+</div>
 
+<!-- MODAL CONTAINER (outside root for z-index) -->
+<div id="modal-container"></div>
 
 <script>
 // ============================================================
-// FIREBASE CONFIG
+//  ★ FIREBASE CONFIG ★
+//  Firebaseコンソール > プロジェクト設定 > マイアプリ から
+//  コピーしたconfigに書き換えてください
 // ============================================================
-// Firebase設定（現在未使用）
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA5wKvTnqeZ0zug5Jgmwklw7hOlR91zZYc",
+  authDomain: "kawaguchi-uketsuke.firebaseapp.com",
+  databaseURL: "https://kawaguchi-uketsuke-default-rtdb.firebaseio.com",
+  projectId: "kawaguchi-uketsuke",
+  storageBucket: "kawaguchi-uketsuke.firebasestorage.app",
+  messagingSenderId: "332721520087",
+  appId: "1:332721520087:web:4130e818983bfeffb0df92"
+};
+const FIREBASE_CONFIGURED = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
 
 // ============================================================
-// CONSTANTS
+//  CONSTANTS
 // ============================================================
-var SHAKAKU = ['2t','4t','大型','コンテナ','軽'];
-var TSUMI = ['バラ','PL'];
-var LSRC = ['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'];
-var ADMIN_PASS_KEY = 'kw_admin_pw';
-var PIN_KEY = 'kw_pin';
-var SESSION_KEY = 'kw_sess';
-var DB_KEY = 'kw_db_v5';
-var DR_KEY = 'kw_dr_v5';
+const SHAKAKU = ['2t','4t','大型','コンテナ','軽'];
+const TSUMI   = ['バラ','PL'];
+const LOTTE_SRC = ['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'];
 
 // ============================================================
-// HELPERS
+//  FIREBASE / LOCAL STORAGE ABSTRACTION
 // ============================================================
-function todayKey() {
-  var d = new Date();
-  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+let fbDb = null;
+let syncStatus = 'offline'; // 'live' | 'offline'
+
+function initFirebase() {
+  if (!FIREBASE_CONFIGURED) return;
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbDb = firebase.database();
+    syncStatus = 'live';
+    // Listen for realtime updates from Firebase
+    fbDb.ref('kawaguchi').on('value', snap => {
+      const data = snap.val();
+      if (!data) return;
+      if (data.db) {
+        S.db = data.db;
+        // Ensure today exists
+        ensureDay(S.db, todayKey());
+      }
+      if (data.drivers) S.drivers = data.drivers;
+      if (!S.modal) render();
+    });
+  } catch(e) {
+    console.warn('Firebase init failed:', e);
+    syncStatus = 'offline';
+  }
 }
-function pad(n){ return String(n).padStart(2,'0'); }
-function fmtKey(k) {
-  var p = k.split('-');
-  var wd = ['日','月','火','水','木','金','土'];
-  var dt = new Date(+p[0], +p[1]-1, +p[2]);
-  return p[0]+'年'+p[1]+'月'+p[2]+'日（'+wd[dt.getDay()]+'）';
+
+function remoteSave() {
+  if (!fbDb) { localSave(); return; }
+  try {
+    fbDb.ref('kawaguchi').set({ db: S.db, drivers: S.drivers });
+  } catch(e) {
+    localSave();
+  }
 }
-function nowStr() {
-  var d = new Date();
-  return pad(d.getHours()) + ':' + pad(d.getMinutes());
+
+function localSave() {
+  try {
+    localStorage.setItem('kw_db_v5', JSON.stringify(S.db));
+    localStorage.setItem('kw_dr_v5', JSON.stringify(S.drivers));
+  } catch(e) {}
 }
-function nowFull() {
-  var d = new Date();
-  return (d.getMonth()+1)+'/'+d.getDate()+' '+nowStr();
+
+function save() {
+  localSave();   // always save locally as backup
+  remoteSave();  // also push to Firebase if configured
 }
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function loadLocal() {
+  let db={}, drivers=[];
+  try { db = JSON.parse(localStorage.getItem('kw_db_v5')||'{}'); } catch{}
+  try { drivers = JSON.parse(localStorage.getItem('kw_dr_v5')||'[]'); } catch{}
+  return {db, drivers};
 }
-function mkNRow(no) {
-  return {id:uid(),no:no,fuda:'',company:'',name:'',tel:'',car:'',shakaku:'2t',tsumi:'バラ',nyuuko:'',shukko:'',biko:'',deleted:false,editLog:[]};
+
+// ============================================================
+//  HELPERS
+// ============================================================
+function todayKey(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-function mkLRow(no) {
-  return {id:uid(),no:no,company:'',name:'',tel:'',car:'',shakaku:'2t',order:'',type:'入荷',src:'狭山工場',srcOther:'',tochaku:'',basu:'',sakuEnd:'',shuppatsu:'',deleted:false,editLog:[]};
+function fmtKey(k){
+  const[y,m,d]=k.split('-');
+  const wd=['日','月','火','水','木','金','土'];
+  const dt=new Date(+y,+m-1,+d);
+  return `${y}年${m}月${d}日（${wd[dt.getDay()]}）`;
 }
+function nowStr(){
+  const d=new Date();
+  return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+function nowFull(){
+  const d=new Date();
+  return `${d.getMonth()+1}/${d.getDate()} ${nowStr()}`;
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+
+function mkNRow(no){ return {id:uid(),no,fuda:'',company:'',name:'',tel:'',car:'',shakaku:'2t',tsumi:'バラ',nyuuko:'',shukko:'',biko:'',deleted:false,editLog:[]}; }
+function mkLRow(no){ return {id:uid(),no,company:'',name:'',tel:'',car:'',shakaku:'2t',order:'',type:'入荷',src:'狭山工場',srcOther:'',tochaku:'',basu:'',sakuEnd:'',shuppatsu:'',deleted:false,editLog:[]}; }
+
 function ensureDay(db, key) {
   if (!db[key]) {
     db[key] = {
-      nyuuka: Array.from({length:20}, function(_,i){ return mkNRow(i+1); }),
-      shukka: Array.from({length:20}, function(_,i){ return mkNRow(i+1); }),
-      lotte:  Array.from({length:15}, function(_,i){ return mkLRow(i+1); }),
+      nyuuka: Array.from({length:20},(_,i)=>mkNRow(i+1)),
+      shukka: Array.from({length:20},(_,i)=>mkNRow(i+1)),
+      lotte:  Array.from({length:15},(_,i)=>mkLRow(i+1)),
       created: key
     };
   }
+  // Ensure arrays exist (for older data)
+  ['nyuuka','shukka'].forEach(t=>{ if(!db[key][t]) db[key][t]=Array.from({length:20},(_,i)=>mkNRow(i+1)); });
+  if (!db[key].lotte) db[key].lotte = Array.from({length:15},(_,i)=>mkLRow(i+1));
   return db[key];
 }
-function toMin(t) {
-  if (!t) return null;
-  var p = t.split(':');
-  return +p[0]*60 + +p[1];
-}
-function elapsed(t) {
-  if (!t) return null;
-  var b = toMin(t);
-  var n = new Date();
-  return n.getHours()*60 + n.getMinutes() - b;
-}
-function timeOk(a,b) {
-  if (!a||!b) return true;
-  return toMin(a) <= toMin(b);
-}
 
 // ============================================================
-// AUTH
+//  STATE
 // ============================================================
-function getAdminPass(){ return localStorage.getItem(ADMIN_PASS_KEY)||'kawaguchi2024'; }
-function getPin(){ return localStorage.getItem(PIN_KEY)||null; }
-function setPin(p){ if(p) localStorage.setItem(PIN_KEY,p); else localStorage.removeItem(PIN_KEY); }
-function isAdmin(){ return sessionStorage.getItem(SESSION_KEY)==='1'; }
-function doLogin(pw){ if(pw===getAdminPass()){ sessionStorage.setItem(SESSION_KEY,'1'); return true; } return false; }
-function doLogout(){ sessionStorage.removeItem(SESSION_KEY); S.screen='home'; render(); }
+const {db: initDb, drivers: initDrivers} = loadLocal();
+// ===== ADMIN AUTH =====
+const DEFAULT_ADMIN_PASS = "kawaguchi2024";
+const SESSION_KEY = "kw_admin_session";
+const PIN_STORAGE_KEY = "kw_delete_pin";
+const ADMIN_PW_STORAGE_KEY = "kw_admin_pw";
 
-// ============================================================
-// DATA
-// ============================================================
-var S = {
+function getAdminPass(){
+  return localStorage.getItem(ADMIN_PW_STORAGE_KEY) || DEFAULT_ADMIN_PASS;
+}
+function getDeletePin(){
+  return localStorage.getItem(PIN_STORAGE_KEY) || null; // null = PIN未設定
+}
+function setDeletePin(pin){
+  if(pin) localStorage.setItem(PIN_STORAGE_KEY, pin);
+  else localStorage.removeItem(PIN_STORAGE_KEY);
+}
+function setAdminPass(pw){
+  if(pw) localStorage.setItem(ADMIN_PW_STORAGE_KEY, pw);
+}
+function isAdminLoggedIn(){
+  return sessionStorage.getItem(SESSION_KEY) === "1";
+}
+function adminLogin(pass){
+  if(pass === getAdminPass()){ sessionStorage.setItem(SESSION_KEY,"1"); return true; }
+  return false;
+}
+function adminLogout(){
+  sessionStorage.removeItem(SESSION_KEY);
+  S.screen = "home";
+  render();
+}
+
+// ===== WIZARD STATE =====
+const WIZ = {
+  active: false,
+  type: 'nyuuka',   // nyuuka | shukka
+  step: 1,          // 1=電話 2=会社名・氏名 3=車番・車格 4=確認
+  tel: '',
+  company: '',
+  name: '',
+  car: '',
+  shakaku: '2t',
+  fuda: '',
+  biko: '',
+  driver: null,     // DB照合結果
+};
+
+const S = {
   screen: 'home',
   viewDate: todayKey(),
   editMode: false,
@@ -291,421 +858,1403 @@ var S = {
   modalData: {},
   alertWarn: 60,
   alertDanger: 90,
-  db: {},
-  drivers: []
+  db: initDb,
+  drivers: initDrivers,
 };
-var fbDb = null;
-var syncStatus = 'local';
-
-try { S.db = JSON.parse(localStorage.getItem(DB_KEY)||'{}'); } catch(e){}
-try { S.drivers = JSON.parse(localStorage.getItem(DR_KEY)||'[]'); } catch(e){}
 ensureDay(S.db, todayKey());
-
-function save() {
-  try { localStorage.setItem(DB_KEY, JSON.stringify(S.db)); } catch(e){}
-  try { localStorage.setItem(DR_KEY, JSON.stringify(S.drivers)); } catch(e){}
-}
-function initFb() {
-  // Firebase無効（ローカルモード）
-  syncStatus = 'offline';
-}
-
-var _telState = {type:'',id:'',buf:''};
-function openTelModal(type,id){
-  var day=S.db[S.viewDate]; var r=day[type].find(function(x){return x.id===id;});
-  if(!r)return;
-  _telState={type:type,id:id,buf:(r.tel||'').replace(/[-\s]/g,'')};
-  renderTelModal();
-}
-function renderTelModal(){
-  mc.innerHTML='';
-  var ts=_telState; var buf=ts.buf;
-  var day=S.db[S.viewDate]; var r=day[ts.type].find(function(x){return x.id===ts.id;});
-  if(!r)return;
-  var disp=buf.length>0?buf.replace(/^(\d{3})(\d{4})(\d{0,4})$/,'$1-$2-$3').replace(/-$/,''):'';
-  var drv=buf.length>=10?findDriver(buf):null;
-
-  var overlay=el('div'); overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:9998;';
-  var modal=el('div'); modal.style.cssText='background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:520px;padding:0 0 env(safe-area-inset-bottom,12px);max-height:94vh;overflow-y:auto;';
-
-  // header
-  var hdr=el('div'); hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid #e0ddd5;';
-  var ht=el('div'); ht.style.cssText='font-size:17px;font-weight:800;'; ht.textContent='電話番号を入力'; hdr.appendChild(ht);
-  var hc=el('button'); hc.style.cssText='width:36px;height:36px;border-radius:50%;border:none;background:#f0efe9;font-size:18px;color:#666;display:flex;align-items:center;justify-content:center;';
-  hc.textContent='✕'; hc.onclick=function(){mc.innerHTML='';};
-  hdr.appendChild(hc); modal.appendChild(hdr);
-
-  // display
-  var dsp=el('div'); dsp.style.cssText='text-align:center;padding:14px 20px 8px;';
-  var num=el('div'); num.style.cssText='font-size:'+(buf.length===0?'20px':'34px')+';font-weight:800;letter-spacing:.08em;color:'+(buf.length===0?'#ccc':'#1a1a1a')+';min-height:46px;display:flex;align-items:center;justify-content:center;';
-  num.textContent=buf.length===0?'090-0000-0000':disp;
-  var hint=el('div'); hint.style.cssText='font-size:12px;color:#999;margin-top:4px;'; hint.textContent=buf.length+'/11桁';
-  dsp.appendChild(num); dsp.appendChild(hint); modal.appendChild(dsp);
-
-  // keypad
-  var kp=el('div'); kp.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:6px 14px 4px;';
-  var kl=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ']];
-  kl.forEach(function(k){
-    var btn=el('button'); btn.style.cssText='height:62px;border-radius:10px;border:1px solid #ccc9be;background:#fff;font-size:24px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;';
-    var num2=document.createTextNode(k[0]); btn.appendChild(num2);
-    if(k[1]){var sub=el('span'); sub.style.cssText='font-size:9px;font-weight:400;color:#999;'; sub.textContent=k[1]; btn.appendChild(sub);}
-    (function(n){ btn.onclick=function(){ if(_telState.buf.length<11){_telState.buf+=n; renderTelModal();} }; })(k[0]);
-    kp.appendChild(btn);
-  });
-  var sp2=el('button'); sp2.style.visibility='hidden'; kp.appendChild(sp2);
-  var z=el('button'); z.style.cssText='height:62px;border-radius:10px;border:1px solid #ccc9be;background:#fff;font-size:24px;font-weight:700;'; z.textContent='0';
-  z.onclick=function(){if(_telState.buf.length<11){_telState.buf+='0';renderTelModal();}};
-  kp.appendChild(z);
-  var del=el('button'); del.style.cssText='height:62px;border-radius:10px;border:1px solid #ccc9be;background:#f0efe9;color:#666;font-size:20px;'; del.textContent='⌫';
-  del.onclick=function(){_telState.buf=_telState.buf.slice(0,-1);renderTelModal();};
-  kp.appendChild(del);
-  modal.appendChild(kp);
-
-  // result
-  if(buf.length>=10){
-    var res=el('div'); res.style.cssText='padding:8px 14px;';
-    if(drv){
-      var fnd=el('div'); fnd.style.cssText='background:#e8f5ea;border:1px solid #90c896;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;';
-      var ico=el('span'); ico.style.cssText='font-size:20px;color:#2d7a3a;'; ico.textContent='✓';
-      var info=el('div'); info.innerHTML='<div style="font-size:15px;font-weight:800;color:#2d7a3a;">'+esc(drv.name)+'</div><div style="font-size:12px;color:#666;">'+esc(drv.company||'')+' ／ 車番:'+esc(drv.car||'―')+'</div>';
-      fnd.appendChild(ico); fnd.appendChild(info); res.appendChild(fnd);
-    } else {
-      var nw=el('div'); nw.style.cssText='background:#fdf3d8;border:1px solid #e8c96a;border-radius:10px;padding:10px 14px;';
-      nw.innerHTML='<div style="font-size:14px;font-weight:700;color:#8a5c00;">新規ドライバー</div><div style="font-size:12px;color:#8a5c00;">次の画面で情報を入力してください</div>';
-      res.appendChild(nw);
-    }
-    modal.appendChild(res);
-  }
-
-  // フィールド
-  if(buf.length>=10){
-    var fields2=el('div'); fields2.style.cssText='padding:0 14px 8px;';
-    var sub2=el('div'); sub2.style.cssText='font-size:12px;color:#666;padding:4px 0 6px;font-weight:600;'; sub2.textContent='確認・修正してください';
-    fields2.appendChild(sub2);
-    var fbox=el('div'); fbox.style.cssText='background:#fff;border:1px solid #e0ddd5;border-radius:10px;overflow:hidden;';
-    [['会社名','tf-company','text',r.company||''],['氏名','tf-name','text',r.name||''],['車番','tf-car','text',r.car||'']].forEach(function(f,i){
-      var row=el('div'); row.style.cssText='display:flex;align-items:center;padding:0 14px;'+(i>0?'border-top:1px solid #e0ddd5;':'');
-      var lbl=el('div'); lbl.style.cssText='font-size:12px;color:#666;width:60px;flex-shrink:0;font-weight:600;padding:12px 0;'; lbl.textContent=f[0];
-      var inp=document.createElement('input'); inp.type=f[2]; inp.id=f[1]; inp.value=f[3]; inp.style.cssText='flex:1;font-size:16px;padding:12px 8px;border:none;background:transparent;outline:none;';
-      row.appendChild(lbl); row.appendChild(inp); fbox.appendChild(row);
-    });
-    // shakaku
-    var skRow=el('div'); skRow.style.cssText='display:flex;align-items:center;padding:0 14px;border-top:1px solid #e0ddd5;';
-    var skLbl=el('div'); skLbl.style.cssText='font-size:12px;color:#666;width:60px;flex-shrink:0;font-weight:600;padding:12px 0;'; skLbl.textContent='車格';
-    var skSel=document.createElement('select'); skSel.id='tf-shakaku'; skSel.style.cssText='flex:1;font-size:16px;padding:12px 8px;border:none;background:transparent;';
-    SHAKAKU.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;if(r.shakaku===s)o.selected=true;skSel.appendChild(o);});
-    skRow.appendChild(skLbl); skRow.appendChild(skSel); fbox.appendChild(skRow);
-    fields2.appendChild(fbox);
-    modal.appendChild(fields2);
-  }
-
-  // confirm button
-  var cfm=el('button'); cfm.style.cssText='display:block;width:calc(100% - 28px);margin:8px 14px 4px;padding:16px;background:'+(buf.length>=10?'#1a1a1a':'#ccc')+';color:#fff;border:none;border-radius:12px;font-size:17px;font-weight:800;';
-  cfm.textContent=buf.length>=10?'確定して受付に反映':'電話番号を入力してください';
-  if(buf.length>=10){
-    cfm.onclick=function(){
-      var company=document.getElementById('tf-company')?.value?.trim()||'';
-      var name=document.getElementById('tf-name')?.value?.trim()||'';
-      var car=document.getElementById('tf-car')?.value?.trim()||'';
-      var shakaku=document.getElementById('tf-shakaku')?.value||'2t';
-      r.tel=buf; if(company)r.company=company; if(name)r.name=name; if(car)r.car=car; r.shakaku=shakaku;
-      save(); mc.innerHTML=''; render();
-    };
-  }
-  modal.appendChild(cfm);
-  var sp3=el('div'); sp3.style.height='8px'; modal.appendChild(sp3);
-
-  overlay.appendChild(modal); mc.appendChild(overlay);
-}
+localSave();
 
 // ============================================================
-// WIZARD
+//  STATUS LOGIC
 // ============================================================
-var WIZ = {
-  active:false, type:'nyuuka', step:'tel',
-  tel:'', company:'', name:'', car:'', shakaku:'2t', tsumi:'バラ', fuda:'',
-  order:'', nyukaType:'入荷', src:'狭山工場', srcOther:'',
-  driver:null, isNew:false, consent:false
-};
-function wizFlow(){
-  if(WIZ.type==='lotte'){
-    return WIZ.isNew?['tel','name','car','lotte_info','consent','final']:['tel','confirm','lotte_info','final'];
-  }
-  return WIZ.isNew?['tel','name','car','consent','final']:['tel','confirm','final'];
-}
-function startWiz(type){
-  WIZ.active=true; WIZ.type=type; WIZ.step='tel';
-  WIZ.tel=''; WIZ.company=''; WIZ.name=''; WIZ.car=''; WIZ.shakaku='2t'; WIZ.tsumi='バラ'; WIZ.fuda='';
-  WIZ.order=''; WIZ.nyukaType='入荷'; WIZ.src='狭山工場'; WIZ.srcOther='';
-  WIZ.driver=null; WIZ.isNew=false; WIZ.consent=false;
-  render();
-}
-function wizBack(){
-  var flow=wizFlow(); var idx=flow.indexOf(WIZ.step);
-  if(idx<=0){WIZ.active=false;render();return;}
-  WIZ.step=flow[idx-1]; render();
-}
-function wizNext(){
-  var flow=wizFlow(); var idx=flow.indexOf(WIZ.step);
-  if(WIZ.step==='tel'){
-    var d=findDriver(WIZ.tel);
-    if(d){ WIZ.driver=d; WIZ.isNew=false; WIZ.company=d.company||''; WIZ.name=d.name||''; WIZ.car=d.car||''; WIZ.shakaku=d.shakaku||'2t'; WIZ.step='confirm'; }
-    else { WIZ.driver=null; WIZ.isNew=true; WIZ.step='name'; }
-  } else if(WIZ.step==='confirm'){
-    var c=document.getElementById('wc-company'); var n=document.getElementById('wc-name'); var car=document.getElementById('wc-car'); var sh=document.getElementById('wc-shakaku');
-    if(c)WIZ.company=c.value.trim(); if(n)WIZ.name=n.value.trim(); if(car)WIZ.car=car.value.trim(); if(sh)WIZ.shakaku=sh.value;
-    WIZ.step=flow[idx+1];
-  } else if(WIZ.step==='name'){
-    var c2=document.getElementById('wn-company'); var n2=document.getElementById('wn-name');
-    if(c2)WIZ.company=c2.value.trim(); if(n2)WIZ.name=n2.value.trim();
-    WIZ.step='car';
-  } else if(WIZ.step==='car'){
-    var car2=document.getElementById('wcar-car'); var sh2=document.getElementById('wcar-shakaku'); var ts=document.getElementById('wcar-tsumi'); var fd=document.getElementById('wcar-fuda');
-    if(car2)WIZ.car=car2.value.trim(); if(sh2)WIZ.shakaku=sh2.value; if(ts)WIZ.tsumi=ts.value; if(fd)WIZ.fuda=fd.value;
-    WIZ.step=flow[idx+1];
-  } else if(WIZ.step==='lotte_info'){
-    var ord=document.getElementById('wl-order'); var typ=document.getElementById('wl-type'); var src=document.getElementById('wl-src'); var sro=document.getElementById('wl-srcother');
-    if(ord)WIZ.order=ord.value.trim(); if(typ)WIZ.nyukaType=typ.value; if(src)WIZ.src=src.value; if(sro)WIZ.srcOther=sro.value.trim();
-    WIZ.step=flow[idx+1];
-  } else if(WIZ.step==='consent'){
-    WIZ.step='final';
-  }
-  render();
-}
-function wizComplete(){
-  var day=todayData();
-  if(WIZ.type==='lotte'){
-    var arr=day.lotte; var slot=arr.find(function(r){return !r.company&&!r.tochaku&&!r.deleted;});
-    var r=slot||mkLRow(arr.length+1);
-    r.tel=WIZ.tel; r.company=WIZ.company; r.name=WIZ.name; r.car=WIZ.car; r.shakaku=WIZ.shakaku;
-    r.order=WIZ.order; r.type=WIZ.nyukaType; r.src=WIZ.src; r.srcOther=WIZ.src==='その他'?WIZ.srcOther:'';
-    r.tochaku=nowStr(); r.basu=''; r.sakuEnd=''; r.shuppatsu='';
-    if(!slot)arr.push(r);
-  } else {
-    var arr2=day[WIZ.type]; var slot2=arr2.find(function(r){return !r.company&&!r.nyuuko&&!r.deleted;});
-    var r2=slot2||mkNRow(arr2.length+1);
-    r2.tel=WIZ.tel; r2.company=WIZ.company; r2.name=WIZ.name; r2.car=WIZ.car; r2.shakaku=WIZ.shakaku; r2.tsumi=WIZ.tsumi||'バラ'; r2.fuda=WIZ.fuda||'';
-    r2.nyuuko=nowStr();
-    if(!slot2)arr2.push(r2);
-  }
-  if(WIZ.isNew&&WIZ.consent&&WIZ.tel&&WIZ.name){
-    S.drivers.push({id:uid(),company:WIZ.company,name:WIZ.name,tel:WIZ.tel,car:WIZ.car,shakaku:WIZ.shakaku});
-  }
-  if(WIZ.driver){
-    var didx=S.drivers.findIndex(function(d){return d.tel===WIZ.tel;});
-    if(didx>=0) S.drivers[didx]=Object.assign(S.drivers[didx],{company:WIZ.company,name:WIZ.name,car:WIZ.car,shakaku:WIZ.shakaku});
-  }
-  save();
-  WIZ.active=false; S.viewDate=todayKey(); S.screen=WIZ.type; render();
-}
+function toMin(t){if(!t)return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
+function elapsed(t){if(!t)return null;const b=toMin(t);const n=new Date();return n.getHours()*60+n.getMinutes()-b;}
+function timeOk(a,b){if(!a||!b)return true;return toMin(a)<=toMin(b);}
 
-function renderWiz(){
-  root.innerHTML='';
-  var label=WIZ.type==='nyuuka'?'入荷受付':WIZ.type==='shukka'?'出荷受付':'ロッテ様受付';
-  var flow=wizFlow(); var idx=flow.indexOf(WIZ.step); var prog=Math.round((idx+1)/flow.length*100);
-  var stepLabels={tel:'電話番号入力',confirm:'登録情報の確認',name:'会社名・お名前',car:'車番・車格',lotte_info:'オーダー情報',consent:'個人情報の取り扱い',final:'受付内容の確認'};
-
-  // tel ステップ専用レイアウト
-  if(WIZ.step==='tel'){
-    var buf=WIZ.tel;
-    var disp=buf.length>0?buf.replace(/^(\d{3})(\d{4})(\d{0,4})$/,'$1-$2-$3').replace(/-$/,''):'';
-    var drv=buf.length>=10?findDriver(buf):null;
-
-    var wrap=el('div','wiz-wrap');
-
-    // header
-    var hdr=el('div','wiz-hdr');
-    var hrow=el('div','wiz-hdr-row');
-    var wb=el('button','wiz-back'); wb.textContent='←'; wb.onclick=wizBack; hrow.appendChild(wb);
-    var hi=el('div'); hi.innerHTML='<div class="wiz-title">'+label+' 受付</div><div class="wiz-step-lbl">電話番号入力</div>'; hrow.appendChild(hi);
-    hdr.appendChild(hrow);
-    var pb=el('div','wiz-prog-bg'); var pbar=el('div','wiz-prog-bar'); pbar.style.width=prog+'%'; pb.appendChild(pbar); hdr.appendChild(pb);
-    wrap.appendChild(hdr);
-
-    // tel display (固定)
-    var td2=el('div','tel-disp');
-    var tn=el('div','tel-num'+(buf.length===0?' empty':'')); tn.textContent=buf.length===0?'090-0000-0000':disp;
-    var th2=el('div','tel-hint'); th2.textContent=buf.length+'/11桁';
-    td2.appendChild(tn); td2.appendChild(th2); wrap.appendChild(td2);
-
-    // keypad (固定)
-    var kp2=el('div','tel-keypad');
-    var kl2=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ']];
-    kl2.forEach(function(k){
-      var btn=el('button','tel-key');
-      var n=document.createTextNode(k[0]); btn.appendChild(n);
-      if(k[1]){var sub=el('span','tel-key-sub'); sub.textContent=k[1]; btn.appendChild(sub);}
-      (function(num){ btn.onclick=function(){ if(WIZ.tel.length<11){WIZ.tel+=num;renderWiz();} }; })(k[0]);
-      kp2.appendChild(btn);
-    });
-    var sp4=el('button','tel-key'); sp4.style.visibility='hidden'; kp2.appendChild(sp4);
-    var z2=el('button','tel-key'); z2.textContent='0'; z2.onclick=function(){if(WIZ.tel.length<11){WIZ.tel+='0';renderWiz();}};  kp2.appendChild(z2);
-    var del2=el('button','tel-key tel-del'); del2.textContent='⌫'; del2.onclick=function(){WIZ.tel=WIZ.tel.slice(0,-1);renderWiz();}; kp2.appendChild(del2);
-    wrap.appendChild(kp2);
-
-    // 照合結果 (テンキーの下・固定高さ)
-    var res2=el('div','tel-result');
-    if(buf.length>=10){
-      if(drv){
-        var fnd2=el('div','tel-found');
-        var ico2=el('span'); ico2.style.cssText='font-size:20px;color:#2d7a3a;'; ico2.textContent='✓';
-        var inf2=el('div'); inf2.innerHTML='<div style="font-size:15px;font-weight:800;color:#2d7a3a;">'+esc(drv.name)+'</div><div style="font-size:12px;color:#666;">'+esc(drv.company||'')+'</div>';
-        fnd2.appendChild(ico2); fnd2.appendChild(inf2); res2.appendChild(fnd2);
-      } else {
-        var nw2=el('div','tel-new');
-        nw2.innerHTML='<div style="font-size:14px;font-weight:700;color:#8a5c00;">新規ドライバー</div><div style="font-size:12px;color:#8a5c00;">次の画面で情報を入力してください</div>';
-        res2.appendChild(nw2);
-      }
-    } else {
-      var em=el('div','tel-empty'); em.textContent='電話番号を入力すると登録状況が表示されます'; res2.appendChild(em);
+function rowStatus(r,type){
+  if(r.deleted)return 'deleted';
+  if(type==='lotte'){
+    const times=[r.tochaku,r.basu,r.sakuEnd,r.shuppatsu];
+    const hasAny=times.some(Boolean)||r.company;
+    if(!hasAny)return 'empty';
+    for(let i=1;i<times.length;i++){
+      if(times[i-1]&&times[i]&&toMin(times[i-1])>toMin(times[i]))return 'alert';
     }
-    wrap.appendChild(res2);
+    if(r.shuppatsu)return 'done';
+    if(r.tochaku){const e=elapsed(r.tochaku);if(e>=S.alertDanger)return 'alert';if(e>=S.alertWarn)return 'warn';}
+    return hasAny?'active':'empty';
+  }
+  if(!r.company&&!r.nyuuko)return 'empty';
+  if(r.nyuuko&&r.shukko){if(!timeOk(r.nyuuko,r.shukko))return 'alert';return 'done';}
+  if(r.nyuuko){const e=elapsed(r.nyuuko);if(e>=S.alertDanger)return 'alert';if(e>=S.alertWarn)return 'warn';}
+  return r.company?'active':'empty';
+}
+function dotCls(st){
+  return 'dot dot-'+({empty:'empty',active:'active',warn:'warn',alert:'alert',done:'done',deleted:'del'}[st]||'empty');
+}
+function rowCls(st){
+  return ({alert:'row-alert',warn:'row-warn',done:'row-ok',deleted:'row-deleted'}[st]||'');
+}
+function findDriver(tel){const t=(tel||'').replace(/[-\s]/g,'');return S.drivers.find(d=>d.tel===t);}
+function allDates(){return Object.keys(S.db).filter(k=>k.match(/^\d{4}-\d{2}-\d{2}$/)).sort().reverse();}
+function isToday(){return S.viewDate===todayKey();}
+function canEdit(){return isToday()||S.editMode;}
+function todayData(){return S.db[todayKey()];}
+function viewed(){return S.db[S.viewDate]||ensureDay(S.db,S.viewDate);}
 
-    // footer button
-    var ft=el('div','wiz-footer');
-    var nb=el('button','wiz-next-btn'); nb.textContent=drv?'登録情報を確認する →':'情報を入力する →';
-    if(buf.length<10) nb.disabled=true;
-    nb.onclick=wizNext; ft.appendChild(nb); wrap.appendChild(ft);
-    root.appendChild(wrap);
+// ============================================================
+//  RENDER ENGINE
+// ============================================================
+const root = document.getElementById('root');
+const modalContainer = document.getElementById('modal-container');
+
+function render(){
+  modalContainer.innerHTML = '';
+  if(WIZ.active){ renderWizard(); return; }
+  if(S.modal){ renderModal(); return; }
+  root.innerHTML = '';
+  const adminRequired = ['drivers','history','export'];
+  if(adminRequired.includes(S.screen) && !isAdminLoggedIn()){
+    renderAdminLogin(S.screen);
     return;
   }
+  if(S.screen==='home')       renderHome();
+  else if(S.screen==='nyuuka') renderTable('nyuuka');
+  else if(S.screen==='shukka') renderTable('shukka');
+  else if(S.screen==='lotte')  renderLotte();
+  else if(S.screen==='drivers') renderDrivers();
+  else if(S.screen==='history') renderHistory();
+  else if(S.screen==='export')  renderExport();
+}
 
-  // その他ステップ（共通レイアウト）
-  var wrap2=el('div','wiz-wrap');
-  var hdr2=el('div','wiz-hdr');
-  var hrow2=el('div','wiz-hdr-row');
-  var wb2=el('button','wiz-back'); wb2.textContent='←'; wb2.onclick=wizBack; hrow2.appendChild(wb2);
-  var hi2=el('div'); hi2.innerHTML='<div class="wiz-title">'+label+' 受付</div><div class="wiz-step-lbl">'+(stepLabels[WIZ.step]||WIZ.step)+'</div>'; hrow2.appendChild(hi2);
-  hdr2.appendChild(hrow2);
-  var pb2=el('div','wiz-prog-bg'); var pbar2=el('div','wiz-prog-bar'); pbar2.style.width=prog+'%'; pb2.appendChild(pbar2); hdr2.appendChild(pb2);
-  wrap2.appendChild(hdr2);
+function renderAdminLogin(destScreen){
+  root.innerHTML = `
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">🔐</div>
+      <div class="login-title">管理者ログイン</div>
+      <div class="login-sub">管理者パスワードを入力してください</div>
+      <div class="login-fg">
+        <label>パスワード</label>
+        <input type="password" id="admin-pw-input" placeholder="管理者パスワードを入力"
+          onkeydown="if(event.key==='Enter')doAdminLogin('${destScreen}')">
+      </div>
+      <button class="login-btn" onclick="doAdminLogin('${destScreen}')">ログイン</button>
+      <div class="login-err" id="admin-err"></div>
+      <div style="text-align:center;margin-top:16px;">
+        <button class="back-btn" onclick="go('home')" style="font-size:13px;color:var(--text2);">← ホームに戻る</button>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>document.getElementById('admin-pw-input')?.focus(), 50);
+}
 
-  var body=el('div','wiz-body');
-
-  if(WIZ.step==='confirm'){
-    var stl=el('div','wiz-section-title'); stl.textContent='登録情報を
-確認してください'; body.appendChild(stl);
-    var hint2=el('div'); hint2.style.cssText='font-size:13px;color:#666;margin-bottom:12px;'; hint2.textContent='修正が必要な場合は直接編集できます。'; body.appendChild(hint2);
-    var fbox2=el('div','wiz-field');
-    var telRow=el('div','wiz-row'); var telLbl=el('div','wiz-lbl'); telLbl.textContent='電話番号'; var telVal=el('div'); telVal.style.cssText='font-size:16px;font-weight:700;padding:14px 8px;'; telVal.textContent=WIZ.tel.replace(/^(\d{3})(\d{4})(\d{4})$/,'$1-$2-$3'); telRow.appendChild(telLbl); telRow.appendChild(telVal); fbox2.appendChild(telRow);
-    [['会社名','wc-company',WIZ.company,'（株）〇〇運輸'],['お名前','wc-name',WIZ.name,'山田 太郎'],['車番','wc-car',WIZ.car,'1234']].forEach(function(f){
-      var row=el('div','wiz-row'); var lbl=el('div','wiz-lbl'); lbl.textContent=f[0];
-      var inp=el('input','wiz-inp'); inp.type='text'; inp.id=f[1]; inp.value=f[2]; inp.placeholder=f[3];
-      row.appendChild(lbl); row.appendChild(inp); fbox2.appendChild(row);
-    });
-    var skRow2=el('div','wiz-row'); var skLbl2=el('div','wiz-lbl'); skLbl2.textContent='車格';
-    var skSel2=el('select','wiz-sel'); skSel2.id='wc-shakaku';
-    SHAKAKU.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;if(WIZ.shakaku===s)o.selected=true;skSel2.appendChild(o);});
-    skRow2.appendChild(skLbl2); skRow2.appendChild(skSel2); fbox2.appendChild(skRow2);
-    body.appendChild(fbox2);
-
-  } else if(WIZ.step==='name'){
-    var stl2=el('div','wiz-section-title'); stl2.textContent='会社名と
-お名前を入力'; body.appendChild(stl2);
-    var fbox3=el('div','wiz-field');
-    [['会社名','wn-company',WIZ.company,'（株）〇〇運輸'],['お名前','wn-name',WIZ.name,'山田 太郎']].forEach(function(f){
-      var row=el('div','wiz-row'); var lbl=el('div','wiz-lbl'); lbl.textContent=f[0];
-      var inp=el('input','wiz-inp'); inp.type='text'; inp.id=f[1]; inp.value=f[2]; inp.placeholder=f[3];
-      row.appendChild(lbl); row.appendChild(inp); fbox3.appendChild(row);
-    });
-    body.appendChild(fbox3);
-
-  } else if(WIZ.step==='car'){
-    var stl3=el('div','wiz-section-title'); stl3.textContent='車番と
-車格を入力'; body.appendChild(stl3);
-    var fbox4=el('div','wiz-field');
-    var carRow=el('div','wiz-row'); var carLbl=el('div','wiz-lbl'); carLbl.textContent='車番';
-    var carInp=el('input','wiz-inp'); carInp.type='text'; carInp.id='wcar-car'; carInp.value=WIZ.car; carInp.placeholder='1234';
-    carRow.appendChild(carLbl); carRow.appendChild(carInp); fbox4.appendChild(carRow);
-    var shRow=el('div','wiz-row'); var shLbl=el('div','wiz-lbl'); shLbl.textContent='車格';
-    var shSel3=el('select','wiz-sel'); shSel3.id='wcar-shakaku';
-    SHAKAKU.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;if(WIZ.shakaku===s)o.selected=true;shSel3.appendChild(o);});
-    shRow.appendChild(shLbl); shRow.appendChild(shSel3); fbox4.appendChild(shRow);
-    var tsRow=el('div','wiz-row'); var tsLbl=el('div','wiz-lbl'); tsLbl.textContent='積み方';
-    var tsSel2=el('select','wiz-sel'); tsSel2.id='wcar-tsumi';
-    TSUMI.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;if(WIZ.tsumi===s)o.selected=true;tsSel2.appendChild(o);});
-    tsRow.appendChild(tsLbl); tsRow.appendChild(tsSel2); fbox4.appendChild(tsRow);
-    var fdRow=el('div','wiz-row'); var fdLbl=el('div','wiz-lbl'); fdLbl.textContent='番号札';
-    var fdInp=el('input','wiz-inp'); fdInp.type='number'; fdInp.id='wcar-fuda'; fdInp.value=WIZ.fuda||''; fdInp.placeholder='夜間番号（任意）';
-    fdRow.appendChild(fdLbl); fdRow.appendChild(fdInp); fbox4.appendChild(fdRow);
-    body.appendChild(fbox4);
-
-  } else if(WIZ.step==='lotte_info'){
-    var stl4=el('div','wiz-section-title'); stl4.textContent='オーダー情報を
-入力してください'; body.appendChild(stl4);
-    var fbox5=el('div','wiz-field');
-    var ordRow=el('div','wiz-row'); var ordLbl=el('div','wiz-lbl'); ordLbl.textContent='オーダーNo';
-    var ordInp=el('input','wiz-inp'); ordInp.type='text'; ordInp.id='wl-order'; ordInp.value=WIZ.order; ordInp.placeholder='例: 12345';
-    ordRow.appendChild(ordLbl); ordRow.appendChild(ordInp); fbox5.appendChild(ordRow);
-    var tyRow=el('div','wiz-row'); var tyLbl=el('div','wiz-lbl'); tyLbl.textContent='入荷/出荷';
-    var tySel3=el('select','wiz-sel'); tySel3.id='wl-type';
-    ['入荷','出荷'].forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;if(WIZ.nyukaType===s)o.selected=true;tySel3.appendChild(o);});
-    tyRow.appendChild(tyLbl); tyRow.appendChild(tySel3); fbox5.appendChild(tyRow);
-    var srcRow=el('div','wiz-row'); var srcLbl=el('div','wiz-lbl'); srcLbl.textContent='出発元';
-    var srcSel2=el('select','wiz-sel'); srcSel2.id='wl-src';
-    LSRC.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;if(WIZ.src===s)o.selected=true;srcSel2.appendChild(o);});
-    srcSel2.onchange=function(){WIZ.src=this.value;renderWiz();};
-    srcRow.appendChild(srcLbl); srcRow.appendChild(srcSel2); fbox5.appendChild(srcRow);
-    if(WIZ.src==='その他'){
-      var soRow=el('div','wiz-row'); var soLbl=el('div','wiz-lbl'); soLbl.textContent='その他';
-      var soInp=el('input','wiz-inp'); soInp.type='text'; soInp.id='wl-srcother'; soInp.value=WIZ.srcOther; soInp.placeholder='出発元を入力';
-      soRow.appendChild(soLbl); soRow.appendChild(soInp); fbox5.appendChild(soRow);
-    }
-    body.appendChild(fbox5);
-    var note=el('div'); note.style.cssText='font-size:12px;color:#666;line-height:1.7;padding:4px 0;'; note.textContent='※ バース着車・作業終了・出発時間は一覧画面から打刻してください'; body.appendChild(note);
-
-  } else if(WIZ.step==='consent'){
-    var stl5=el('div','wiz-section-title'); stl5.textContent='個人情報の
-取り扱いについて'; body.appendChild(stl5);
-    var pbox=el('div','privacy-box');
-    pbox.innerHTML='<div style="font-weight:700;color:#1a1a1a;margin-bottom:8px;font-size:14px;">個人情報の取り扱いに関するご説明</div>'+
-      'ご入力いただいた氏名・電話番号・車両情報などの個人情報は、川口弥平センターにおける入荷・出荷受付業務の管理のみを目的として利用します。<br><br>'+
-      '<b style="color:#1a1a1a;">利用目的</b><br>・入荷・出荷受付の記録および管理<br>・次回以降の受付における自動入力<br>・取適法に基づく記録保管<br><br>'+
-      '<b style="color:#1a1a1a;">第三者提供</b><br>法令に基づく場合を除き、第三者への提供は行いません。<br><br>'+
-      '<b style="color:#1a1a1a;">管理・削除</b><br>情報の確認・修正・削除をご希望の場合はセンター管理者までお申し付けください。';
-    body.appendChild(pbox);
-    var cbox=el('div','consent-box'+(WIZ.consent?' checked':''));
-    cbox.onclick=function(){WIZ.consent=!WIZ.consent;renderWiz();};
-    var cc=el('div','consent-check'+(WIZ.consent?' checked':'')); cc.textContent=WIZ.consent?'✓':''; cbox.appendChild(cc);
-    var cl2=el('div','consent-lbl'); cl2.style.color=WIZ.consent?'#2d7a3a':'#1a1a1a'; cl2.textContent='上記の内容に同意します'; cbox.appendChild(cl2);
-    body.appendChild(cbox);
-
-  } else if(WIZ.step==='final'){
-    var stl6=el('div','wiz-section-title'); stl6.textContent='内容を確認して
-受付を完了'; body.appendChild(stl6);
-    var cc2=el('div','wiz-confirm-card');
-    var rows3=[
-      ['電話番号',WIZ.tel.replace(/^(\d{3})(\d{4})(\d{4})$/,'$1-$2-$3')],
-      ['運送会社',WIZ.company||'―'],['お名前',WIZ.name||'―'],
-      ['車番',WIZ.car||'―'],['車格',WIZ.shakaku]
-    ];
-    if(WIZ.type==='lotte'){
-      rows3.push(['オーダーNo',WIZ.order||'―'],['入荷/出荷',WIZ.nyukaType],['出発元',WIZ.src==='その他'?WIZ.srcOther:WIZ.src]);
-    } else {
-      rows3.push(['積み方',WIZ.tsumi||'バラ']);
-    }
-    rows3.forEach(function(r){ var row=el('div','wiz-confirm-row'); var lbl=el('div','wiz-confirm-lbl'); lbl.textContent=r[0]; var val=el('div','wiz-confirm-val'); val.textContent=r[1]; row.appendChild(lbl); row.appendChild(val); cc2.appendChild(row); });
-    body.appendChild(cc2);
-    var sn=el('div','stamp-note');
-    sn.textContent=WIZ.type==='lotte'?'「受付完了 ＋ 到着打刻」で現在時刻が到着時間に登録されます。バース・作業終了・出発は一覧から打刻してください。':'「受付完了 ＋ 入庫打刻」で現在時刻が入庫時間に登録されます。';
-    body.appendChild(sn);
+function doAdminLogin(destScreen){
+  const pw = document.getElementById('admin-pw-input')?.value || '';
+  if(adminLogin(pw)){
+    S.screen = 'home'; // ログイン後はホームに戻してメニューを表示
+    render();
+  } else {
+    document.getElementById('admin-err').textContent = 'パスワードが違います';
+    document.getElementById('admin-pw-input').value = '';
+    document.getElementById('admin-pw-input').focus();
   }
+}
 
-  wrap2.appendChild(body);
-  var ft2=el('div','wiz-footer');
-  var nb2=el('button','wiz-next-btn'+(WIZ.step==='final'?' green':''));
-  if(WIZ.step==='final'){ nb2.textContent=WIZ.type==='lotte'?'受付完了 ＋ 到着打刻':'受付完了 ＋ 入庫打刻'; nb2.onclick=wizComplete; }
-  else { nb2.textContent=(WIZ.step==='consent'&&!WIZ.consent)?'同意してから次へ進んでください':'次へ　→'; if(WIZ.step==='consent'&&!WIZ.consent)nb2.disabled=true; nb2.onclick=wizNext; }
-  ft2.appendChild(nb2); wrap2.appendChild(ft2);
-  root.appendChild(wrap2);
+function go(sc){ S.screen=sc; S.editMode=false; render(); }
+function e(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ---------- HOME ----------
+function renderHome(){
+  const tk=todayKey();
+  const td=todayData()||ensureDay(S.db,tk);
+  const alertN=td.nyuuka.filter(r=>rowStatus(r,'nyuuka')==='alert').length;
+  const alertS=td.shukka.filter(r=>rowStatus(r,'shukka')==='alert').length;
+  const alertL=td.lotte.filter(r=>rowStatus(r,'lotte')==='alert').length;
+  const total=alertN+alertS+alertL;
+  const actN=td.nyuuka.filter(r=>['active','warn','alert'].includes(rowStatus(r,'nyuuka'))).length;
+  const actS=td.shukka.filter(r=>['active','warn','alert'].includes(rowStatus(r,'shukka'))).length;
+  const actL=td.lotte.filter(r=>['active','warn','alert'].includes(rowStatus(r,'lotte'))).length;
+  const syncLabel=syncStatus==='live'?'リアルタイム同期中':'オフライン';
+  const isAdmin=isAdminLoggedIn();
+
+  root.innerHTML=`
+  <div class="app-bar">
+    <div class="app-bar-title">川口弥平センター</div>
+    <span class="bar-badge ${syncStatus==='live'?'sync':'offline'}">
+      <span class="sync-dot ${syncStatus==='live'?'live':'offline'}" style="display:inline-block;vertical-align:middle;margin-right:4px;"></span>${syncLabel}
+    </span>
+  </div>
+
+  <div class="home-hero">
+    <div class="home-title">${fmtKey(tk)}</div>
+    <div class="home-subtitle">受付管理システム${total>0?` &nbsp;<span style="color:var(--red);font-weight:700;">⚠ 要対応 ${total}件</span>`:''}</div>
+  </div>
+
+  ${total>0?`<div class="home-alert-bar show">⚠ 要対応: 入荷 ${alertN}件 ／ 出荷 ${alertS}件 ／ ロッテ ${alertL}件</div>`:''}
+
+  ${isAdmin ? `
+  <!-- 管理者モード -->
+  <div style="background:#1a1a1a;color:#fff;padding:8px 16px;font-size:12px;display:flex;align-items:center;gap:8px;">
+    <span style="flex:1;">🔐 管理者モードでログイン中</span>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+  </div>
+
+  <div class="menu-grid">
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
+      <div class="menu-card-icon">📥</div>
+      <div class="menu-card-label">入荷受付</div>
+      <div class="menu-card-sub">作業中 ${actN}件</div>
+      ${alertN>0?`<div class="menu-card-alert">要対応 ${alertN}件</div>`:''}
+    </div>
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
+      <div class="menu-card-icon">📤</div>
+      <div class="menu-card-label">出荷受付</div>
+      <div class="menu-card-sub">作業中 ${actS}件</div>
+      ${alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
+    </div>
+    <div class="menu-card full lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="menu-card-icon">⭐</div>
+        <div>
+          <div class="menu-card-label">ロッテ様専用受付</div>
+          <div class="menu-card-sub">作業中 ${actL}件${alertL>0?` <span style="color:var(--red);font-weight:700;">要対応 ${alertL}件</span>`:''}</div>
+        </div>
+      </div>
+    </div>
+    <div class="menu-card" onclick="go('history')">
+      <div class="menu-card-icon">📅</div>
+      <div class="menu-card-label">過去データ</div>
+      <div class="menu-card-sub">${allDates().length}日分 ／ 後日修正可</div>
+    </div>
+    <div class="menu-card" onclick="go('drivers')">
+      <div class="menu-card-icon">👤</div>
+      <div class="menu-card-label">ドライバーDB</div>
+      <div class="menu-card-sub">${S.drivers.length}名登録</div>
+    </div>
+    <div class="menu-card full" onclick="go('export')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="menu-card-icon">📄</div>
+        <div>
+          <div class="menu-card-label">データ出力（取適法対応）</div>
+          <div class="menu-card-sub">CSV ダウンロード ／ 印刷</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">アラート設定（入庫後の経過時間）</div>
+  <div style="display:flex;align-items:center;gap:10px;padding:6px 16px 20px;flex-wrap:wrap;font-size:12px;color:var(--text2);">
+    警告（黄） <input type="number" value="${S.alertWarn}" min="10" max="480"
+      style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;"
+      onchange="S.alertWarn=+this.value"> 分 &nbsp;&nbsp;
+    アラート（赤） <input type="number" value="${S.alertDanger}" min="10" max="480"
+      style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;"
+      onchange="S.alertDanger=+this.value"> 分
+  </div>
+
+  ` : `
+  <!-- 一般スタッフモード -->
+  <div class="menu-grid">
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
+      <div class="menu-card-icon">📥</div>
+      <div class="menu-card-label">入荷受付</div>
+      <div class="menu-card-sub">作業中 ${actN}件</div>
+      ${alertN>0?`<div class="menu-card-alert">要対応 ${alertN}件</div>`:''}
+    </div>
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
+      <div class="menu-card-icon">📤</div>
+      <div class="menu-card-label">出荷受付</div>
+      <div class="menu-card-sub">作業中 ${actS}件</div>
+      ${alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
+    </div>
+    <div class="menu-card full lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="menu-card-icon">⭐</div>
+        <div>
+          <div class="menu-card-label">ロッテ様専用受付</div>
+          <div class="menu-card-sub">作業中 ${actL}件${alertL>0?` <span style="color:var(--red);font-weight:700;">要対応 ${alertL}件</span>`:''}</div>
+        </div>
+      </div>
+    </div>
+    <div class="menu-card full" style="border-style:dashed;cursor:pointer;" onclick="go('history')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="menu-card-icon">🔑</div>
+        <div>
+          <div class="menu-card-label">管理者ログイン</div>
+          <div class="menu-card-sub">過去データ・ドライバーDB・データ出力・アラート設定</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  `}`;
+}
+
+
+// ---------- DATE NAV & MOD BAR ----------
+function dateNavHtml(label){
+  const dates=allDates();
+  const opts=dates.map(k=>`<option value="${k}"${k===S.viewDate?' selected':''}>${fmtKey(k)}${k===todayKey()?' 【本日】':''}</option>`).join('');
+  const tagCls=isToday()?'today':S.editMode?'editing':'past';
+  const tagLabel=isToday()?'本日':S.editMode?'修正モード':'閲覧中';
+  return `<div class="date-nav">
+    <select onchange="S.viewDate=this.value;S.editMode=false;render();">${opts}</select>
+    <span class="mode-tag ${tagCls}">${tagLabel}</span>
+  </div>`;
+}
+function modBarHtml(){
+  if(isToday()) return `<div class="mod-bar today"><span class="mod-bar-msg">✓ 本日のデータを編集中</span></div>`;
+  if(S.editMode) return `<div class="mod-bar editing"><span class="mod-bar-msg">✎ 後日修正モード — 変更は修正記録に残ります</span><button class="toggle-edit-btn" onclick="S.editMode=false;render();">修正を終了</button></div>`;
+  return `<div class="mod-bar past"><span class="mod-bar-msg">閲覧のみ（読み取り専用）</span><button class="toggle-edit-btn" onclick="S.editMode=true;render();">後日修正を行う</button></div>`;
+}
+
+// ---------- TABLE (入荷/出荷) ----------
+function renderTable(type){
+  const day=viewed();
+  const arr=day[type];
+  const ed=canEdit();
+  const label=type==='nyuuka'?'入荷受付':'出荷受付';
+  const alertRows=arr.filter(r=>rowStatus(r,type)==='alert');
+  let html=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">${label}</div>
+    ${syncStatus==='live'?'<span class="bar-badge sync">同期中</span>':'<span class="bar-badge offline">オフライン</span>'}
+  </div>
+  ${dateNavHtml(label)}
+  ${modBarHtml()}
+  ${alertRows.length>0&&ed?`<div class="alert-bar">⚠ 要対応: ${alertRows.map(r=>`No.${r.no} ${e(r.company||'')}`).join('、')}</div>`:''}
+  <div class="tbl-wrap"><table>
+  <thead><tr>
+    <th style="width:28px;"></th>
+    <th>No</th>
+    <th style="min-width:104px;">電話番号</th>
+    <th style="min-width:108px;">運送会社名</th>
+    <th style="min-width:62px;">氏名</th>
+    <th>札</th>
+    <th>車番</th><th>車格</th><th>積み方</th>
+    <th style="min-width:104px;">入庫時間</th>
+    <th style="min-width:104px;">出庫時間</th>
+    <th style="min-width:74px;">備考</th>
+  </tr></thead><tbody>`;
+
+  arr.forEach(r=>{
+    const st=rowStatus(r,type);
+    const isDel=r.deleted;
+    const dis=!ed||isDel;
+    const tErr=r.nyuuko&&r.shukko&&!timeOk(r.nyuuko,r.shukko)?'err':'';
+    const hasLog=r.editLog&&r.editLog.length>0;
+    html+=`<tr class="${rowCls(st)}">
+      <td style="text-align:center;padding:4px 2px;">
+        ${isDel
+          ?`<button class="restore-btn" title="削除を取り消す" onpointerup="confirmRestore('${type}','${r.id}')" onclick="confirmRestore('${type}','${r.id}')">↩</button>`
+          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onpointerup="confirmDelete('${type}','${r.id}')" onclick="confirmDelete('${type}','${r.id}')">×</button>`
+        }
+      </td>
+      <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
+      <td><input class="t-input" style="width:36px;" type="number" value="${r.fuda||''}" ${dis?'disabled':''} placeholder="―" oninput="upd('${type}','${r.id}','fuda',this.value)"></td>
+      <td><input class="t-input" style="min-width:98px;" type="text" value="${e(r.company||'')}" ${dis?'disabled':''} placeholder="運送会社名" oninput="upd('${type}','${r.id}','company',this.value)"></td>
+      <td><input class="t-input" type="text" value="${e(r.name||'')}" ${dis?'disabled':''} placeholder="氏名" oninput="upd('${type}','${r.id}','name',this.value)"></td>
+      <td>
+        ${dis
+          ? `<span style="font-size:12px;color:var(--text2);">${e(r.tel||'―')}</span>`
+          : `<button style="min-width:100px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
+              onpointerup="openTelModal('${type}','${r.id}')"
+              onclick="openTelModal('${type}','${r.id}')"
+            >${r.tel?e(r.tel):'タップして入力'}</button>`
+        }
+      </td>
+      <td><input class="t-input" style="width:46px;" type="text" value="${e(r.car||'')}" ${dis?'disabled':''} oninput="upd('${type}','${r.id}','car',this.value)"></td>
+      <td><select class="t-select" style="width:62px;" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','shakaku',this.value)">${SHAKAKU.map(s=>`<option${r.shakaku===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><select class="t-select" style="width:50px;" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','tsumi',this.value)">${TSUMI.map(s=>`<option${r.tsumi===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><div class="time-wrap">
+        <input class="time-inp" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.nyuuko||''}" ${dis?'disabled':''} oninput="upd('${type}','${r.id}','nyuuko',this.value);render()">
+        <button class="stamp-btn${r.nyuuko?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('${type}','${r.id}','nyuuko')">${r.nyuuko||'打刻'}</button>
+      </div></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${tErr}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.shukko||''}" ${dis?'disabled':''} oninput="upd('${type}','${r.id}','shukko',this.value);render()">
+        <button class="stamp-btn${r.shukko?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('${type}','${r.id}','shukko')">${r.shukko||'打刻'}</button>
+      </div></td>
+      <td><input class="t-input" style="min-width:64px;" type="text" value="${e(r.biko||'')}" ${dis?'disabled':''} placeholder="メーカー名" oninput="upd('${type}','${r.id}','biko',this.value)"></td>
+    </tr>
+    ${hasLog?`<tr class="edit-log-row"><td colspan="12">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
+  });
+  html+=`</tbody></table></div>
+  <div class="fab-area">
+    <button class="fab fab-primary" style="flex:1;min-height:48px;font-size:16px;" ${!isToday()?'disabled':''}
+      onpointerup="if(!this.disabled){startWizard('${type}')}"
+      onclick="if(!this.disabled){startWizard('${type}')}">＋ ドライバー受付</button>
+    ${ed&&isToday()?`<button class="fab" style="min-height:48px;"
+      onpointerup="addRows('${type}')"
+      onclick="addRows('${type}')">行追加</button>`:''}
+  </div>`;
+  root.innerHTML=html;
+}
+
+// ---------- LOTTE ----------
+function renderLotte(){
+  const day=viewed();
+  const arr=day.lotte;
+  const ed=canEdit();
+  const alertRows=arr.filter(r=>rowStatus(r,'lotte')==='alert');
+  let html=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">ロッテ様専用受付</div>
+    ${syncStatus==='live'?'<span class="bar-badge sync">同期中</span>':'<span class="bar-badge offline">オフライン</span>'}
+  </div>
+  ${dateNavHtml('ロッテ様')}
+  ${modBarHtml()}
+  ${alertRows.length>0&&ed?`<div class="alert-bar">⚠ 時間逆転または長時間滞留: ${alertRows.map(r=>`No.${r.no}`).join('、')}</div>`:''}
+  <div class="tbl-wrap"><table>
+  <thead><tr>
+    <th style="width:28px;"></th>
+    <th>No</th>
+    <th style="min-width:100px;">電話番号</th>
+    <th style="min-width:108px;">運送会社名</th>
+    <th style="min-width:60px;">氏名</th>
+    <th>車番</th><th>車格</th>
+    <th>オーダーNo</th><th>入/出荷</th>
+    <th style="min-width:112px;">出発元/入荷元</th>
+    <th style="min-width:104px;">到着時間</th>
+    <th style="min-width:104px;">バース着車</th>
+    <th style="min-width:104px;">作業終了</th>
+    <th style="min-width:104px;">出発時間</th>
+  </tr></thead><tbody>`;
+
+  arr.forEach(r=>{
+    const st=rowStatus(r,'lotte');
+    const isDel=r.deleted;
+    const dis=!ed||isDel;
+    const tC=(a,b)=>a&&b&&toMin(a)>toMin(b)?'err':'';
+    const hasLog=r.editLog&&r.editLog.length>0;
+    html+=`<tr class="${rowCls(st)}">
+      <td style="text-align:center;padding:4px 2px;">
+        ${isDel
+          ?`<button class="restore-btn" title="削除を取り消す" onpointerup="confirmRestore('lotte','${r.id}')" onclick="confirmRestore('lotte','${r.id}')">↩</button>`
+          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onpointerup="confirmDelete('lotte','${r.id}')" onclick="confirmDelete('lotte','${r.id}')">×</button>`
+        }
+      </td>
+      <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
+      <td><input class="t-input" style="min-width:94px;" type="text" value="${e(r.company||'')}" ${dis?'disabled':''} placeholder="会社名" oninput="upd('lotte','${r.id}','company',this.value)"></td>
+      <td><input class="t-input" type="text" value="${e(r.name||'')}" ${dis?'disabled':''} placeholder="氏名" oninput="upd('lotte','${r.id}','name',this.value)"></td>
+      <td>
+        ${dis
+          ? `<span style="font-size:12px;color:var(--text2);">${e(r.tel||'―')}</span>`
+          : `<button style="min-width:96px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
+              onpointerup="openTelModal('lotte','${r.id}')"
+              onclick="openTelModal('lotte','${r.id}')"
+            >${r.tel?e(r.tel):'タップして入力'}</button>`
+        }
+      </td>
+      <td><input class="t-input" style="width:44px;" type="text" value="${e(r.car||'')}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','car',this.value)"></td>
+      <td><select class="t-select" style="width:62px;" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','shakaku',this.value)">${SHAKAKU.map(s=>`<option${r.shakaku===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><input class="t-input" style="width:66px;" type="text" value="${e(r.order||'')}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','order',this.value)"></td>
+      <td><select class="t-select" style="width:52px;" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','type',this.value)"><option${r.type==='入荷'?' selected':''}>入荷</option><option${r.type==='出荷'?' selected':''}>出荷</option></select></td>
+      <td>
+        <select class="t-select" style="width:98px;" ${dis?'disabled':''} onchange="lotSrc('${r.id}',this.value)">${LOTTE_SRC.map(s=>`<option${r.src===s?' selected':''}>${s}</option>`).join('')}</select>
+        ${r.src==='その他'?`<div style="margin-top:3px;font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px;">
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;">${e(r.srcOther||'（未入力）')}</span>
+          ${!dis?`<button style="font-size:10px;padding:2px 6px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);cursor:pointer;white-space:nowrap;" onclick="lotSrc('${r.id}','その他')">編集</button>`:''}
+        </div>`:''}
+      </td>
+      <td><div class="time-wrap">
+        <input class="time-inp" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.tochaku||''}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','tochaku',this.value);render()">
+        <button class="stamp-btn${r.tochaku?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','tochaku')">${r.tochaku||'打刻'}</button>
+      </div></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${tC(r.tochaku,r.basu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.basu||''}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','basu',this.value);render()">
+        <button class="stamp-btn${r.basu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','basu')">${r.basu||'打刻'}</button>
+      </div></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${tC(r.basu,r.sakuEnd)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.sakuEnd||''}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','sakuEnd',this.value);render()">
+        <button class="stamp-btn${r.sakuEnd?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','sakuEnd')">${r.sakuEnd||'打刻'}</button>
+      </div></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${tC(r.sakuEnd,r.shuppatsu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.shuppatsu||''}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','shuppatsu',this.value);render()">
+        <button class="stamp-btn${r.shuppatsu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','shuppatsu')">${r.shuppatsu||'打刻'}</button>
+      </div></td>
+    </tr>
+    ${hasLog?`<tr class="edit-log-row"><td colspan="14">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
+  });
+  html+=`</tbody></table></div>
+  <div class="fab-area">
+    <button class="fab fab-primary" ${!ed||!isToday()?'disabled':''} onclick="openModal('lotte')">＋ 新規受付</button>
+    <button class="fab" ${!ed||!isToday()?'disabled':''} onclick="addRows('lotte')">行を追加</button>
+  </div>`;
+  root.innerHTML=html;
+}
+
+// ---------- HISTORY ----------
+function renderHistory(){
+  const dates=allDates();
+  root.innerHTML=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">過去データ一覧 <span class="admin-tag">管理者</span></div>
+  </div>
+  <div class="admin-bar">
+    <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+  </div>
+  <div style="padding:10px 14px 6px;font-size:12px;color:var(--text2);">${dates.length}日分の記録。選択すると各画面で閲覧・後日修正できます。</div>
+  <div class="list-wrap">
+    ${dates.map(k=>{
+      const d=S.db[k];
+      const nC=d.nyuuka.filter(r=>r.company&&!r.deleted).length;
+      const sC=d.shukka.filter(r=>r.company&&!r.deleted).length;
+      const lC=d.lotte.filter(r=>r.company&&!r.deleted).length;
+      const nDel=d.nyuuka.concat(d.shukka,d.lotte).filter(r=>r.deleted).length;
+      const nEdit=d.nyuuka.concat(d.shukka,d.lotte).filter(r=>r.editLog&&r.editLog.length>0).length;
+      const isT=k===todayKey();
+      return `<div class="list-item" onclick="S.viewDate='${k}';S.editMode=false;go('nyuuka')">
+        <div>
+          <div class="list-item-title">${fmtKey(k)} ${isT?'<span class="mode-tag today" style="font-size:10px;">本日</span>':''}</div>
+          <div class="list-item-sub">入荷 ${nC}件 ／ 出荷 ${sC}件 ／ ロッテ ${lC}件${nDel>0?` ／ 削除 ${nDel}件`:''}${nEdit>0?` ／ 修正 ${nEdit}件`:''}</div>
+        </div>
+        <span class="list-arrow">›</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ---------- DRIVERS ----------
+function renderDrivers(){
+  root.innerHTML=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">ドライバーDB <span class="admin-tag">管理者</span></div>
+  </div>
+  <div class="admin-bar">
+    <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+  </div>
+  <div class="fab-area" style="position:static;border-top:none;border-bottom:1px solid var(--border);background:var(--surface2);">
+    <button class="fab fab-primary" onclick="openModal('driver')">＋ 新規登録</button>
+  </div>
+  <div class="list-wrap">
+    ${S.drivers.length===0?'<div style="color:var(--text2);font-size:13px;padding:16px 0;">登録されていません</div>':''}
+    ${S.drivers.map(d=>`<div class="driver-card">
+      <div class="driver-avatar">${e((d.name||'?').slice(0,2))}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:700;">${e(d.name)}</div>
+        <div style="font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e(d.company||'')} ／ ${e(d.tel)} ／ 車番:${e(d.car||'―')} ／ ${e(d.shakaku)}</div>
+      </div>
+      <button class="fab" style="font-size:12px;padding:5px 10px;flex-shrink:0;" onclick="confirmDelDriver('${d.id}','${e(d.name)}')">削除</button>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ---------- EXPORT ----------
+function renderExport(){
+  const dates=allDates();
+  root.innerHTML=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">データ出力 <span class="admin-tag">管理者</span></div>
+  </div>
+  <div class="admin-bar">
+    <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+  </div>
+  <div style="padding:14px;">
+    <div class="export-card">
+      <h4>対象日を選択</h4>
+      <select id="exp-date" style="width:100%;font-size:14px;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);margin-top:6px;">
+        ${dates.map(k=>`<option value="${k}">${fmtKey(k)}${k===todayKey()?' （本日）':''}</option>`).join('')}
+      </select>
+    </div>
+    <div class="export-card">
+      <h4>CSV出力（取適法対応）</h4>
+      <p>削除済みの行は除外。修正記録も含まれます。</p>
+      <button class="export-btn" onclick="dlCsv('nyuuka')">入荷CSV</button>
+      <button class="export-btn" onclick="dlCsv('shukka')">出荷CSV</button>
+      <button class="export-btn" onclick="dlCsv('lotte')">ロッテ様CSV</button>
+    </div>
+    <div class="export-card">
+      <h4>全期間まとめ出力</h4>
+      <p>保存されている全日付を一括でCSV出力します。</p>
+      <button class="export-btn" onclick="dlAllCsv()">全期間 入荷CSV一括</button>
+    </div>
+    <div class="export-card">
+      <h4>印刷プレビュー</h4>
+      <p>選択した日付のデータを印刷用フォーマットで表示します。</p>
+      <button class="export-btn" onclick="printDay()">印刷プレビューを開く</button>
+    </div>
+    <div class="export-card" style="border-color:var(--border2);">
+      <h4>🔐 セキュリティ設定（削除PIN）</h4>
+      <p>設定するとデータ削除時に4桁PINの入力が必要になります。スタッフの誤削除を防止できます。</p>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <span style="font-size:13px;color:var(--text2);">現在の削除PIN：</span>
+        <span id="pin-status-label" style="font-size:13px;font-weight:700;">${getDeletePin()?'設定済み（●●●●）':'未設定'}</span>
+      </div>
+      <input id="new-pin-input" type="tel" inputmode="numeric" maxlength="4" placeholder="新しい4桁PIN（例: 1234）"
+        style="width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);margin-bottom:10px;display:block;">
+      <button class="export-btn" onclick="saveNewPin()">PINを設定・変更</button>
+      <button class="export-btn" style="color:var(--red);border-color:var(--red-bd);" onclick="clearPin()">PINを削除</button>
+      <div id="pin-save-msg" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+    </div>
+  </div>`;
 }
 
 // ============================================================
-// BOOT
+//  MODAL
 // ============================================================
+function openModal(type){ S.modal=type; render(); }
+function closeModal(){ S.modal=null; S.modalData={}; render(); }
+
+function renderModal(){
+  const m=S.modal;
+  let html='';
+
+  if(m==='srcOther'){
+    const {id}=S.modalData;
+    const day=S.db[S.viewDate];
+    const r=day?.lotte?.find(x=>x.id===id);
+    const cur=r?.srcOther||'';
+    modalContainer.innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeSrcOther('${id}');">
+      <div class="modal" style="max-width:360px;">
+        <h3>出発元 / 入荷元（その他）</h3>
+        <div class="fg">
+          <label>具体的な出発元・入荷元を入力してください</label>
+          <input id="src-other-modal-input" type="text" value="${cur}"
+            placeholder="例：東京工場、大阪センター など"
+            style="width:100%;font-size:16px;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);"
+            onkeydown="if(event.key==='Enter')closeSrcOther('${id}')">
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeSrcOther('${id}')">キャンセル</button>
+          <button class="btn-ok" onclick="closeSrcOther('${id}')">確定</button>
+        </div>
+      </div>
+    </div>`;
+    setTimeout(()=>{
+      const el=document.getElementById('src-other-modal-input');
+      if(el){el.focus();el.select();}
+    },50);
+    return;
+  }
+  if(m==='confirmDelete'){
+    const {r,type}=S.modalData;
+    const label=type==='lotte'
+      ?`到着:${r.tochaku||'―'} ／ 出発:${r.shuppatsu||'―'}`
+      :`入庫:${r.nyuuko||'―'} ／ 出庫:${r.shukko||'―'}`;
+    const pin=getDeletePin();
+    const pinSection=pin?`
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <div class="pin-title">削除PINを入力</div>
+        <div class="pin-sub">4桁のPINで削除を認証します</div>
+        <div class="pin-display">
+          <div class="pin-dot" id="pd0"></div>
+          <div class="pin-dot" id="pd1"></div>
+          <div class="pin-dot" id="pd2"></div>
+          <div class="pin-dot" id="pd3"></div>
+        </div>
+        <div class="pin-pad">
+          ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-key" onpointerup="pinPress(${n})" onclick="pinPress(${n})">${n}</button>`).join('')}
+          <button class="pin-key pin-del-key pin-zero" onpointerup="pinDel()" onclick="pinDel()">⌫</button>
+        </div>
+        <div class="pin-err" id="pin-err"></div>
+      </div>`:
+      `<div class="modal-actions" style="margin-top:16px;">
+        <button class="btn-cancel" onpointerup="closeModal()" onclick="closeModal()">キャンセル</button>
+        <button class="btn-danger" onpointerup="doDelete()" onclick="doDelete()">削除する</button>
+      </div>`;
+    html=`<div class="modal">
+      <h3>⚠ この行を削除しますか？</h3>
+      <div class="modal-record">
+        <strong>No.${r.no}　${e(r.company||'（会社名未入力）')}</strong><br>
+        ${e(r.name||'')} ${r.tel?'／ '+e(r.tel):''}<br>
+        ${label}
+      </div>
+      <div class="modal-body">削除してもデータは保持されます（グレー表示）。↩ ボタンからいつでも復元できます。</div>
+      ${pinSection}
+    </div>`;
+  } else if(m==='confirmRestore'){
+    const {r}=S.modalData;
+    html=`<div class="modal">
+      <h3>削除を取り消しますか？</h3>
+      <div class="modal-record"><strong>No.${r.no}　${e(r.company||'')}</strong>　${e(r.name||'')}</div>
+      <div class="modal-body">元の状態に復元します。</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onpointerup="closeModal()" onclick="closeModal()">キャンセル</button>
+        <button class="btn-ok" onpointerup="doRestore()" onclick="doRestore()">復元する</button>
+      </div>
+    </div>`;
+  } else if(m==='confirmDelDriver'){
+    const {name}=S.modalData;
+    html=`<div class="modal">
+      <h3>ドライバーを削除しますか？</h3>
+      <div class="modal-record"><strong>${e(name)}</strong></div>
+      <div class="modal-body">DBから削除します。過去受付データには影響しません。</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-danger" onclick="doDelDriver()">削除する</button>
+      </div>
+    </div>`;
+  } else {
+    // NEW ENTRY / DRIVER FORMS
+    const type=m;
+    let fields='';
+    if(type==='driver'){
+      fields=`
+      <div class="fg"><label>会社名</label><input id="m-company" type="text" placeholder="（株）〇〇運輸"></div>
+      <div class="fg"><label>氏名 ＊</label><input id="m-name" type="text"></div>
+      <div class="fg"><label>電話番号 ＊（ハイフンなし）</label><input id="m-tel" type="tel" placeholder="09012345678"></div>
+      <div class="fg-row">
+        <div class="fg"><label>車番</label><input id="m-car" type="text"></div>
+        <div class="fg"><label>車格</label><select id="m-shakaku">${SHAKAKU.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      </div>`;
+    } else if(type==='lotte'){
+      fields=`
+      <div class="fg"><label>運送会社名 ＊</label><input id="m-company" type="text"></div>
+      <div class="fg-row">
+        <div class="fg"><label>氏名</label><input id="m-name" type="text"></div>
+        <div class="fg"><label>電話番号</label><input id="m-tel" type="tel" placeholder="09012345678"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>車番</label><input id="m-car" type="text"></div>
+        <div class="fg"><label>車格</label><select id="m-shakaku">${SHAKAKU.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>オーダーNo</label><input id="m-order" type="text"></div>
+        <div class="fg"><label>入荷 ／ 出荷</label><select id="m-type"><option>入荷</option><option>出荷</option></select></div>
+      </div>
+      <div class="fg"><label>出発元 ／ 入荷元</label><select id="m-src">${LOTTE_SRC.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div class="fg hidden" id="m-src-other-fg"><label>その他（入力）</label><input id="m-src-other" type="text"></div>`;
+    } else {
+      fields=`
+      <div class="fg"><label>運送会社名 ＊</label><input id="m-company" type="text" placeholder="（株）〇〇運輸"></div>
+      <div class="fg-row">
+        <div class="fg"><label>氏名</label><input id="m-name" type="text"></div>
+        <div class="fg"><label>電話番号</label><input id="m-tel" type="tel" placeholder="09012345678"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>車番</label><input id="m-car" type="text"></div>
+        <div class="fg"><label>番号札</label><input id="m-fuda" type="number" placeholder="夜間番号"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>車格</label><select id="m-shakaku">${SHAKAKU.map(s=>`<option>${s}</option>`).join('')}</select></div>
+        <div class="fg"><label>積み方</label><select id="m-tsumi">${TSUMI.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      </div>
+      <div class="fg"><label>備考（メーカー名）</label><input id="m-biko" type="text"></div>`;
+    }
+    const titles={driver:'ドライバー登録',lotte:'ロッテ様 新規受付',nyuuka:'入荷受付 新規登録',shukka:'出荷受付 新規登録'};
+    const okLabels={driver:'登録',lotte:'受付 ＋ 到着打刻',nyuuka:'受付 ＋ 入庫打刻',shukka:'受付 ＋ 入庫打刻'};
+    html=`<div class="modal">
+      <h3>${titles[type]}</h3>${fields}
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-ok" onclick="submitModal('${type}')">${okLabels[type]}</button>
+      </div>
+    </div>`;
+  }
+
+  modalContainer.innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal();">${html}</div>`;
+
+  // Src other toggle
+  const mSrc=document.getElementById('m-src');
+  if(mSrc)mSrc.addEventListener('change',function(){
+    document.getElementById('m-src-other-fg')?.classList.toggle('hidden',this.value!=='その他');
+  });
+  // Driver auto-fill
+  const mTel=document.getElementById('m-tel');
+  if(mTel)mTel.addEventListener('blur',function(){
+    const d=findDriver(this.value);
+    if(!d)return;
+    const mc=document.getElementById('m-company');if(mc&&!mc.value)mc.value=d.company||'';
+    const mn=document.getElementById('m-name');if(mn&&!mn.value)mn.value=d.name;
+    const mcar=document.getElementById('m-car');if(mcar&&!mcar.value)mcar.value=d.car||'';
+    const msh=document.getElementById('m-shakaku');if(msh)msh.value=d.shakaku;
+  });
+}
+
+// ============================================================
+//  ACTIONS
+// ============================================================
+function confirmDelete(type,id){
+  const day=S.db[S.viewDate];
+  const r=day[type].find(x=>x.id===id);
+  if(!r)return;
+  S.modal='confirmDelete'; S.modalData={type,id,r}; render();
+}
+function confirmRestore(type,id){
+  const day=S.db[S.viewDate];
+  const r=day[type].find(x=>x.id===id);
+  if(!r)return;
+  S.modal='confirmRestore'; S.modalData={type,id,r}; render();
+}
+function confirmDelDriver(id,name){
+  S.modal='confirmDelDriver'; S.modalData={id,name}; render();
+}
+function doDelete(){
+  const {type,id}=S.modalData;
+  const r=S.db[S.viewDate][type].find(x=>x.id===id);
+  if(r){r.deleted=true;if(!r.editLog)r.editLog=[];r.editLog.push(`${nowFull()} 削除`);save();}
+  closeModal();
+}
+function doRestore(){
+  const {type,id}=S.modalData;
+  const r=S.db[S.viewDate][type].find(x=>x.id===id);
+  if(r){r.deleted=false;if(!r.editLog)r.editLog=[];r.editLog.push(`${nowFull()} 削除取消`);save();}
+  closeModal();
+}
+function doDelDriver(){
+  S.drivers=S.drivers.filter(d=>d.id!==S.modalData.id);
+  save(); closeModal(); go('drivers');
+}
+
+let _updTimer = {};
+function upd(type,id,field,val){
+  const day=S.db[S.viewDate];if(!day)return;
+  const r=day[type].find(x=>x.id===id);
+  if(!r||r.deleted)return;
+  const old=r[field];
+  r[field]=val;
+  if(!isToday()&&old!==val&&old!==undefined&&old!==''){
+    if(!r.editLog)r.editLog=[];
+    r.editLog.push(`${nowFull()} ${field}「${old||'空'}」→「${val}」`);
+  }
+  // Debounce saves: wait 600ms after last keystroke before saving
+  const key=`${type}-${id}-${field}`;
+  clearTimeout(_updTimer[key]);
+  _updTimer[key]=setTimeout(()=>save(), 600);
+}
+function stamp(type,id,field){
+  if(!isToday())return;
+  const r=todayData()[type].find(x=>x.id===id);
+  if(!r||r.deleted)return;
+  r[field]=nowStr(); save(); render();
+}
+// ===== TEL INPUT MODAL =====
+let _telState = { type:'', id:'', buf:'' };
+
+function openTelModal(type, id){
+  const day = S.db[S.viewDate];
+  const r = day[type].find(x=>x.id===id);
+  if(!r) return;
+  _telState = { type, id, buf: (r.tel||'').replace(/[-\s]/g,'') };
+  renderTelModal();
+}
+
+function renderTelModal(){
+  const {type, id, buf} = _telState;
+  const day = S.db[S.viewDate];
+  const r = day[type].find(x=>x.id===id);
+  if(!r) return;
+
+  // 既存データをフォームに反映
+  const company = r.company||'';
+  const name = r.name||'';
+  const car = r.car||'';
+  const shakaku = r.shakaku||'2t';
+
+  // ドライバーDB照合
+  const driver = buf.length>=10 ? findDriver(buf) : null;
+
+  const dispBuf = buf.length>0
+    ? buf.replace(/^(\d{3})(\d{4})(\d{0,4})$/,'$1-$2-$3').replace(/-$/,'')
+    : '';
+
+  const resultHtml = buf.length >= 10
+    ? (driver
+        ? `<div class="tel-lookup-result found">
+            <div class="tel-lookup-name">✓ ${driver.name}</div>
+            <div class="tel-lookup-sub">${driver.company||''} ／ 車番:${driver.car||'―'} ／ ${driver.shakaku}</div>
+           </div>`
+        : `<div class="tel-lookup-result notfound">
+            <div style="font-size:14px;font-weight:600;">新規ドライバー</div>
+            <div class="tel-lookup-sub">DBに登録がありません。下欄に会社名・氏名を入力してください。</div>
+           </div>`)
+    : '';
+
+  const showFields = buf.length >= 10;
+
+  const keyLabels = [
+    ['1',''],['2','ABC'],['3','DEF'],
+    ['4','GHI'],['5','JKL'],['6','MNO'],
+    ['7','PQRS'],['8','TUV'],['9','WXYZ'],
+  ];
+
+  const keysHtml = keyLabels.map(([n,s])=>`
+    <button class="tel-key"
+      onpointerup="telKeyPress('${n}')"
+      onclick="telKeyPress('${n}')">
+      ${n}<span class="tel-key-sub">${s}</span>
+    </button>`).join('');
+
+  const existingOverlay = document.getElementById('tel-modal-overlay');
+  if(existingOverlay) existingOverlay.remove();
+
+  const div = document.createElement('div');
+  div.id = 'tel-modal-overlay';
+  div.className = 'tel-modal-overlay';
+  div.innerHTML = `
+    <div class="tel-modal">
+      <div class="tel-modal-header">
+        <div class="tel-modal-title">電話番号を入力</div>
+        <button class="tel-modal-close"
+          onpointerup="closeTelModal()"
+          onclick="closeTelModal()">✕</button>
+      </div>
+      <div class="tel-display ${buf.length===0?'placeholder':''}" id="tel-disp">
+        ${buf.length===0 ? '090-0000-0000' : dispBuf}
+      </div>
+      ${resultHtml}
+      <div class="tel-keypad">
+        ${keysHtml}
+        <button class="tel-key" style="visibility:hidden;"></button>
+        <button class="tel-key"
+          onpointerup="telKeyPress('0')"
+          onclick="telKeyPress('0')">0</button>
+        <button class="tel-key tel-del"
+          onpointerup="telKeyDel()"
+          onclick="telKeyDel()">⌫</button>
+      </div>
+      <div class="tel-fields ${showFields?'show':''}" id="tel-fields">
+        <div style="font-size:12px;color:var(--text2);padding:4px 0 8px;font-weight:600;">確認・修正してください</div>
+        <div class="tel-field-row">
+          <div class="tel-field-label">運送会社名</div>
+          <input class="tel-field-val" id="tf-company" type="text" value="${company}" placeholder="（株）〇〇運輸">
+        </div>
+        <div class="tel-field-row">
+          <div class="tel-field-label">氏名</div>
+          <input class="tel-field-val" id="tf-name" type="text" value="${name}" placeholder="山田 太郎">
+        </div>
+        <div class="tel-field-row">
+          <div class="tel-field-label">車番</div>
+          <input class="tel-field-val" id="tf-car" type="text" value="${car}" placeholder="1234">
+        </div>
+        <div class="tel-field-row">
+          <div class="tel-field-label">車格</div>
+          <select class="tel-field-val" id="tf-shakaku">
+            ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${shakaku===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <button class="tel-confirm-btn" id="tel-confirm-btn"
+        ${buf.length<10?'disabled style="opacity:.4;"':''}
+        onpointerup="confirmTelInput()"
+        onclick="confirmTelInput()">
+        ${buf.length<10 ? '電話番号を入力してください' : '確定して受付に反映'}
+      </button>
+      <div style="height:8px;"></div>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+function telKeyPress(n){
+  if(_telState.buf.length >= 11) return;
+  _telState.buf += n;
+  renderTelModal();
+}
+function telKeyDel(){
+  _telState.buf = _telState.buf.slice(0,-1);
+  renderTelModal();
+}
+function closeTelModal(){
+  const el = document.getElementById('tel-modal-overlay');
+  if(el) el.remove();
+}
+function confirmTelInput(){
+  const {type, id, buf} = _telState;
+  if(buf.length < 10) return;
+  const day = S.db[S.viewDate];
+  const r = day[type].find(x=>x.id===id);
+  if(!r) return;
+
+  // 電話番号保存
+  r.tel = buf;
+
+  // フォームの値を反映
+  const company = document.getElementById('tf-company')?.value?.trim()||'';
+  const name    = document.getElementById('tf-name')?.value?.trim()||'';
+  const car     = document.getElementById('tf-car')?.value?.trim()||'';
+  const shakaku = document.getElementById('tf-shakaku')?.value||'2t';
+
+  if(company) r.company = company;
+  if(name)    r.name    = name;
+  if(car)     r.car     = car;
+  r.shakaku = shakaku;
+
+  save();
+  closeTelModal();
+  render();
+}
+
+function lotSrc(id,val){
+  upd('lotte',id,'src',val);
+  if(val==='その他'){
+    // その他はモーダルで入力（テーブル内で隠れる問題を回避）
+    S.modal='srcOther';
+    S.modalData={id};
+    render();
+  } else {
+    render();
+  }
+}
+function telLookup(type,id,tel){
+  if(!canEdit())return;
+  const d=findDriver(tel);if(!d)return;
+  const r=S.db[S.viewDate][type].find(x=>x.id===id);
+  if(!r||r.deleted)return;
+  let changed=false;
+  if(!r.company&&d.company){r.company=d.company;changed=true;}
+  if(!r.name&&d.name){r.name=d.name;changed=true;}
+  if(!r.car&&d.car){r.car=d.car;changed=true;}
+  if(d.shakaku){r.shakaku=d.shakaku;changed=true;}
+  if(changed){save();render();}
+}
+function addRows(type){
+  if(!isToday())return;
+  const day=todayData();
+  const base=day[type].length;
+  for(let i=0;i<5;i++) day[type].push(type==='lotte'?mkLRow(base+i+1):mkNRow(base+i+1));
+  save(); render();
+}
+
+function submitModal(type){
+  const g=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
+  if(type==='driver'){
+    const name=g('m-name'),tel=g('m-tel').replace(/[-\s]/g,'');
+    if(!name||!tel){alert('氏名と電話番号は必須です');return;}
+    S.drivers.push({id:uid(),company:g('m-company'),name,tel,car:g('m-car'),shakaku:g('m-shakaku')||'2t'});
+    save(); closeModal(); return;
+  }
+  const company=g('m-company');
+  if(!company){alert('運送会社名は必須です');return;}
+  const tel=g('m-tel').replace(/[-\s]/g,'');
+  const day=todayData();
+  const arr=day[type];
+  const slot=arr.find(r=>!r.company&&!r.deleted&&(type==='lotte'?!r.tochaku:!r.nyuuko));
+  const r=slot||(type==='lotte'?mkLRow(arr.length+1):mkNRow(arr.length+1));
+  r.company=company;r.name=g('m-name');r.tel=tel;r.car=g('m-car');
+  r.shakaku=g('m-shakaku')||'2t';
+  if(type==='lotte'){
+    r.order=g('m-order');r.type=g('m-type')||'入荷';
+    const src=g('m-src');r.src=src;r.srcOther=src==='その他'?g('m-src-other'):'';
+    r.tochaku=nowStr();
+  } else {
+    r.tsumi=g('m-tsumi')||'バラ';r.fuda=g('m-fuda');r.biko=g('m-biko');
+    r.nyuuko=nowStr();
+  }
+  if(!slot)arr.push(r);
+  save(); S.modal=null; S.viewDate=todayKey(); S.screen=type; render();
+}
+
+// ============================================================
+//  EXPORT
+// ============================================================
+function saveNewPin(){
+  const el=document.getElementById('new-pin-input');
+  const val=(el?.value||'').replace(/\D/g,'');
+  if(val.length!==4){
+    document.getElementById('pin-save-msg').textContent='4桁の数字で入力してください';
+    document.getElementById('pin-save-msg').style.color='var(--red)';
+    return;
+  }
+  setDeletePin(val);
+  el.value='';
+  document.getElementById('pin-status-label').textContent='設定済み（●●●●）';
+  document.getElementById('pin-save-msg').textContent='PINを設定しました';
+  document.getElementById('pin-save-msg').style.color='var(--green)';
+  setTimeout(()=>{const m=document.getElementById('pin-save-msg');if(m)m.textContent='';},2000);
+}
+function clearPin(){
+  if(!confirm('PINを削除します。削除時の認証が不要になります。よろしいですか？')) return;
+  setDeletePin(null);
+  document.getElementById('pin-status-label').textContent='未設定';
+  document.getElementById('pin-save-msg').textContent='PINを削除しました';
+  document.getElementById('pin-save-msg').style.color='var(--amber)';
+  setTimeout(()=>{const m=document.getElementById('pin-save-msg');if(m)m.textContent='';},2000);
+}
+
+function getExpDate(){return document.getElementById('exp-date')?.value||todayKey();}
+function toCsvNS(arr){
+  const h='No,番号札,会社名,氏名,電話番号,車番,車格,積み方,入庫時間,出庫時間,備考,修正記録';
+  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[r.no,r.fuda||'',r.company,r.name||'',r.tel||'',r.car||'',r.shakaku,r.tsumi,r.nyuuko||'',r.shukko||'',r.biko||'',(r.editLog&&r.editLog.length?r.editLog.join('|'):'')].join(','));
+  return h+'\n'+rows.join('\n');
+}
+function toCsvL(arr){
+  const h='No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,出発元,到着時間,バース着車,作業終了,出発時間,修正記録';
+  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[r.no,r.company,r.name||'',r.tel||'',r.car||'',r.shakaku,r.order||'',r.type,r.src==='その他'?r.srcOther:r.src,r.tochaku||'',r.basu||'',r.sakuEnd||'',r.shuppatsu||'',(r.editLog&&r.editLog.length?r.editLog.join('|'):'')].join(','));
+  return h+'\n'+rows.join('\n');
+}
+function dlCsv(type){
+  const dk=getExpDate();const day=S.db[dk];if(!day)return;
+  const content=type==='lotte'?toCsvL(day.lotte):toCsvNS(day[type]);
+  const label=type==='nyuuka'?'入荷受付':type==='shukka'?'出荷受付':'ロッテ受付';
+  _dl(`${label}_${dk}.csv`,content);
+}
+function dlAllCsv(){
+  const dates=allDates().reverse();
+  const h='日付,No,番号札,会社名,氏名,電話番号,車番,車格,積み方,入庫時間,出庫時間,備考,修正記録';
+  const rows=dates.flatMap(k=>{const d=S.db[k];return d?d.nyuuka.filter(r=>r.company&&!r.deleted).map(r=>[k,r.no,r.fuda||'',r.company,r.name||'',r.tel||'',r.car||'',r.shakaku,r.tsumi,r.nyuuko||'',r.shukko||'',r.biko||'',(r.editLog&&r.editLog.length?r.editLog.join('|'):'')].join(',')):[];});
+  _dl('入荷受付_全期間.csv',h+'\n'+rows.join('\n'));
+}
+function _dl(fname,content){
+  const blob=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+}
+function printDay(){
+  const dk=getExpDate();const day=S.db[dk];if(!day)return;
+  const win=window.open('','_blank','width=950,height=750');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>入荷受付表 ${dk}</title>
+  <style>body{font-family:'Hiragino Sans',sans-serif;font-size:11px;margin:16px;}
+  h2{font-size:15px;margin-bottom:8px;}
+  table{border-collapse:collapse;width:100%;}
+  th,td{border:1px solid #999;padding:4px 6px;text-align:left;}
+  th{background:#eee;font-size:10px;}
+  @media print{button{display:none;}}</style></head><body>`);
+  win.document.write(`<h2>入荷受付表　${fmtKey(dk)}</h2>`);
+  win.document.write(`<table><tr><th>No</th><th>会社名</th><th>氏名</th><th>電話</th><th>車番</th><th>車格</th><th>積み方</th><th>入庫</th><th>出庫</th><th>備考</th></tr>`);
+  day.nyuuka.filter(r=>r.company&&!r.deleted).forEach(r=>{
+    win.document.write(`<tr><td>${r.no}</td><td>${r.company}</td><td>${r.name||''}</td><td>${r.tel||''}</td><td>${r.car||''}</td><td>${r.shakaku}</td><td>${r.tsumi}</td><td>${r.nyuuko||''}</td><td>${r.shukko||''}</td><td>${r.biko||''}</td></tr>`);
+  });
+  win.document.write(`</table><br><button onclick="window.print()">印刷</button></body></html>`);
+  win.document.close();
+}
+
+// ============================================================
+//  BOOT
+// ============================================================
+// 時刻入力バリデーション＆フォーマット
+// ===== PIN INPUT LOGIC =====
+let _pinBuffer = '';
+
+function pinPress(n){
+  if(_pinBuffer.length >= 4) return;
+  _pinBuffer += String(n);
+  updatePinDisplay();
+  if(_pinBuffer.length === 4){
+    setTimeout(()=>checkPin(), 120);
+  }
+}
+function pinDel(){
+  _pinBuffer = _pinBuffer.slice(0,-1);
+  updatePinDisplay();
+  // エラー表示をクリア
+  const errEl=document.getElementById('pin-err');
+  if(errEl) errEl.textContent='';
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    if(d) d.classList.remove('err');
+  }
+}
+function updatePinDisplay(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    if(d) d.classList.toggle('filled', i<_pinBuffer.length);
+  }
+}
+function checkPin(){
+  const pin=getDeletePin();
+  if(_pinBuffer === pin){
+    doDelete();
+  } else {
+    // エラー表示
+    for(let i=0;i<4;i++){
+      const d=document.getElementById('pd'+i);
+      if(d){d.classList.remove('filled');d.classList.add('err');}
+    }
+    const errEl=document.getElementById('pin-err');
+    if(errEl) errEl.textContent='PINが違います。もう一度入力してください。';
+    setTimeout(()=>{
+      _pinBuffer='';
+      for(let i=0;i<4;i++){
+        const d=document.getElementById('pd'+i);
+        if(d){d.classList.remove('err');d.classList.remove('filled');}
+      }
+      if(errEl) errEl.textContent='';
+    }, 1200);
+  }
+}
+
+
+// ============================================================
+//  WIZARD
+// ============================================================
+function startWizard(type){
+  WIZ.active=true; WIZ.type=type; WIZ.step=1;
+  WIZ.tel=''; WIZ.company=''; WIZ.name='';
+  WIZ.car=''; WIZ.shakaku='2t'; WIZ.fuda=''; WIZ.biko='';
+  WIZ.driver=null;
+  renderWizard();
+}
+
+function wizBack(){
+  if(WIZ.step===1){ WIZ.active=false; render(); return; }
+  WIZ.step--;
+  renderWizard();
+}
+
+function renderWizard(){
+  root.innerHTML='';
+  modalContainer.innerHTML='';
+  const steps=['電話番号','会社名・氏名','車番・車格','登録確認'];
+  const label=WIZ.type==='nyuuka'?'入荷受付':'出荷受付';
+  const prog=Math.round((WIZ.step/4)*100);
+
+  let body='';
+
+  if(WIZ.step===1){
+    // --- STEP 1: 電話番号 ---
+    const buf=WIZ.tel;
+    const disp=buf.length>0
+      ? buf.replace(/^(\d{3})(\d{4})(\d{0,4})$/,'$1-$2-$3').replace(/-$/,'')
+      : '';
+    const driver=buf.length>=10?findDriver(buf):null;
+    WIZ.driver=driver;
+    const foundHtml=buf.length>=10
+      ? (driver
+        ? `<div class="wiz-found-card">
+            <div class="wiz-found-name">✓ ${e(driver.name)}</div>
+            <div class="wiz-found-sub">${e(driver.company||'')} ／ 車番:${e(driver.car||'―')} ／ ${e(driver.shakaku)}</div>
+            <div style="font-size:12px;color:var(--green);margin-top:6px;font-weight:600;">登録済みドライバーです。次へ進むと情報が自動入力されます。</div>
+          </div>`
+        : `<div style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:var(--radius-lg);padding:14px 16px;">
+            <div class="wiz-new-badge">新規ドライバー</div>
+            <div style="font-size:14px;color:var(--amber);font-weight:600;">DBに登録がありません。次の画面で会社名・氏名を入力してください。</div>
+          </div>`)
+      : '';
+
+    const keyLabels=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ']];
+    const keysHtml=keyLabels.map(([n,s])=>`
+      <button class="wiz-key" onpointerup="wizTelKey('${n}')" onclick="wizTelKey('${n}')">
+        ${n}<span class="wiz-key-sub">${s}</span>
+      </button>`).join('');
+
+    body=`
+      <div class="wiz-section-title">電話番号を<br>入力してください</div>
+      <div class="wiz-tel-display">
+        <div class="wiz-tel-number ${buf.length===0?'empty':''}">${buf.length===0?'090-0000-0000':disp}</div>
+        <div class="wiz-tel-hint">${buf.length}/11桁</div>
+      </div>
+      ${foundHtml}
+      <div class="wiz-keypad">
+        ${keysHtml}
+        <button class="wiz-key" style="visibility:hidden;"></button>
+        <button class="wiz-key" onpointerup="wizTelKey('0')" onclick="wizTelKey('0')">0</button>
+        <button class="wiz-key wiz-del" onpointerup="wizTelDel()" onclick="wizTelDel()">⌫</button>
+      </div>`;
+
+  } else if(WIZ.step===2){
+    // --- STEP 2: 会社名・氏名 ---
+    body=`
+      <div class="wiz-section-title">会社名と<br>お名前を入力</div>
+      <div class="wiz-field">
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">運送会社名</div>
+          <input class="wiz-field-input" id="wiz-company" type="text" value="${e(WIZ.company)}" placeholder="（株）〇〇運輸" oninput="WIZ.company=this.value">
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">お名前</div>
+          <input class="wiz-field-input" id="wiz-name" type="text" value="${e(WIZ.name)}" placeholder="山田 太郎" oninput="WIZ.name=this.value">
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7;">
+        ※ 登録済みの場合は自動入力されています。違う場合は修正してください。
+      </div>`;
+
+  } else if(WIZ.step===3){
+    // --- STEP 3: 車番・車格 ---
+    body=`
+      <div class="wiz-section-title">車番と<br>車格を入力</div>
+      <div class="wiz-field">
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">車番</div>
+          <input class="wiz-field-input" id="wiz-car" type="text" value="${e(WIZ.car)}" placeholder="1234" oninput="WIZ.car=this.value">
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">車格</div>
+          <select class="wiz-field-select" id="wiz-shakaku" onchange="WIZ.shakaku=this.value">
+            ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${WIZ.shakaku===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">積み方</div>
+          <select class="wiz-field-select" id="wiz-tsumi" onchange="WIZ.tsumi=this.value">
+            ${['バラ','PL'].map(s=>`<option${(WIZ.tsumi||'バラ')===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">番号札</div>
+          <input class="wiz-field-input" id="wiz-fuda" type="number" value="${WIZ.fuda||''}" placeholder="夜間番号（任意）" oninput="WIZ.fuda=this.value">
+        </div>
+      </div>`;
+
+  } else if(WIZ.step===4){
+    // --- STEP 4: 確認 + 入庫打刻 ---
+    body=`
+      <div class="wiz-section-title">内容を確認して<br>受付を完了</div>
+      <div class="wiz-confirm-card">
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">電話番号</div>
+          <div class="wiz-confirm-val">${WIZ.tel.replace(/^(\d{3})(\d{4})(\d{4})$/,'$1-$2-$3')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">運送会社名</div>
+          <div class="wiz-confirm-val">${e(WIZ.company||'―')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">お名前</div>
+          <div class="wiz-confirm-val">${e(WIZ.name||'―')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">車番</div>
+          <div class="wiz-confirm-val">${e(WIZ.car||'―')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">車格</div>
+          <div class="wiz-confirm-val">${WIZ.shakaku}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">積み方</div>
+          <div class="wiz-confirm-val">${WIZ.tsumi||'バラ'}</div>
+        </div>
+      </div>
+      <div style="background:var(--green-bg);border:1px solid var(--green-bd);border-radius:var(--radius-lg);padding:14px 16px;font-size:14px;color:var(--green);font-weight:600;line-height:1.7;">
+        「受付完了 ＋ 入庫打刻」を押すと現在時刻で入庫時間が登録されます。
+      </div>`;
+  }
+
+  root.innerHTML=`
+  <div class="wiz-screen">
+    <div class="wiz-header">
+      <button class="wiz-back" onpointerup="wizBack()" onclick="wizBack()">←</button>
+      <div class="wiz-header-info">
+        <div class="wiz-title">${label} 受付</div>
+        <div class="wiz-step-label">STEP ${WIZ.step} / 4 ー ${steps[WIZ.step-1]}</div>
+      </div>
+    </div>
+    <div class="wiz-progress"><div class="wiz-progress-bar" style="width:${prog}%;"></div></div>
+    <div class="wiz-body">${body}</div>
+    <div class="wiz-footer">
+      ${WIZ.step===4
+        ? `<button class="wiz-next-btn stamp"
+             onpointerup="wizComplete()"
+             onclick="wizComplete()">受付完了 ＋ 入庫打刻</button>`
+        : `<button class="wiz-next-btn"
+             ${WIZ.step===1&&WIZ.tel.length<10?'disabled':''}
+             onpointerup="if(!this.disabled){wizNext()}"
+             onclick="if(!this.disabled){wizNext()}">次へ　→</button>`
+      }
+    </div>
+  </div>`;
+}
+
+function wizTelKey(n){
+  if(WIZ.tel.length>=11) return;
+  WIZ.tel+=n;
+  renderWizard();
+}
+function wizTelDel(){
+  WIZ.tel=WIZ.tel.slice(0,-1);
+  renderWizard();
+}
+
+function wizNext(){
+  if(WIZ.step===1){
+    // DB照合して自動入力
+    const d=findDriver(WIZ.tel);
+    if(d){
+      if(!WIZ.company) WIZ.company=d.company||'';
+      if(!WIZ.name)    WIZ.name=d.name||'';
+      if(!WIZ.car)     WIZ.car=d.car||'';
+      WIZ.shakaku=d.shakaku||'2t';
+      WIZ.driver=d;
+    }
+  }
+  if(WIZ.step===2){
+    const c=document.getElementById('wiz-company');
+    const n=document.getElementById('wiz-name');
+    if(c) WIZ.company=c.value.trim();
+    if(n) WIZ.name=n.value.trim();
+  }
+  if(WIZ.step===3){
+    const car=document.getElementById('wiz-car');
+    const sha=document.getElementById('wiz-shakaku');
+    const tsu=document.getElementById('wiz-tsumi');
+    const fud=document.getElementById('wiz-fuda');
+    if(car) WIZ.car=car.value.trim();
+    if(sha) WIZ.shakaku=sha.value;
+    if(tsu) WIZ.tsumi=tsu.value;
+    if(fud) WIZ.fuda=fud.value;
+  }
+  WIZ.step++;
+  renderWizard();
+}
+
+function wizComplete(){
+  const day=todayData();
+  const arr=day[WIZ.type];
+  const slot=arr.find(r=>!r.company&&!r.nyuuko&&!r.deleted);
+  const r=slot||mkNRow(arr.length+1);
+  r.tel=WIZ.tel;
+  r.company=WIZ.company;
+  r.name=WIZ.name;
+  r.car=WIZ.car;
+  r.shakaku=WIZ.shakaku;
+  r.tsumi=WIZ.tsumi||'バラ';
+  r.fuda=WIZ.fuda||'';
+  r.nyuuko=nowStr();
+  if(!slot) arr.push(r);
+  // ドライバーDBに未登録なら自動登録するか確認
+  if(!WIZ.driver && WIZ.tel && WIZ.name){
+    const autoReg=confirm(`${WIZ.name}さんをドライバーDBに登録しますか？
+（次回から自動入力されます）`);
+    if(autoReg){
+      S.drivers.push({id:uid(),company:WIZ.company,name:WIZ.name,tel:WIZ.tel,car:WIZ.car,shakaku:WIZ.shakaku});
+    }
+  }
+  save();
+  WIZ.active=false;
+  S.viewDate=todayKey();
+  S.screen=WIZ.type;
+  render();
+}
+
+
+function closeSrcOther(id){
+  const el=document.getElementById('src-other-modal-input');
+  const val=el?el.value.trim():'';
+  if(val){
+    const day=S.db[S.viewDate];
+    const r=day?.lotte?.find(x=>x.id===id);
+    if(r){r.srcOther=val;save();}
+  }
+  S.modal=null;S.modalData={};
+  render();
+}
+
+function timeInputBlur(el, saveFn) {
+  let v = el.value.trim().replace(/[^\d:]/g, '');
+  if (!v) { el.value = ''; saveFn(); return; }
+  // 数字のみ4桁 → HH:MM に変換 (e.g. "1430" → "14:30")
+  if (/^\d{3,4}$/.test(v)) {
+    v = v.length === 3 ? '0' + v : v;
+    v = v.slice(0,2) + ':' + v.slice(2);
+  }
+  // HH:MM バリデーション
+  const m = v.match(/^(\d{1,2}):(\d{2})$/);
+  if (m) {
+    const h = parseInt(m[1]), min = parseInt(m[2]);
+    if (h >= 0 && h <= 23 && min >= 0 && min <= 59) {
+      el.value = String(h).padStart(2,'0') + ':' + String(min).padStart(2,'0');
+      el.classList.remove('err');
+      saveFn();
+      return;
+    }
+  }
+  el.classList.add('err');
+  el.title = '時刻は HH:MM 形式で入力してください（例: 14:30）';
+}
+
+initFirebase();
 render();
-setInterval(function(){
-  if(!S.modal&&!WIZ.active&&['nyuuka','shukka','lotte','home'].indexOf(S.screen)>=0) render();
+// Refresh alert status every 30s
+setInterval(()=>{
+  if(!S.modal && ['nyuuka','shukka','lotte','home'].includes(S.screen)) render();
 }, 30000);
 </script>
 </body>

@@ -226,11 +226,42 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 
 /* ===== FAB AREA ===== */
 .fab-area{
-  padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;
+  padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;
   background:var(--surface);border-top:1px solid var(--border);
   position:sticky;bottom:0;z-index:20;
   -webkit-tap-highlight-color:rgba(0,0,0,0);
 }
+.fab-driver{
+  width:100%;padding:20px 16px;
+  border-radius:14px;
+  border:none;
+  background:var(--text);color:var(--surface);
+  font-size:20px;font-weight:800;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  letter-spacing:-.01em;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  user-select:none;
+  transition:opacity .1s,transform .1s;
+}
+.fab-driver:active{opacity:.85;transform:scale(.98);}
+.fab-driver:disabled{opacity:.35;transform:none;}
+.fab-driver-icon{font-size:26px;line-height:1;}
+.fab-sub-row{display:flex;gap:8px;width:100%;}
+.fab-sub{
+  flex:1;padding:12px 8px;
+  border-radius:10px;
+  border:1px solid var(--border2);background:var(--surface2);
+  font-size:13px;font-weight:700;color:var(--text2);
+  cursor:pointer;text-align:center;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  user-select:none;
+  transition:background .1s;
+}
+.fab-sub:active{background:var(--border);}
+.fab-sub:disabled{opacity:.35;}
 .fab{
   padding:9px 16px;border-radius:var(--radius);
   border:1px solid var(--border2);background:var(--surface);
@@ -640,12 +671,13 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
   background:var(--surface);border-top:1px solid var(--border);
 }
 .wiz-next-btn{
-  width:100%;padding:18px;
+  width:100%;padding:20px;
   background:var(--text);color:var(--surface);
-  border:none;border-radius:var(--radius-lg);
-  font-size:18px;font-weight:800;cursor:pointer;
+  border:none;border-radius:14px;
+  font-size:20px;font-weight:800;cursor:pointer;
   -webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;
   letter-spacing:-.01em;
+  user-select:none;
 }
 .wiz-next-btn:active{opacity:.85;transform:scale(.98);}
 .wiz-next-btn:disabled{opacity:.35;transform:none;}
@@ -838,16 +870,24 @@ function adminLogout(){
 // ===== WIZARD STATE =====
 const WIZ = {
   active: false,
-  type: 'nyuuka',   // nyuuka | shukka
-  step: 1,          // 1=電話 2=会社名・氏名 3=車番・車格 4=確認
+  type: 'nyuuka', // nyuuka | shukka | lotte
+  step: 'tel',
   tel: '',
   company: '',
   name: '',
   car: '',
   shakaku: '2t',
+  tsumi: 'バラ',
   fuda: '',
   biko: '',
-  driver: null,     // DB照合結果
+  // lotte専用
+  order: '',
+  nyukaType: '入荷',
+  src: '狭山工場',
+  srcOther: '',
+  driver: null,
+  isNew: false,
+  consent: false,
 };
 
 const S = {
@@ -1181,12 +1221,18 @@ function renderTable(type){
   });
   html+=`</tbody></table></div>
   <div class="fab-area">
-    <button class="fab fab-primary" style="flex:1;min-height:48px;font-size:16px;" ${!isToday()?'disabled':''}
+    <button class="fab-driver" ${!isToday()?'disabled':''}
       onpointerup="if(!this.disabled){startWizard('${type}')}"
-      onclick="if(!this.disabled){startWizard('${type}')}">＋ ドライバー受付</button>
-    ${ed&&isToday()?`<button class="fab" style="min-height:48px;"
-      onpointerup="addRows('${type}')"
-      onclick="addRows('${type}')">行追加</button>`:''}
+      onclick="if(!this.disabled){startWizard('${type}')}">
+      <span class="fab-driver-icon">📋</span>
+      <span>ドライバー受付 ／ 新規登録</span>
+    </button>
+    <div class="fab-sub-row">
+      ${ed&&isToday()?`
+      <button class="fab-sub"
+        onpointerup="addRows('${type}')"
+        onclick="addRows('${type}')">＋ 行を追加</button>`:''}
+    </div>
   </div>`;
   root.innerHTML=html;
 }
@@ -1279,8 +1325,17 @@ function renderLotte(){
   });
   html+=`</tbody></table></div>
   <div class="fab-area">
-    <button class="fab fab-primary" ${!ed||!isToday()?'disabled':''} onclick="openModal('lotte')">＋ 新規受付</button>
-    <button class="fab" ${!ed||!isToday()?'disabled':''} onclick="addRows('lotte')">行を追加</button>
+    <button class="fab-driver" ${!isToday()?'disabled':''}
+      onpointerup="if(!this.disabled){startWizard('lotte')}"
+      onclick="if(!this.disabled){startWizard('lotte')}">
+      <span class="fab-driver-icon">⭐</span>
+      <span>ドライバー受付 ／ 新規登録</span>
+    </button>
+    <div class="fab-sub-row">
+      ${ed&&isToday()?`<button class="fab-sub"
+        onpointerup="addRows('lotte')"
+        onclick="addRows('lotte')">＋ 行を追加</button>`:''}
+    </div>
   </div>`;
   root.innerHTML=html;
 }
@@ -1975,46 +2030,78 @@ function checkPin(){
 //  WIZARD
 // ============================================================
 function startWizard(type){
-  WIZ.active=true; WIZ.type=type; WIZ.step=1;
+  WIZ.active=true; WIZ.type=type; WIZ.step='tel';
   WIZ.tel=''; WIZ.company=''; WIZ.name='';
-  WIZ.car=''; WIZ.shakaku='2t'; WIZ.fuda=''; WIZ.biko='';
-  WIZ.driver=null;
+  WIZ.car=''; WIZ.shakaku='2t'; WIZ.tsumi='バラ';
+  WIZ.fuda=''; WIZ.biko='';
+  WIZ.order=''; WIZ.nyukaType='入荷'; WIZ.src='狭山工場'; WIZ.srcOther='';
+  WIZ.driver=null; WIZ.isNew=false; WIZ.consent=false;
   renderWizard();
 }
 
 function wizBack(){
-  if(WIZ.step===1){ WIZ.active=false; render(); return; }
-  WIZ.step--;
+  const flow = wizFlow();
+  const idx = flow.indexOf(WIZ.step);
+  if(idx<=0){ WIZ.active=false; render(); return; }
+  WIZ.step = flow[idx-1];
   renderWizard();
+}
+function wizFlow(){
+  // lotte登録済み: tel → confirm_existing → lotte_info → final
+  // lotte新規:     tel → name → car → lotte_info → consent → final
+  // 通常登録済み: tel → confirm_existing → final
+  // 通常新規:     tel → name → car → consent → final
+  if(WIZ.type==='lotte'){
+    if(!WIZ.isNew) return ['tel','confirm_existing','lotte_info','final'];
+    return ['tel','name','car','lotte_info','consent','final'];
+  }
+  if(!WIZ.isNew) return ['tel','confirm_existing','final'];
+  return ['tel','name','car','consent','final'];
 }
 
 function renderWizard(){
   root.innerHTML='';
   modalContainer.innerHTML='';
-  const steps=['電話番号','会社名・氏名','車番・車格','登録確認'];
-  const label=WIZ.type==='nyuuka'?'入荷受付':'出荷受付';
-  const prog=Math.round((WIZ.step/4)*100);
+  const label=WIZ.type==='nyuuka'?'入荷受付':WIZ.type==='shukka'?'出荷受付':'ロッテ様受付';
+  const flow=wizFlow();
+  const idx=flow.indexOf(WIZ.step);
+  const total=flow.length;
+  const prog=Math.round(((idx+1)/total)*100);
+  const stepLabels={
+    tel:'電話番号入力',
+    confirm_existing:'登録情報の確認',
+    name:'会社名・お名前',
+    car:'車番・車格',
+    consent:'個人情報の取り扱い',
+    final:'受付内容の確認',
+  };
 
   let body='';
+  let nextLabel='次へ　→';
+  let nextDisabled=false;
+  let isLastStep=(WIZ.step==='final');
+  let isStampStep=isLastStep;
 
-  if(WIZ.step===1){
-    // --- STEP 1: 電話番号 ---
+  // ===== STEP: 電話番号 =====
+  if(WIZ.step==='tel'){
     const buf=WIZ.tel;
     const disp=buf.length>0
       ? buf.replace(/^(\d{3})(\d{4})(\d{0,4})$/,'$1-$2-$3').replace(/-$/,'')
       : '';
     const driver=buf.length>=10?findDriver(buf):null;
-    WIZ.driver=driver;
+    nextDisabled=buf.length<10;
+    nextLabel=driver?'登録情報を確認する　→':'情報を入力する　→';
+
     const foundHtml=buf.length>=10
       ? (driver
         ? `<div class="wiz-found-card">
             <div class="wiz-found-name">✓ ${e(driver.name)}</div>
             <div class="wiz-found-sub">${e(driver.company||'')} ／ 車番:${e(driver.car||'―')} ／ ${e(driver.shakaku)}</div>
-            <div style="font-size:12px;color:var(--green);margin-top:6px;font-weight:600;">登録済みドライバーです。次へ進むと情報が自動入力されます。</div>
+            <div style="font-size:13px;color:var(--green);margin-top:8px;font-weight:600;">登録済みドライバーです。次へ進んで内容を確認してください。</div>
           </div>`
         : `<div style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:var(--radius-lg);padding:14px 16px;">
             <div class="wiz-new-badge">新規ドライバー</div>
-            <div style="font-size:14px;color:var(--amber);font-weight:600;">DBに登録がありません。次の画面で会社名・氏名を入力してください。</div>
+            <div style="font-size:14px;color:var(--amber);font-weight:600;">DBに登録がありません。次の画面で会社名・お名前を入力してください。</div>
           </div>`)
       : '';
 
@@ -2038,8 +2125,39 @@ function renderWizard(){
         <button class="wiz-key wiz-del" onpointerup="wizTelDel()" onclick="wizTelDel()">⌫</button>
       </div>`;
 
-  } else if(WIZ.step===2){
-    // --- STEP 2: 会社名・氏名 ---
+  // ===== STEP: 登録済み確認 =====
+  } else if(WIZ.step==='confirm_existing'){
+    nextLabel='この内容で受付する　→';
+    body=`
+      <div class="wiz-section-title">登録情報を<br>確認してください</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:4px;">以下の内容で登録されています。修正が必要な場合は各項目を直接編集できます。</div>
+      <div class="wiz-field">
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">電話番号</div>
+          <div style="flex:1;font-size:16px;font-weight:700;padding:14px 8px;">${WIZ.tel.replace(/^(\d{3})(\d{4})(\d{4})$/,'$1-$2-$3')}</div>
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">運送会社名</div>
+          <input class="wiz-field-input" id="wiz-company" type="text" value="${e(WIZ.company)}" placeholder="（株）〇〇運輸" oninput="WIZ.company=this.value">
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">お名前</div>
+          <input class="wiz-field-input" id="wiz-name" type="text" value="${e(WIZ.name)}" placeholder="山田 太郎" oninput="WIZ.name=this.value">
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">車番</div>
+          <input class="wiz-field-input" id="wiz-car" type="text" value="${e(WIZ.car)}" placeholder="1234" oninput="WIZ.car=this.value">
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">車格</div>
+          <select class="wiz-field-select" id="wiz-shakaku" onchange="WIZ.shakaku=this.value">
+            ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${WIZ.shakaku===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>`;
+
+  // ===== STEP: 会社名・氏名（新規） =====
+  } else if(WIZ.step==='name'){
     body=`
       <div class="wiz-section-title">会社名と<br>お名前を入力</div>
       <div class="wiz-field">
@@ -2051,13 +2169,10 @@ function renderWizard(){
           <div class="wiz-field-label">お名前</div>
           <input class="wiz-field-input" id="wiz-name" type="text" value="${e(WIZ.name)}" placeholder="山田 太郎" oninput="WIZ.name=this.value">
         </div>
-      </div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.7;">
-        ※ 登録済みの場合は自動入力されています。違う場合は修正してください。
       </div>`;
 
-  } else if(WIZ.step===3){
-    // --- STEP 3: 車番・車格 ---
+  // ===== STEP: 車番・車格（新規） =====
+  } else if(WIZ.step==='car'){
     body=`
       <div class="wiz-section-title">車番と<br>車格を入力</div>
       <div class="wiz-field">
@@ -2074,7 +2189,7 @@ function renderWizard(){
         <div class="wiz-field-row">
           <div class="wiz-field-label">積み方</div>
           <select class="wiz-field-select" id="wiz-tsumi" onchange="WIZ.tsumi=this.value">
-            ${['バラ','PL'].map(s=>`<option${(WIZ.tsumi||'バラ')===s?' selected':''}>${s}</option>`).join('')}
+            ${['バラ','PL'].map(s=>`<option${WIZ.tsumi===s?' selected':''}>${s}</option>`).join('')}
           </select>
         </div>
         <div class="wiz-field-row">
@@ -2083,8 +2198,70 @@ function renderWizard(){
         </div>
       </div>`;
 
-  } else if(WIZ.step===4){
-    // --- STEP 4: 確認 + 入庫打刻 ---
+  // ===== STEP: 個人情報同意（新規のみ） =====
+  } else if(WIZ.step==='consent'){
+    nextLabel='同意して次へ　→';
+    nextDisabled=!WIZ.consent;
+    body=`
+      <div class="wiz-section-title">個人情報の<br>取り扱いについて</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;font-size:13px;line-height:1.9;color:var(--text2);max-height:260px;overflow-y:auto;">
+        <div style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:14px;">個人情報の取り扱いに関するご説明</div>
+        ご入力いただいた氏名・電話番号・車両情報などの個人情報は、川口弥平センターにおける入荷・出荷受付業務の管理のみを目的として利用します。<br><br>
+        <b style="color:var(--text);">利用目的</b><br>
+        ・入荷・出荷受付の記録および管理<br>
+        ・次回以降の受付における自動入力<br>
+        ・取適法（貨物自動車運送事業法）に基づく記録保管<br><br>
+        <b style="color:var(--text);">第三者提供</b><br>
+        法令に基づく場合を除き、第三者への提供は行いません。<br><br>
+        <b style="color:var(--text);">管理・削除</b><br>
+        情報の確認・修正・削除をご希望の場合は、センター管理者までお申し付けください。
+      </div>
+      <div style="background:var(--surface);border:2px solid ${WIZ.consent?'var(--green)':'var(--border2)'};border-radius:var(--radius-lg);padding:18px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:border-color .15s;"
+        onpointerup="WIZ.consent=!WIZ.consent;renderWizard()"
+        onclick="WIZ.consent=!WIZ.consent;renderWizard()">
+        <div style="width:28px;height:28px;border-radius:6px;border:2px solid ${WIZ.consent?'var(--green)':'var(--border2)'};background:${WIZ.consent?'var(--green)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;">
+          ${WIZ.consent?'<span style="color:#fff;font-size:18px;font-weight:800;">✓</span>':''}
+        </div>
+        <div style="font-size:15px;font-weight:700;color:${WIZ.consent?'var(--green)':'var(--text)'};">上記の内容に同意します</div>
+      </div>`;
+
+  // ===== STEP: ロッテ情報（オーダーNo・入荷出荷・出発元） =====
+  } else if(WIZ.step==='lotte_info'){
+    const srcOtherVisible = WIZ.src==='その他';
+    body=`
+      <div class="wiz-section-title">オーダー情報を<br>入力してください</div>
+      <div class="wiz-field">
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">オーダーNo</div>
+          <input class="wiz-field-input" id="wiz-order" type="text" value="${e(WIZ.order)}" placeholder="例: 12345" oninput="WIZ.order=this.value">
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">入荷 / 出荷</div>
+          <select class="wiz-field-select" id="wiz-nyuka-type" onchange="WIZ.nyukaType=this.value">
+            <option${WIZ.nyukaType==='入荷'?' selected':''}>入荷</option>
+            <option${WIZ.nyukaType==='出荷'?' selected':''}>出荷</option>
+          </select>
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">出発元/<br>入荷元</div>
+          <select class="wiz-field-select" id="wiz-src"
+            onchange="WIZ.src=this.value;renderWizard()">
+            ${['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'].map(s=>`<option${WIZ.src===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        ${srcOtherVisible?`
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">その他<br>（入力）</div>
+          <input class="wiz-field-input" id="wiz-src-other" type="text" value="${e(WIZ.srcOther)}" placeholder="出発元を入力" oninput="WIZ.srcOther=this.value">
+        </div>`:''}
+      </div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7;padding:4px 0;">
+        ※ バース着車・作業終了・出発時間は一覧画面から打刻してください
+      </div>`;
+
+  // ===== STEP: 最終確認 =====
+  } else if(WIZ.step==='final'){
+    isStampStep=true;
     body=`
       <div class="wiz-section-title">内容を確認して<br>受付を完了</div>
       <div class="wiz-confirm-card">
@@ -2093,7 +2270,7 @@ function renderWizard(){
           <div class="wiz-confirm-val">${WIZ.tel.replace(/^(\d{3})(\d{4})(\d{4})$/,'$1-$2-$3')}</div>
         </div>
         <div class="wiz-confirm-row">
-          <div class="wiz-confirm-label">運送会社名</div>
+          <div class="wiz-confirm-label">運送会社</div>
           <div class="wiz-confirm-val">${e(WIZ.company||'―')}</div>
         </div>
         <div class="wiz-confirm-row">
@@ -2108,13 +2285,29 @@ function renderWizard(){
           <div class="wiz-confirm-label">車格</div>
           <div class="wiz-confirm-val">${WIZ.shakaku}</div>
         </div>
+        ${WIZ.type==='lotte'?`
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">オーダーNo</div>
+          <div class="wiz-confirm-val">${e(WIZ.order||'―')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">入荷/出荷</div>
+          <div class="wiz-confirm-val">${WIZ.nyukaType}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">出発元</div>
+          <div class="wiz-confirm-val">${WIZ.src==='その他'?e(WIZ.srcOther||'その他'):WIZ.src}</div>
+        </div>`:`
         <div class="wiz-confirm-row">
           <div class="wiz-confirm-label">積み方</div>
           <div class="wiz-confirm-val">${WIZ.tsumi||'バラ'}</div>
-        </div>
+        </div>`}
       </div>
       <div style="background:var(--green-bg);border:1px solid var(--green-bd);border-radius:var(--radius-lg);padding:14px 16px;font-size:14px;color:var(--green);font-weight:600;line-height:1.7;">
-        「受付完了 ＋ 入庫打刻」を押すと現在時刻で入庫時間が登録されます。
+        ${WIZ.type==='lotte'
+          ?'「受付完了 ＋ 到着打刻」を押すと現在時刻で到着時間が登録されます。バース着車・作業終了・出発は一覧画面で打刻してください。'
+          :'「受付完了 ＋ 入庫打刻」を押すと現在時刻で入庫時間が登録されます。'
+        }
       </div>`;
   }
 
@@ -2124,24 +2317,25 @@ function renderWizard(){
       <button class="wiz-back" onpointerup="wizBack()" onclick="wizBack()">←</button>
       <div class="wiz-header-info">
         <div class="wiz-title">${label} 受付</div>
-        <div class="wiz-step-label">STEP ${WIZ.step} / 4 ー ${steps[WIZ.step-1]}</div>
+        <div class="wiz-step-label">${stepLabels[WIZ.step]||''}</div>
       </div>
     </div>
     <div class="wiz-progress"><div class="wiz-progress-bar" style="width:${prog}%;"></div></div>
     <div class="wiz-body">${body}</div>
     <div class="wiz-footer">
-      ${WIZ.step===4
+      ${isStampStep
         ? `<button class="wiz-next-btn stamp"
              onpointerup="wizComplete()"
-             onclick="wizComplete()">受付完了 ＋ 入庫打刻</button>`
+             onclick="wizComplete()">${WIZ.type==='lotte'?'受付完了 ＋ 到着打刻':'受付完了 ＋ 入庫打刻'}</button>`
         : `<button class="wiz-next-btn"
-             ${WIZ.step===1&&WIZ.tel.length<10?'disabled':''}
+             ${nextDisabled?'disabled':''}
              onpointerup="if(!this.disabled){wizNext()}"
-             onclick="if(!this.disabled){wizNext()}">次へ　→</button>`
+             onclick="if(!this.disabled){wizNext()}">${nextLabel}</button>`
       }
     </div>
   </div>`;
 }
+
 
 function wizTelKey(n){
   if(WIZ.tel.length>=11) return;
@@ -2186,27 +2380,69 @@ function wizNext(){
 }
 
 function wizComplete(){
-  const day=todayData();
-  const arr=day[WIZ.type];
-  const slot=arr.find(r=>!r.company&&!r.nyuuko&&!r.deleted);
-  const r=slot||mkNRow(arr.length+1);
-  r.tel=WIZ.tel;
-  r.company=WIZ.company;
-  r.name=WIZ.name;
-  r.car=WIZ.car;
-  r.shakaku=WIZ.shakaku;
-  r.tsumi=WIZ.tsumi||'バラ';
-  r.fuda=WIZ.fuda||'';
-  r.nyuuko=nowStr();
-  if(!slot) arr.push(r);
-  // ドライバーDBに未登録なら自動登録するか確認
-  if(!WIZ.driver && WIZ.tel && WIZ.name){
-    const autoReg=confirm(`${WIZ.name}さんをドライバーDBに登録しますか？
-（次回から自動入力されます）`);
-    if(autoReg){
-      S.drivers.push({id:uid(),company:WIZ.company,name:WIZ.name,tel:WIZ.tel,car:WIZ.car,shakaku:WIZ.shakaku});
+  // confirm_existing の場合、入力修正をWIZに反映
+  if(WIZ.step==='confirm_existing'){
+    const c=document.getElementById('wiz-company');
+    const n=document.getElementById('wiz-name');
+    const car=document.getElementById('wiz-car');
+    const sha=document.getElementById('wiz-shakaku');
+    if(c) WIZ.company=c.value.trim();
+    if(n) WIZ.name=n.value.trim();
+    if(car) WIZ.car=car.value.trim();
+    if(sha) WIZ.shakaku=sha.value;
+    // 登録済みドライバーのDB情報を最新に更新
+    if(WIZ.driver){
+      WIZ.driver.company=WIZ.company;
+      WIZ.driver.name=WIZ.name;
+      WIZ.driver.car=WIZ.car;
+      WIZ.driver.shakaku=WIZ.shakaku;
     }
   }
+
+  const day=todayData();
+  const arr=day[WIZ.type];
+  if(WIZ.type==='lotte'){
+    const slot=arr.find(r=>!r.company&&!r.tochaku&&!r.deleted);
+    const r=slot||mkLRow(arr.length+1);
+    r.tel=WIZ.tel;
+    r.company=WIZ.company;
+    r.name=WIZ.name;
+    r.car=WIZ.car;
+    r.shakaku=WIZ.shakaku;
+    r.order=WIZ.order||'';
+    r.type=WIZ.nyukaType||'入荷';
+    r.src=WIZ.src||'狭山工場';
+    r.srcOther=WIZ.src==='その他'?WIZ.srcOther:'';
+    r.tochaku=nowStr(); // 到着時間を打刻
+    r.basu=''; r.sakuEnd=''; r.shuppatsu='';
+    if(!slot) arr.push(r);
+  } else {
+    const slot=arr.find(r=>!r.company&&!r.nyuuko&&!r.deleted);
+    const r=slot||mkNRow(arr.length+1);
+    r.tel=WIZ.tel;
+    r.company=WIZ.company;
+    r.name=WIZ.name;
+    r.car=WIZ.car;
+    r.shakaku=WIZ.shakaku;
+    r.tsumi=WIZ.tsumi||'バラ';
+    r.fuda=WIZ.fuda||'';
+    r.nyuuko=nowStr();
+    if(!slot) arr.push(r);
+  }
+
+  // 新規ドライバーは同意済みなのでDBに自動登録
+  if(WIZ.isNew && WIZ.consent && WIZ.tel && WIZ.name){
+    S.drivers.push({
+      id:uid(),company:WIZ.company,name:WIZ.name,
+      tel:WIZ.tel,car:WIZ.car,shakaku:WIZ.shakaku
+    });
+  }
+  // 登録済みドライバーの情報を更新（修正があれば）
+  if(WIZ.driver){
+    const idx=S.drivers.findIndex(d=>d.tel===WIZ.tel);
+    if(idx>=0) S.drivers[idx]={...S.drivers[idx],company:WIZ.company,name:WIZ.name,car:WIZ.car,shakaku:WIZ.shakaku};
+  }
+
   save();
   WIZ.active=false;
   S.viewDate=todayKey();

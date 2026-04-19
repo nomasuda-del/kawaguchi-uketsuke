@@ -76,7 +76,7 @@ input,select,button,textarea{font-family:inherit;}
 .home-alert-bar.show{display:block;}
 
 .menu-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  display:grid;grid-template-columns:1fr;gap:12px;
   padding:16px;
 }
 .menu-card{
@@ -145,7 +145,7 @@ input,select,button,textarea{font-family:inherit;}
 
 /* ===== TABLE ===== */
 .tbl-wrap{overflow-x:auto;flex:1;-webkit-overflow-scrolling:touch;}
-table{width:100%;border-collapse:collapse;min-width:800px;}
+table{width:100%;border-collapse:collapse;min-width:800px;table-layout:fixed;}
 thead th{
   background:var(--surface2);padding:7px 5px;
   font-size:11px;font-weight:700;color:var(--text2);
@@ -1015,31 +1015,25 @@ function renderHome(){
   const actN=td.nyuuka.filter(r=>['active','warn','alert'].includes(rowStatus(r,'nyuuka'))).length;
   const actS=td.shukka.filter(r=>['active','warn','alert'].includes(rowStatus(r,'shukka'))).length;
   const actL=td.lotte.filter(r=>['active','warn','alert'].includes(rowStatus(r,'lotte'))).length;
-  const syncLabel=syncStatus==='live'?'リアルタイム同期中':'オフライン';
-  const isAdmin=isAdminLoggedIn();
+  const syncLabel=syncStatus==='live'?'リアルタイム同期中':'オフライン（ローカル保存）';
+  const syncCls=syncStatus==='live'?'sync':'offline';
+  const isAdm=isAdminLoggedIn();
 
   root.innerHTML=`
   <div class="app-bar">
     <div class="app-bar-title">川口弥平センター</div>
-    <span class="bar-badge ${syncStatus==='live'?'sync':'offline'}">
-      <span class="sync-dot ${syncStatus==='live'?'live':'offline'}" style="display:inline-block;vertical-align:middle;margin-right:4px;"></span>${syncLabel}
-    </span>
+    <span class="bar-badge ${syncCls}">${syncLabel}</span>
   </div>
-
+  ${isAdm?`<div class="admin-bar">
+    <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+  </div>`:''}
   <div class="home-hero">
     <div class="home-title">${fmtKey(tk)}</div>
     <div class="home-subtitle">受付管理システム${total>0?` &nbsp;<span style="color:var(--red);font-weight:700;">⚠ 要対応 ${total}件</span>`:''}</div>
   </div>
-
   ${total>0?`<div class="home-alert-bar show">⚠ 要対応: 入荷 ${alertN}件 ／ 出荷 ${alertS}件 ／ ロッテ ${alertL}件</div>`:''}
 
-  ${isAdmin ? `
-  <!-- 管理者モード -->
-  <div style="background:#1a1a1a;color:#fff;padding:8px 16px;font-size:12px;display:flex;align-items:center;gap:8px;">
-    <span style="flex:1;">🔐 管理者モードでログイン中</span>
-    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
-  </div>
-
   <div class="menu-grid">
     <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
       <div class="menu-card-icon">📥</div>
@@ -1053,81 +1047,47 @@ function renderHome(){
       <div class="menu-card-sub">作業中 ${actS}件</div>
       ${alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
     </div>
-    <div class="menu-card full lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div class="menu-card-icon">⭐</div>
-        <div>
-          <div class="menu-card-label">ロッテ様専用受付</div>
-          <div class="menu-card-sub">作業中 ${actL}件${alertL>0?` <span style="color:var(--red);font-weight:700;">要対応 ${alertL}件</span>`:''}</div>
-        </div>
-      </div>
+    <div class="menu-card lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
+      <div class="menu-card-icon">⭐</div>
+      <div class="menu-card-label">ロッテ様専用受付</div>
+      <div class="menu-card-sub">作業中 ${actL}件${alertL>0?` &nbsp;<span style="color:var(--lotte);font-weight:700;">要対応 ${alertL}件</span>`:''}</div>
     </div>
-    <div class="menu-card" onclick="go('history')">
-      <div class="menu-card-icon">📅</div>
-      <div class="menu-card-label">過去データ</div>
-      <div class="menu-card-sub">${allDates().length}日分 ／ 後日修正可</div>
-    </div>
-    <div class="menu-card" onclick="go('drivers')">
-      <div class="menu-card-icon">👤</div>
-      <div class="menu-card-label">ドライバーDB</div>
-      <div class="menu-card-sub">${S.drivers.length}名登録</div>
-    </div>
-    <div class="menu-card full" onclick="go('export')">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div class="menu-card-icon">📄</div>
-        <div>
-          <div class="menu-card-label">データ出力（取適法対応）</div>
-          <div class="menu-card-sub">CSV ダウンロード ／ 印刷</div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="section-label">アラート設定（入庫後の経過時間）</div>
-  <div style="display:flex;align-items:center;gap:10px;padding:6px 16px 20px;flex-wrap:wrap;font-size:12px;color:var(--text2);">
-    警告（黄） <input type="number" value="${S.alertWarn}" min="10" max="480"
-      style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;"
-      onchange="S.alertWarn=+this.value"> 分 &nbsp;&nbsp;
-    アラート（赤） <input type="number" value="${S.alertDanger}" min="10" max="480"
-      style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;"
-      onchange="S.alertDanger=+this.value"> 分
-  </div>
-
-  ` : `
-  <!-- 一般スタッフモード -->
-  <div class="menu-grid">
-    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
-      <div class="menu-card-icon">📥</div>
-      <div class="menu-card-label">入荷受付</div>
-      <div class="menu-card-sub">作業中 ${actN}件</div>
-      ${alertN>0?`<div class="menu-card-alert">要対応 ${alertN}件</div>`:''}
-    </div>
-    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
-      <div class="menu-card-icon">📤</div>
-      <div class="menu-card-label">出荷受付</div>
-      <div class="menu-card-sub">作業中 ${actS}件</div>
-      ${alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
-    </div>
-    <div class="menu-card full lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div class="menu-card-icon">⭐</div>
-        <div>
-          <div class="menu-card-label">ロッテ様専用受付</div>
-          <div class="menu-card-sub">作業中 ${actL}件${alertL>0?` <span style="color:var(--red);font-weight:700;">要対応 ${alertL}件</span>`:''}</div>
-        </div>
+    ${isAdm?`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div class="menu-card" onclick="go('history')" style="min-height:80px;padding:14px;gap:6px;">
+        <div style="font-size:22px;">📅</div>
+        <div style="font-size:13px;font-weight:700;">過去データ</div>
+        <div style="font-size:11px;color:var(--text2);">${allDates().length}日分</div>
+      </div>
+      <div class="menu-card" onclick="go('drivers')" style="min-height:80px;padding:14px;gap:6px;">
+        <div style="font-size:22px;">👤</div>
+        <div style="font-size:13px;font-weight:700;">ドライバーDB</div>
+        <div style="font-size:11px;color:var(--text2);">${S.drivers.length}名</div>
+      </div>
+      <div class="menu-card" onclick="go('export')" style="min-height:80px;padding:14px;gap:6px;">
+        <div style="font-size:22px;">📄</div>
+        <div style="font-size:13px;font-weight:700;">データ出力</div>
+        <div style="font-size:11px;color:var(--text2);">CSV / 印刷</div>
       </div>
     </div>
-    <div class="menu-card full" style="border-style:dashed;cursor:pointer;" onclick="go('history')">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div class="menu-card-icon">🔑</div>
-        <div>
-          <div class="menu-card-label">管理者ログイン</div>
-          <div class="menu-card-sub">過去データ・ドライバーDB・データ出力・アラート設定</div>
-        </div>
-      </div>
+    <div class="section-label">アラート設定（入庫後の経過時間）</div>
+    <div style="display:flex;align-items:center;gap:10px;padding:0 0 16px;flex-wrap:wrap;font-size:12px;color:var(--text2);">
+      警告（黄） <input type="number" value="${S.alertWarn}" min="10" max="480"
+        style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;"
+        onchange="S.alertWarn=+this.value"> 分 &nbsp;&nbsp;
+      アラート（赤） <input type="number" value="${S.alertDanger}" min="10" max="480"
+        style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;"
+        onchange="S.alertDanger=+this.value"> 分
     </div>
-  </div>
-  `}`;
+    `:`
+    <div class="menu-card" onclick="go('history')"
+      style="min-height:auto;padding:10px 16px;background:var(--surface2);border-style:dashed;flex-direction:row;align-items:center;gap:10px;">
+      <span style="font-size:16px;">🔑</span>
+      <span style="font-size:13px;font-weight:600;color:var(--text2);">管理者ログイン</span>
+    </div>
+    `}
+  </div>`;
 }
 
 
@@ -1166,13 +1126,15 @@ function renderTable(type){
   ${alertRows.length>0&&ed?`<div class="alert-bar">⚠ 要対応: ${alertRows.map(r=>`No.${r.no} ${e(r.company||'')}`).join('、')}</div>`:''}
   <div class="tbl-wrap"><table>
   <thead><tr>
-    <th style="width:28px;"></th>
-    <th>No</th>
-    <th style="min-width:104px;">電話番号</th>
+    <th style="width:34px;"></th>
+    <th style="width:32px;">No</th>
+    <th style="width:130px;">電話番号</th>
     <th style="min-width:108px;">運送会社名</th>
     <th style="min-width:62px;">氏名</th>
-    <th>札</th>
-    <th>車番</th><th>車格</th><th>積み方</th>
+    <th style="width:36px;">札</th>
+    <th style="width:52px;">車番</th>
+    <th style="width:68px;">車格</th>
+    <th style="width:56px;">積み方</th>
     <th style="min-width:104px;">入庫時間</th>
     <th style="min-width:104px;">出庫時間</th>
     <th style="min-width:74px;">備考</th>
@@ -1198,7 +1160,7 @@ function renderTable(type){
       <td>
         ${dis
           ? `<span style="font-size:12px;color:var(--text2);">${e(r.tel||'―')}</span>`
-          : `<button style="min-width:100px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
+          : `<button style="width:126px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
               onpointerup="openTelModal('${type}','${r.id}')"
               onclick="openTelModal('${type}','${r.id}')"
             >${r.tel?e(r.tel):'タップして入力'}</button>`
@@ -1254,13 +1216,15 @@ function renderLotte(){
   ${alertRows.length>0&&ed?`<div class="alert-bar">⚠ 時間逆転または長時間滞留: ${alertRows.map(r=>`No.${r.no}`).join('、')}</div>`:''}
   <div class="tbl-wrap"><table>
   <thead><tr>
-    <th style="width:28px;"></th>
-    <th>No</th>
-    <th style="min-width:100px;">電話番号</th>
+    <th style="width:34px;"></th>
+    <th style="width:32px;">No</th>
+    <th style="width:130px;">電話番号</th>
     <th style="min-width:108px;">運送会社名</th>
     <th style="min-width:60px;">氏名</th>
-    <th>車番</th><th>車格</th>
-    <th>オーダーNo</th><th>入/出荷</th>
+    <th style="width:52px;">車番</th>
+    <th style="width:68px;">車格</th>
+    <th style="width:80px;">オーダーNo</th>
+    <th style="width:60px;">入/出荷</th>
     <th style="min-width:112px;">出発元/入荷元</th>
     <th style="min-width:104px;">到着時間</th>
     <th style="min-width:104px;">バース着車</th>

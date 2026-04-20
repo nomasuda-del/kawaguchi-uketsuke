@@ -740,6 +740,7 @@ let syncStatus = 'offline'; // 'live' | 'offline'
 
 function initFirebase() {
   if (!FIREBASE_CONFIGURED) return;
+  if (typeof firebase === 'undefined') return;
   try {
     firebase.initializeApp(FIREBASE_CONFIG);
     fbDb = firebase.database();
@@ -757,7 +758,7 @@ function initFirebase() {
       if (!S.modal) render();
     });
   } catch(e) {
-    console.warn('Firebase init failed:', e);
+    
     syncStatus = 'offline';
   }
 }
@@ -1128,10 +1129,10 @@ function renderTable(type){
   <thead><tr>
     <th style="width:34px;"></th>
     <th style="width:32px;">No</th>
-    <th style="width:130px;">電話番号</th>
-    <th style="min-width:108px;">運送会社名</th>
-    <th style="min-width:62px;">氏名</th>
-    <th style="width:36px;">札</th>
+    <th style="width:40px;">札</th>
+    <th style="min-width:120px;">運送会社名</th>
+    <th style="min-width:65px;">氏名</th>
+    <th style="min-width:120px;">電話番号</th>
     <th style="width:52px;">車番</th>
     <th style="width:68px;">車格</th>
     <th style="width:56px;">積み方</th>
@@ -1218,9 +1219,9 @@ function renderLotte(){
   <thead><tr>
     <th style="width:34px;"></th>
     <th style="width:32px;">No</th>
-    <th style="width:130px;">電話番号</th>
-    <th style="min-width:108px;">運送会社名</th>
-    <th style="min-width:60px;">氏名</th>
+    <th style="min-width:120px;">運送会社名</th>
+    <th style="min-width:65px;">氏名</th>
+    <th style="min-width:120px;">電話番号</th>
     <th style="width:52px;">車番</th>
     <th style="width:68px;">車格</th>
     <th style="width:80px;">オーダーNo</th>

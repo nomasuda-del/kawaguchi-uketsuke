@@ -664,6 +664,14 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
   border:none;background:transparent;color:var(--text);
   outline:none;width:100%;-webkit-appearance:none;
 }
+.wiz-edit-inp{
+  width:100%;font-size:20px;font-weight:700;
+  padding:16px 40px 16px 8px;
+  border:none;background:transparent;color:var(--text);
+  outline:none;
+}
+.wiz-edit-inp::placeholder{color:var(--border2);font-weight:400;font-size:16px;}
+.wiz-edit-inp:focus{background:#fffdf0;}
 
 /* ウィザード フッターボタン */
 .wiz-footer{
@@ -698,6 +706,24 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
   margin-bottom:8px;
 }
 
+
+/* ===== TIME INPUT MODAL ===== */
+.time-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:9998;}
+.time-modal{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:420px;padding-bottom:env(safe-area-inset-bottom,12px);}
+.time-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid #e0ddd5;}
+.time-modal-title{font-size:17px;font-weight:800;}
+.time-modal-close{width:36px;height:36px;border-radius:50%;border:none;background:#f0efe9;font-size:18px;color:#666;display:flex;align-items:center;justify-content:center;}
+.time-disp-wrap{text-align:center;padding:14px 20px 10px;border-bottom:1px solid #e0ddd5;}
+.time-disp{font-size:44px;font-weight:800;letter-spacing:.06em;color:#1a1a1a;min-height:58px;display:flex;align-items:center;justify-content:center;}
+.time-disp.empty{color:#ccc;font-size:28px;font-weight:400;}
+.time-hint{font-size:12px;color:#999;margin-top:6px;}
+.time-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 14px 4px;}
+.time-key{height:62px;border-radius:10px;border:1px solid #ccc9be;background:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.time-key:active{background:#f0efe9;}
+.time-del{background:#f0efe9;color:#666;font-size:20px;}
+.time-now-btn{display:block;width:calc(100% - 28px);margin:6px 14px 2px;padding:13px;background:#2d7a3a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;}
+.time-ok-btn{display:block;width:calc(100% - 28px);margin:4px 14px 4px;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;}
+.time-ok-btn:disabled{background:#ccc;}
 </style>
 </head>
 <body>
@@ -1136,9 +1162,9 @@ function renderTable(type){
     <th style="width:52px;">車番</th>
     <th style="width:68px;">車格</th>
     <th style="width:56px;">積み方</th>
+    <th style="min-width:74px;">メーカー名</th>
     <th style="min-width:104px;">入庫時間</th>
     <th style="min-width:104px;">出庫時間</th>
-    <th style="min-width:74px;">備考</th>
   </tr></thead><tbody>`;
 
   arr.forEach(r=>{
@@ -1170,15 +1196,15 @@ function renderTable(type){
       <td><input class="t-input" style="width:46px;" type="text" value="${e(r.car||'')}" ${dis?'disabled':''} oninput="upd('${type}','${r.id}','car',this.value)"></td>
       <td><select class="t-select" style="width:62px;" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','shakaku',this.value)">${SHAKAKU.map(s=>`<option${r.shakaku===s?' selected':''}>${s}</option>`).join('')}</select></td>
       <td><select class="t-select" style="width:50px;" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','tsumi',this.value)">${TSUMI.map(s=>`<option${r.tsumi===s?' selected':''}>${s}</option>`).join('')}</select></td>
-      <td><div class="time-wrap">
-        <input class="time-inp" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.nyuuko||''}" ${dis?'disabled':''} oninput="upd('${type}','${r.id}','nyuuko',this.value);render()">
-        <button class="stamp-btn${r.nyuuko?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('${type}','${r.id}','nyuuko')">${r.nyuuko||'打刻'}</button>
-      </div></td>
-      <td><div class="time-wrap">
-        <input class="time-inp ${tErr}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.shukko||''}" ${dis?'disabled':''} oninput="upd('${type}','${r.id}','shukko',this.value);render()">
-        <button class="stamp-btn${r.shukko?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('${type}','${r.id}','shukko')">${r.shukko||'打刻'}</button>
-      </div></td>
       <td><input class="t-input" style="min-width:64px;" type="text" value="${e(r.biko||'')}" ${dis?'disabled':''} placeholder="メーカー名" oninput="upd('${type}','${r.id}','biko',this.value)"></td>
+      <td><div class="time-wrap">
+        <button class="stamp-btn${r.nyuuko?' stamped':''}" ${dis?'disabled':''} onclick="openTimeModal('${type}','${r.id}','nyuuko','${r.nyuuko||''}')">${r.nyuuko||'--:--'}</button>
+        ${!dis&&isToday()?'<button class="stamp-btn" onclick="stamp(\'${type}\',\'${r.id}\',\'nyuuko\')">今</button>':''}
+      </div></td>
+      <td><div class="time-wrap">
+        <button class="stamp-btn${r.shukko?' stamped':''}" ${dis?'disabled':''} onclick="openTimeModal('${type}','${r.id}','shukko','${r.shukko||''}')">${r.shukko||'--:--'}</button>
+        ${!dis&&isToday()?'<button class="stamp-btn" onclick="stamp(\'${type}\',\'${r.id}\',\'shukko\')">今</button>':''}
+      </div></td>
     </tr>
     ${hasLog?`<tr class="edit-log-row"><td colspan="12">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
   });
@@ -1270,20 +1296,20 @@ function renderLotte(){
         </div>`:''}
       </td>
       <td><div class="time-wrap">
-        <input class="time-inp" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.tochaku||''}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','tochaku',this.value);render()">
-        <button class="stamp-btn${r.tochaku?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','tochaku')">${r.tochaku||'打刻'}</button>
+        <button class="stamp-btn${r.tochaku?' stamped':''}" ${dis?'disabled':''} onclick="openTimeModal('lotte','${r.id}','tochaku','${r.tochaku||''}')">${r.tochaku||'--:--'}</button>
+        ${!dis&&isToday()?'<button class="stamp-btn" onclick="stamp(\'lotte\',\'${r.id}\',\'tochaku\')">今</button>':''}
       </div></td>
       <td><div class="time-wrap">
-        <input class="time-inp ${tC(r.tochaku,r.basu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.basu||''}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','basu',this.value);render()">
-        <button class="stamp-btn${r.basu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','basu')">${r.basu||'打刻'}</button>
+        <button class="stamp-btn${r.basu?' stamped':''}" ${dis?'disabled':''} onclick="openTimeModal('lotte','${r.id}','basu','${r.basu||''}')">${r.basu||'--:--'}</button>
+        ${!dis&&isToday()?'<button class="stamp-btn" onclick="stamp(\'lotte\',\'${r.id}\',\'basu\')">今</button>':''}
       </div></td>
       <td><div class="time-wrap">
-        <input class="time-inp ${tC(r.basu,r.sakuEnd)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.sakuEnd||''}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','sakuEnd',this.value);render()">
-        <button class="stamp-btn${r.sakuEnd?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','sakuEnd')">${r.sakuEnd||'打刻'}</button>
+        <button class="stamp-btn${r.sakuEnd?' stamped':''}" ${dis?'disabled':''} onclick="openTimeModal('lotte','${r.id}','sakuEnd','${r.sakuEnd||''}')">${r.sakuEnd||'--:--'}</button>
+        ${!dis&&isToday()?'<button class="stamp-btn" onclick="stamp(\'lotte\',\'${r.id}\',\'sakuEnd\')">今</button>':''}
       </div></td>
       <td><div class="time-wrap">
-        <input class="time-inp ${tC(r.sakuEnd,r.shuppatsu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.shuppatsu||''}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','shuppatsu',this.value);render()">
-        <button class="stamp-btn${r.shuppatsu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','shuppatsu')">${r.shuppatsu||'打刻'}</button>
+        <button class="stamp-btn${r.shuppatsu?' stamped':''}" ${dis?'disabled':''} onclick="openTimeModal('lotte','${r.id}','shuppatsu','${r.shuppatsu||''}')">${r.shuppatsu||'--:--'}</button>
+        ${!dis&&isToday()?'<button class="stamp-btn" onclick="stamp(\'lotte\',\'${r.id}\',\'shuppatsu\')">今</button>':''}
       </div></td>
     </tr>
     ${hasLog?`<tr class="edit-log-row"><td colspan="14">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
@@ -1891,7 +1917,7 @@ function clearPin(){
 
 function getExpDate(){return document.getElementById('exp-date')?.value||todayKey();}
 function toCsvNS(arr){
-  const h='No,番号札,会社名,氏名,電話番号,車番,車格,積み方,入庫時間,出庫時間,備考,修正記録';
+  const h='No,番号札,会社名,氏名,電話番号,車番,車格,積み方,メーカー名,入庫時間,出庫時間,修正記録';
   const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[r.no,r.fuda||'',r.company,r.name||'',r.tel||'',r.car||'',r.shakaku,r.tsumi,r.nyuuko||'',r.shukko||'',r.biko||'',(r.editLog&&r.editLog.length?r.editLog.join('|'):'')].join(','));
   return h+'\n'+rows.join('\n');
 }
@@ -2099,29 +2125,41 @@ function renderWizard(){
     nextLabel='この内容で受付する　→';
     body=`
       <div class="wiz-section-title">登録情報を<br>確認してください</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:4px;">以下の内容で登録されています。修正が必要な場合は各項目を直接編集できます。</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;gap:6px;padding:10px 14px;background:#fff8e8;border-radius:8px;border:1px solid #e8c96a;">✏️ &nbsp;各項目をタップして修正できます</div>
       <div class="wiz-field">
-        <div class="wiz-field-row">
+        <div class="wiz-field-row" style="background:var(--surface2);">
           <div class="wiz-field-label">電話番号</div>
-          <div style="flex:1;font-size:16px;font-weight:700;padding:14px 8px;">${WIZ.tel.replace(/^(\d{3})(\d{4})(\d{4})$/,'$1-$2-$3')}</div>
+          <div style="flex:1;font-size:20px;font-weight:800;padding:16px 8px;color:var(--text);">  ${WIZ.tel.replace(/^(\d{3})(\d{4})(\d{4})$/,'$1-$2-$3')}</div>
         </div>
-        <div class="wiz-field-row">
+        <div class="wiz-field-row" style="background:#fafaf8;">
           <div class="wiz-field-label">運送会社名</div>
-          <input class="wiz-field-input" id="wiz-company" type="text" value="${e(WIZ.company)}" placeholder="（株）〇〇運輸" oninput="WIZ.company=this.value">
+          <div style="flex:1;position:relative;">
+            <input class="wiz-edit-inp" id="wiz-company" type="text" value="${e(WIZ.company)}" placeholder="（株）〇〇運輸" oninput="WIZ.company=this.value">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;">✏️</span>
+          </div>
         </div>
-        <div class="wiz-field-row">
+        <div class="wiz-field-row" style="background:#fafaf8;">
           <div class="wiz-field-label">お名前</div>
-          <input class="wiz-field-input" id="wiz-name" type="text" value="${e(WIZ.name)}" placeholder="山田 太郎" oninput="WIZ.name=this.value">
+          <div style="flex:1;position:relative;">
+            <input class="wiz-edit-inp" id="wiz-name" type="text" value="${e(WIZ.name)}" placeholder="山田 太郎" oninput="WIZ.name=this.value">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;">✏️</span>
+          </div>
         </div>
-        <div class="wiz-field-row">
+        <div class="wiz-field-row" style="background:#fafaf8;">
           <div class="wiz-field-label">車番</div>
-          <input class="wiz-field-input" id="wiz-car" type="text" value="${e(WIZ.car)}" placeholder="1234" oninput="WIZ.car=this.value">
+          <div style="flex:1;position:relative;">
+            <input class="wiz-edit-inp" id="wiz-car" type="text" value="${e(WIZ.car)}" placeholder="1234" oninput="WIZ.car=this.value">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;">✏️</span>
+          </div>
         </div>
-        <div class="wiz-field-row">
+        <div class="wiz-field-row" style="background:#fafaf8;">
           <div class="wiz-field-label">車格</div>
-          <select class="wiz-field-select" id="wiz-shakaku" onchange="WIZ.shakaku=this.value">
-            ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${WIZ.shakaku===s?' selected':''}>${s}</option>`).join('')}
-          </select>
+          <div style="flex:1;position:relative;">
+            <select class="wiz-edit-inp" id="wiz-shakaku" onchange="WIZ.shakaku=this.value" style="-webkit-appearance:none;">
+              ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${WIZ.shakaku===s?' selected':''}>${s}</option>`).join('')}
+            </select>
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;">✏️</span>
+          </div>
         </div>
       </div>`;
 
@@ -2469,6 +2507,100 @@ function timeInputBlur(el, saveFn) {
   }
   el.classList.add('err');
   el.title = '時刻は HH:MM 形式で入力してください（例: 14:30）';
+}
+
+
+// ============================================================
+// TIME INPUT MODAL
+// ============================================================
+var _TM = {type:'',id:'',field:'',buf:''};
+var _TM_LABELS = {nyuuko:'入庫時間',shukko:'出庫時間',tochaku:'到着時間',basu:'バース着車',sakuEnd:'作業終了',shuppatsu:'出発時間'};
+
+function openTimeModal(type,id,field,cur){
+  _TM = {type:type,id:id,field:field,buf:''};
+  if(cur && /^\d{2}:\d{2}$/.test(cur)) _TM.buf = cur.replace(':','');
+  renderTimeModal();
+}
+function renderTimeModal(){
+  var old = document.getElementById('_tm_overlay');
+  if(old) old.remove();
+  var buf=_TM.buf;
+  var dh = buf.length>=2?buf.slice(0,2):(buf.length===1?buf+'_':'--');
+  var dm = buf.length>=4?buf.slice(2,4):(buf.length===3?buf.slice(2)+'_':'--');
+  var valid = buf.length===4;
+  var hint = buf.length<2?'時（00〜23）を入力':buf.length<4?'分（00〜59）を入力':'OKを押して確定';
+
+  var ov = document.createElement('div');
+  ov.id='_tm_overlay'; ov.className='time-modal-overlay';
+  var md = document.createElement('div'); md.className='time-modal';
+
+  // header
+  var hdr=document.createElement('div'); hdr.className='time-modal-hdr';
+  var ttl=document.createElement('div'); ttl.className='time-modal-title'; ttl.textContent=_TM_LABELS[_TM.field]||'時刻入力';
+  var cls=document.createElement('button'); cls.className='time-modal-close'; cls.textContent='✕'; cls.onclick=function(){ov.remove();};
+  hdr.appendChild(ttl); hdr.appendChild(cls); md.appendChild(hdr);
+
+  // display
+  var dw=document.createElement('div'); dw.className='time-disp-wrap';
+  var dp=document.createElement('div'); dp.className='time-disp'+(buf.length===0?' empty':'');
+  dp.innerHTML = buf.length===0?'--:--':'<span>'+dh+'</span><span style="margin:0 4px;">:</span><span>'+dm+'</span>';
+  var ht=document.createElement('div'); ht.className='time-hint'; ht.textContent=hint;
+  dw.appendChild(dp); dw.appendChild(ht); md.appendChild(dw);
+
+  // keypad
+  var kp=document.createElement('div'); kp.className='time-keypad';
+  [1,2,3,4,5,6,7,8,9].forEach(function(n){
+    var b=document.createElement('button'); b.className='time-key'; b.textContent=n;
+    b.onclick=function(){tmKey(String(n));}; kp.appendChild(b);
+  });
+  var sp=document.createElement('button'); sp.style.visibility='hidden'; kp.appendChild(sp);
+  var z=document.createElement('button'); z.className='time-key'; z.textContent='0'; z.onclick=function(){tmKey('0');}; kp.appendChild(z);
+  var dl=document.createElement('button'); dl.className='time-key time-del'; dl.textContent='⌫'; dl.onclick=function(){tmDel();}; kp.appendChild(dl);
+  md.appendChild(kp);
+
+  // now button
+  var nb=document.createElement('button'); nb.className='time-now-btn';
+  nb.textContent='現在時刻を使用（'+nowStr()+'）';
+  nb.onclick=function(){ _TM.buf=nowStr().replace(':',''); tmConfirm(); };
+  md.appendChild(nb);
+
+  // ok button
+  var ok=document.createElement('button'); ok.className='time-ok-btn';
+  ok.textContent=valid?'確定（'+dh+':'+dm+'）':'時刻を入力してください';
+  if(!valid) ok.disabled=true;
+  ok.onclick=function(){if(valid)tmConfirm();};
+  md.appendChild(ok);
+
+  var sp2=document.createElement('div'); sp2.style.height='8px'; md.appendChild(sp2);
+  ov.appendChild(md);
+  document.body.appendChild(ov);
+}
+function tmKey(n){
+  var buf=_TM.buf;
+  if(buf.length>=4) return;
+  var next=buf+n;
+  if(next.length===1 && +n>2) return;
+  if(next.length===2 && +next>23) return;
+  if(next.length===3 && +n>5) return;
+  _TM.buf=next; renderTimeModal();
+}
+function tmDel(){ _TM.buf=_TM.buf.slice(0,-1); renderTimeModal(); }
+function tmConfirm(){
+  var buf=_TM.buf; if(buf.length!==4) return;
+  var ts=buf.slice(0,2)+':'+buf.slice(2,4);
+  var day=S.db[S.viewDate]; if(!day) return;
+  var arr=day[_TM.type]; if(!arr) return;
+  var r=arr.find(function(x){return x.id===_TM.id;});
+  if(r){
+    var old=r[_TM.field]; r[_TM.field]=ts;
+    if(!isToday()&&old!==ts){
+      if(!r.editLog)r.editLog=[];
+      r.editLog.push(nowFull()+' '+_TM.field+'「'+(old||'空')+'」→「'+ts+'」');
+    }
+    save();
+  }
+  var ov=document.getElementById('_tm_overlay'); if(ov)ov.remove();
+  render();
 }
 
 initFirebase();

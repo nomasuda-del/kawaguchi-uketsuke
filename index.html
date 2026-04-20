@@ -9,6 +9,7 @@
 <style>
 /* ===== RESET & BASE ===== */
 *{box-sizing:border-box;margin:0;padding:0;}
+input,select,textarea{font-size:16px!important;} /* iOS zoom防止 */
 html,body{height:100%;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:14px;background:#f5f4f0;color:#1a1a1a;}
 input,select,button,textarea{font-family:inherit;}
 
@@ -163,18 +164,22 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 
 /* ===== FORM ELEMENTS ===== */
 .t-input{
-  width:100%;font-size:12px;padding:4px 5px;
+  width:100%;font-size:16px;padding:7px 6px;
   border:1px solid var(--border2);border-radius:6px;
   background:var(--surface);color:var(--text);min-width:0;
+  -webkit-appearance:none;
+  touch-action:manipulation;
 }
 .t-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);}
 .t-select{
-  font-size:12px;padding:4px 3px;
+  font-size:16px;padding:7px 4px;
   border:1px solid var(--border2);border-radius:6px;
   background:var(--surface);color:var(--text);width:100%;
+  -webkit-appearance:none;
+  touch-action:manipulation;
 }
 .t-input:disabled,.t-select:disabled{opacity:.45;cursor:not-allowed;}
-.time-wrap{display:flex;align-items:center;gap:3px;min-width:108px;}
+.time-wrap{display:flex;align-items:center;gap:4px;min-width:110px;}
 .time-inp{
   width:56px;font-size:13px;padding:4px 5px;
   border:1px solid var(--border2);border-radius:6px;
@@ -185,10 +190,12 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 .time-inp:disabled{opacity:.45;}
 .time-inp::placeholder{font-size:11px;font-weight:400;letter-spacing:0;color:#bbb;}
 .stamp-btn{
-  font-size:12px;padding:6px 10px;
+  font-size:14px;padding:9px 10px;
   border:1px solid var(--border2);border-radius:6px;
   background:var(--surface2);color:var(--text2);
   white-space:nowrap;cursor:pointer;transition:background .1s;font-weight:600;
+  min-height:40px;touch-action:manipulation;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
 }
 .stamp-btn:hover{background:var(--border);}
 .stamp-btn.stamped{background:var(--green-bg);border-color:var(--green-bd);color:var(--green);font-weight:700;}
@@ -1156,9 +1163,9 @@ function renderTable(type){
     <th style="width:34px;"></th>
     <th style="width:32px;">No</th>
     <th style="width:40px;">札</th>
-    <th style="min-width:120px;">運送会社名</th>
+    <th style="min-width:130px;">運送会社名</th>
     <th style="min-width:65px;">氏名</th>
-    <th style="min-width:120px;">電話番号</th>
+    <th style="min-width:140px;">電話番号</th>
     <th style="width:52px;">車番</th>
     <th style="width:68px;">車格</th>
     <th style="width:56px;">積み方</th>
@@ -1187,7 +1194,7 @@ function renderTable(type){
       <td>
         ${dis
           ? `<span style="font-size:12px;color:var(--text2);">${e(r.tel||'―')}</span>`
-          : `<button style="width:126px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
+          : `<button style="min-width:120px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
               onpointerup="openTelModal('${type}','${r.id}')"
               onclick="openTelModal('${type}','${r.id}')"
             >${r.tel?e(r.tel):'タップして入力'}</button>`
@@ -1243,9 +1250,9 @@ function renderLotte(){
   <thead><tr>
     <th style="width:34px;"></th>
     <th style="width:32px;">No</th>
-    <th style="min-width:120px;">運送会社名</th>
+    <th style="min-width:130px;">運送会社名</th>
     <th style="min-width:65px;">氏名</th>
-    <th style="min-width:120px;">電話番号</th>
+    <th style="min-width:140px;">電話番号</th>
     <th style="width:52px;">車番</th>
     <th style="width:68px;">車格</th>
     <th style="width:80px;">オーダーNo</th>
@@ -1276,7 +1283,7 @@ function renderLotte(){
       <td>
         ${dis
           ? `<span style="font-size:12px;color:var(--text2);">${e(r.tel||'―')}</span>`
-          : `<button style="min-width:96px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
+          : `<button style="min-width:120px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
               onpointerup="openTelModal('lotte','${r.id}')"
               onclick="openTelModal('lotte','${r.id}')"
             >${r.tel?e(r.tel):'タップして入力'}</button>`

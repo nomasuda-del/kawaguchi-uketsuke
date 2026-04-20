@@ -185,7 +185,7 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 .time-inp:disabled{opacity:.45;}
 .time-inp::placeholder{font-size:11px;font-weight:400;letter-spacing:0;color:#bbb;}
 .stamp-btn{
-  font-size:11px;padding:5px 8px;
+  font-size:12px;padding:6px 10px;
   border:1px solid var(--border2);border-radius:6px;
   background:var(--surface2);color:var(--text2);
   white-space:nowrap;cursor:pointer;transition:background .1s;font-weight:600;
@@ -1198,12 +1198,10 @@ function renderTable(type){
       <td><select class="t-select" style="width:50px;" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','tsumi',this.value)">${TSUMI.map(s=>`<option${r.tsumi===s?' selected':''}>${s}</option>`).join('')}</select></td>
       <td><input class="t-input" style="min-width:64px;" type="text" value="${e(r.biko||'')}" ${dis?'disabled':''} placeholder="メーカー名" oninput="upd('${type}','${r.id}','biko',this.value)"></td>
       <td><div class="time-wrap">
-        <button class="stamp-btn${r.nyuuko?' stamped':''}" ${dis?'disabled':''} onclick="openTimeModal('${type}','${r.id}','nyuuko','${r.nyuuko||''}')">${r.nyuuko||'--:--'}</button>
-        ${!dis&&isToday()?'<button class="stamp-btn" onclick="stamp(\'${type}\',\'${r.id}\',\'nyuuko\')">今</button>':''}
+        <button class="stamp-btn${r.nyuuko?' stamped':''}" ${dis?'disabled':''} onclick="stampNow('${type}','${r.id}','nyuuko','${r.nyuuko||''}')">${r.nyuuko||'今すぐ打刻'}</button>
       </div></td>
       <td><div class="time-wrap">
-        <button class="stamp-btn${r.shukko?' stamped':''}" ${dis?'disabled':''} onclick="openTimeModal('${type}','${r.id}','shukko','${r.shukko||''}')">${r.shukko||'--:--'}</button>
-        ${!dis&&isToday()?'<button class="stamp-btn" onclick="stamp(\'${type}\',\'${r.id}\',\'shukko\')">今</button>':''}
+        <button class="stamp-btn${r.shukko?' stamped':''}" ${dis?'disabled':''} onclick="stampNow('${type}','${r.id}','shukko','${r.shukko||''}')">${r.shukko||'今すぐ打刻'}</button>
       </div></td>
     </tr>
     ${hasLog?`<tr class="edit-log-row"><td colspan="12">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
@@ -1296,20 +1294,16 @@ function renderLotte(){
         </div>`:''}
       </td>
       <td><div class="time-wrap">
-        <button class="stamp-btn${r.tochaku?' stamped':''}" ${dis?'disabled':''} onclick="openTimeModal('lotte','${r.id}','tochaku','${r.tochaku||''}')">${r.tochaku||'--:--'}</button>
-        ${!dis&&isToday()?'<button class="stamp-btn" onclick="stamp(\'lotte\',\'${r.id}\',\'tochaku\')">今</button>':''}
+        <button class="stamp-btn${r.tochaku?' stamped':''}" ${dis?'disabled':''} onclick="stampNow('lotte','${r.id}','tochaku','${r.tochaku||''}')">${r.tochaku||'今すぐ打刻'}</button>
       </div></td>
       <td><div class="time-wrap">
-        <button class="stamp-btn${r.basu?' stamped':''}" ${dis?'disabled':''} onclick="openTimeModal('lotte','${r.id}','basu','${r.basu||''}')">${r.basu||'--:--'}</button>
-        ${!dis&&isToday()?'<button class="stamp-btn" onclick="stamp(\'lotte\',\'${r.id}\',\'basu\')">今</button>':''}
+        <button class="stamp-btn${r.basu?' stamped':''}" ${dis?'disabled':''} onclick="stampNow('lotte','${r.id}','basu','${r.basu||''}')">${r.basu||'今すぐ打刻'}</button>
       </div></td>
       <td><div class="time-wrap">
-        <button class="stamp-btn${r.sakuEnd?' stamped':''}" ${dis?'disabled':''} onclick="openTimeModal('lotte','${r.id}','sakuEnd','${r.sakuEnd||''}')">${r.sakuEnd||'--:--'}</button>
-        ${!dis&&isToday()?'<button class="stamp-btn" onclick="stamp(\'lotte\',\'${r.id}\',\'sakuEnd\')">今</button>':''}
+        <button class="stamp-btn${r.sakuEnd?' stamped':''}" ${dis?'disabled':''} onclick="stampNow('lotte','${r.id}','sakuEnd','${r.sakuEnd||''}')">${r.sakuEnd||'今すぐ打刻'}</button>
       </div></td>
       <td><div class="time-wrap">
-        <button class="stamp-btn${r.shuppatsu?' stamped':''}" ${dis?'disabled':''} onclick="openTimeModal('lotte','${r.id}','shuppatsu','${r.shuppatsu||''}')">${r.shuppatsu||'--:--'}</button>
-        ${!dis&&isToday()?'<button class="stamp-btn" onclick="stamp(\'lotte\',\'${r.id}\',\'shuppatsu\')">今</button>':''}
+        <button class="stamp-btn${r.shuppatsu?' stamped':''}" ${dis?'disabled':''} onclick="stampNow('lotte','${r.id}','shuppatsu','${r.shuppatsu||''}')">${r.shuppatsu||'今すぐ打刻'}</button>
       </div></td>
     </tr>
     ${hasLog?`<tr class="edit-log-row"><td colspan="14">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
@@ -1671,6 +1665,11 @@ function stamp(type,id,field){
   const r=todayData()[type].find(x=>x.id===id);
   if(!r||r.deleted)return;
   r[field]=nowStr(); save(); render();
+}
+function stampNow(type,id,field,cur){
+  // 未打刻なら即打刻、打刻済みならモーダルで修正
+  if(!cur){ stamp(type,id,field); }
+  else { openTimeModal(type,id,field,cur); }
 }
 // ===== TEL INPUT MODAL =====
 let _telState = { type:'', id:'', buf:'' };

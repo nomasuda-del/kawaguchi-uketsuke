@@ -10,6 +10,18 @@
 /* ===== RESET & BASE ===== */
 *{box-sizing:border-box;margin:0;padding:0;}
 input,select,textarea{font-size:16px!important;} /* iOS zoom防止 */
+/* iPad Safari: ボタンタップ確実化 */
+button{
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  cursor:pointer;
+  user-select:none;
+  -webkit-appearance:none;
+}
+input,select{
+  touch-action:manipulation;
+  -webkit-appearance:none;
+}
 html,body{height:100%;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:14px;background:#f5f4f0;color:#1a1a1a;}
 input,select,button,textarea{font-family:inherit;}
 
@@ -41,10 +53,12 @@ input,select,button,textarea{font-family:inherit;}
 .app-bar-title{font-size:15px;font-weight:700;flex:1;letter-spacing:-.01em;}
 .back-btn{
   display:flex;align-items:center;gap:4px;
-  font-size:13px;color:var(--text2);
-  background:none;border:none;padding:4px 0;cursor:pointer;
+  font-size:15px;color:var(--text2);
+  background:none;border:none;
+  padding:10px 16px 10px 4px;
+  min-height:44px;
 }
-.back-btn:hover{color:var(--text);}
+.back-btn:active{opacity:.6;}
 .bar-badge{
   font-size:11px;font-weight:700;padding:3px 8px;
   border-radius:999px;white-space:nowrap;
@@ -193,10 +207,10 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
   font-size:14px;padding:9px 10px;
   border:1px solid var(--border2);border-radius:6px;
   background:var(--surface2);color:var(--text2);
-  white-space:nowrap;cursor:pointer;transition:background .1s;font-weight:600;
-  min-height:40px;touch-action:manipulation;
-  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  white-space:nowrap;transition:background .1s;font-weight:600;
+  min-height:40px;
 }
+.stamp-btn:active{background:var(--border);}
 .stamp-btn:hover{background:var(--border);}
 .stamp-btn.stamped{background:var(--green-bg);border-color:var(--green-bd);color:var(--green);font-weight:700;}
 .stamp-btn:disabled{opacity:.35;cursor:not-allowed;}

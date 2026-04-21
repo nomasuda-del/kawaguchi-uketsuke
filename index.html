@@ -193,10 +193,12 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
   touch-action:manipulation;
 }
 .t-input:disabled,.t-select:disabled{opacity:.45;cursor:not-allowed;}
-.time-wrap{display:flex;align-items:center;gap:4px;min-width:110px;}
+.time-wrap{display:flex;align-items:center;gap:4px;min-width:120px;}
 .time-inp{
-  width:56px;font-size:13px;padding:4px 5px;
+  width:62px;font-size:16px;padding:8px 4px;
   border:1px solid var(--border2);border-radius:6px;
+  text-align:center;font-weight:600;
+  -webkit-appearance:none;
   background:var(--surface);color:var(--text);
   text-align:center;letter-spacing:.04em;font-weight:500;
 }
@@ -1180,7 +1182,7 @@ function renderTable(type){
     <th style="min-width:130px;">運送会社名</th>
     <th style="min-width:65px;">氏名</th>
     <th style="min-width:140px;">電話番号</th>
-    <th style="width:52px;">車番</th>
+    <th style="width:60px;">車番</th>
     <th style="width:68px;">車格</th>
     <th style="width:56px;">積み方</th>
     <th style="min-width:74px;">メーカー名</th>
@@ -1207,22 +1209,24 @@ function renderTable(type){
       <td><input class="t-input" type="text" value="${e(r.name||'')}" ${dis?'disabled':''} placeholder="氏名" oninput="upd('${type}','${r.id}','name',this.value)"></td>
       <td>
         ${dis
-          ? `<span style="font-size:12px;color:var(--text2);">${e(r.tel||'―')}</span>`
-          : `<button style="min-width:120px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
-              onpointerup="openTelModal('${type}','${r.id}')"
-              onclick="openTelModal('${type}','${r.id}')"
-            >${r.tel?e(r.tel):'タップして入力'}</button>`
+          ? `<span style="font-size:13px;color:var(--text2);">${e(r.tel||'―')}</span>`
+          : `<div style="display:flex;gap:3px;align-items:center;">
+              <input class="t-input" type="tel" inputmode="numeric" value="${e(r.tel||'')}" placeholder="電話番号" style="flex:1;min-width:0;" oninput="upd('${type}','${r.id}','tel',this.value)">
+              <button class="stamp-btn" style="padding:7px 8px;font-size:12px;min-height:38px;" onclick="openTelModal('${type}','${r.id}')" title="テンキーで入力">⌨</button>
+            </div>`
         }
       </td>
-      <td><input class="t-input" style="width:46px;" type="text" value="${e(r.car||'')}" ${dis?'disabled':''} oninput="upd('${type}','${r.id}','car',this.value)"></td>
+      <td><input class="t-input" style="width:54px;" type="text" value="${e(r.car||'')}" ${dis?'disabled':''} oninput="upd('${type}','${r.id}','car',this.value)"></td>
       <td><select class="t-select" style="width:62px;" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','shakaku',this.value)">${SHAKAKU.map(s=>`<option${r.shakaku===s?' selected':''}>${s}</option>`).join('')}</select></td>
       <td><select class="t-select" style="width:50px;" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','tsumi',this.value)">${TSUMI.map(s=>`<option${r.tsumi===s?' selected':''}>${s}</option>`).join('')}</select></td>
       <td><input class="t-input" style="min-width:64px;" type="text" value="${e(r.biko||'')}" ${dis?'disabled':''} placeholder="メーカー名" oninput="upd('${type}','${r.id}','biko',this.value)"></td>
       <td><div class="time-wrap">
-        <button class="stamp-btn${r.nyuuko?' stamped':''}" ${dis?'disabled':''} onclick="stampNow('${type}','${r.id}','nyuuko','${r.nyuuko||''}')">${r.nyuuko||'今すぐ打刻'}</button>
+        <input class="time-inp ${r.nyuuko?'done':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.nyuuko||''}" ${dis?'disabled':''} onblur="handleTimeInput('${type}','${r.id}','nyuuko',this.value);render()">
+        <button class="stamp-btn${r.nyuuko?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('${type}','${r.id}','nyuuko')" title="現在時刻で打刻">今</button>
       </div></td>
       <td><div class="time-wrap">
-        <button class="stamp-btn${r.shukko?' stamped':''}" ${dis?'disabled':''} onclick="stampNow('${type}','${r.id}','shukko','${r.shukko||''}')">${r.shukko||'今すぐ打刻'}</button>
+        <input class="time-inp ${r.shukko?'done':''} ${tErr?'err':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.shukko||''}" ${dis?'disabled':''} onblur="handleTimeInput('${type}','${r.id}','shukko',this.value);render()">
+        <button class="stamp-btn${r.shukko?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('${type}','${r.id}','shukko')" title="現在時刻で打刻">今</button>
       </div></td>
     </tr>
     ${hasLog?`<tr class="edit-log-row"><td colspan="12">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
@@ -1267,7 +1271,7 @@ function renderLotte(){
     <th style="min-width:130px;">運送会社名</th>
     <th style="min-width:65px;">氏名</th>
     <th style="min-width:140px;">電話番号</th>
-    <th style="width:52px;">車番</th>
+    <th style="width:60px;">車番</th>
     <th style="width:68px;">車格</th>
     <th style="width:80px;">オーダーNo</th>
     <th style="width:60px;">入/出荷</th>
@@ -1296,11 +1300,11 @@ function renderLotte(){
       <td><input class="t-input" type="text" value="${e(r.name||'')}" ${dis?'disabled':''} placeholder="氏名" oninput="upd('lotte','${r.id}','name',this.value)"></td>
       <td>
         ${dis
-          ? `<span style="font-size:12px;color:var(--text2);">${e(r.tel||'―')}</span>`
-          : `<button style="min-width:120px;text-align:left;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:13px;font-weight:${r.tel?'600':'400'};color:${r.tel?'var(--text)':'var(--text3)'};cursor:pointer;width:100%;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;"
-              onpointerup="openTelModal('lotte','${r.id}')"
-              onclick="openTelModal('lotte','${r.id}')"
-            >${r.tel?e(r.tel):'タップして入力'}</button>`
+          ? `<span style="font-size:13px;color:var(--text2);">${e(r.tel||'―')}</span>`
+          : `<div style="display:flex;gap:3px;align-items:center;">
+              <input class="t-input" type="tel" inputmode="numeric" value="${e(r.tel||'')}" placeholder="電話番号" style="flex:1;min-width:0;" oninput="upd('lotte','${r.id}','tel',this.value)">
+              <button class="stamp-btn" style="padding:7px 8px;font-size:12px;min-height:38px;" onclick="openTelModal('lotte','${r.id}')" title="テンキーで入力">⌨</button>
+            </div>`
         }
       </td>
       <td><input class="t-input" style="width:44px;" type="text" value="${e(r.car||'')}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','car',this.value)"></td>
@@ -1315,16 +1319,20 @@ function renderLotte(){
         </div>`:''}
       </td>
       <td><div class="time-wrap">
-        <button class="stamp-btn${r.tochaku?' stamped':''}" ${dis?'disabled':''} onclick="stampNow('lotte','${r.id}','tochaku','${r.tochaku||''}')">${r.tochaku||'今すぐ打刻'}</button>
+        <input class="time-inp ${r.tochaku?'done':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.tochaku||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','tochaku',this.value);render()">
+        <button class="stamp-btn${r.tochaku?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','tochaku')" title="現在時刻で打刻">今</button>
       </div></td>
       <td><div class="time-wrap">
-        <button class="stamp-btn${r.basu?' stamped':''}" ${dis?'disabled':''} onclick="stampNow('lotte','${r.id}','basu','${r.basu||''}')">${r.basu||'今すぐ打刻'}</button>
+        <input class="time-inp ${r.basu?'done':''} ${tC(r.tochaku,r.basu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.basu||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','basu',this.value);render()">
+        <button class="stamp-btn${r.basu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','basu')" title="現在時刻で打刻">今</button>
       </div></td>
       <td><div class="time-wrap">
-        <button class="stamp-btn${r.sakuEnd?' stamped':''}" ${dis?'disabled':''} onclick="stampNow('lotte','${r.id}','sakuEnd','${r.sakuEnd||''}')">${r.sakuEnd||'今すぐ打刻'}</button>
+        <input class="time-inp ${r.sakuEnd?'done':''} ${tC(r.basu,r.sakuEnd)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.sakuEnd||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','sakuEnd',this.value);render()">
+        <button class="stamp-btn${r.sakuEnd?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','sakuEnd')" title="現在時刻で打刻">今</button>
       </div></td>
       <td><div class="time-wrap">
-        <button class="stamp-btn${r.shuppatsu?' stamped':''}" ${dis?'disabled':''} onclick="stampNow('lotte','${r.id}','shuppatsu','${r.shuppatsu||''}')">${r.shuppatsu||'今すぐ打刻'}</button>
+        <input class="time-inp ${r.shuppatsu?'done':''} ${tC(r.sakuEnd,r.shuppatsu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.shuppatsu||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','shuppatsu',this.value);render()">
+        <button class="stamp-btn${r.shuppatsu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','shuppatsu')" title="現在時刻で打刻">今</button>
       </div></td>
     </tr>
     ${hasLog?`<tr class="edit-log-row"><td colspan="14">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
@@ -2634,6 +2642,52 @@ function tmConfirm(){
   }
   var ov=document.getElementById('_tm_overlay'); if(ov)ov.remove();
   render();
+}
+
+
+// 時刻の直接入力処理
+function handleTimeInput(type, id, field, val) {
+  if(!val) {
+    updField(type, id, field, '');
+    return;
+  }
+  // HHMM → HH:MM 自動変換
+  var cleaned = val.replace(/[^0-9]/g,'');
+  if(cleaned.length === 3) cleaned = '0' + cleaned;
+  if(cleaned.length === 4) {
+    var h = parseInt(cleaned.slice(0,2));
+    var m = parseInt(cleaned.slice(2,4));
+    if(h>=0 && h<=23 && m>=0 && m<=59) {
+      var formatted = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+      updField(type, id, field, formatted);
+      return;
+    }
+  }
+  // HH:MM形式をそのまま
+  var m2 = val.match(/^(\d{1,2}):(\d{2})$/);
+  if(m2) {
+    var h2 = parseInt(m2[1]), mn2 = parseInt(m2[2]);
+    if(h2>=0 && h2<=23 && mn2>=0 && mn2<=59) {
+      var f2 = String(h2).padStart(2,'0') + ':' + String(mn2).padStart(2,'0');
+      updField(type, id, field, f2);
+      return;
+    }
+  }
+  // それ以外はそのまま保存
+  updField(type, id, field, val);
+}
+function updField(type, id, field, val) {
+  var day = S.db[S.viewDate];
+  if(!day) return;
+  var r = day[type].find(function(x){ return x.id === id; });
+  if(!r || r.deleted) return;
+  var old = r[field];
+  r[field] = val;
+  if(!isToday() && old !== val && old !== undefined && old !== '') {
+    if(!r.editLog) r.editLog = [];
+    r.editLog.push(nowFull() + ' ' + field + '「'+(old||'空')+'」→「'+val+'」');
+  }
+  save();
 }
 
 initFirebase();

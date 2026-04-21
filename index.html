@@ -1211,8 +1211,8 @@ function renderTable(type){
         ${dis
           ? `<span style="font-size:13px;color:var(--text2);">${e(r.tel||'―')}</span>`
           : `<div style="display:flex;gap:3px;align-items:center;">
-              <input class="t-input" type="tel" inputmode="numeric" value="${e(r.tel||'')}" placeholder="電話番号" style="flex:1;min-width:0;" oninput="upd('${type}','${r.id}','tel',this.value)">
-              <button class="stamp-btn" style="padding:7px 8px;font-size:12px;min-height:38px;" onclick="openTelModal('${type}','${r.id}')" title="テンキーで入力">⌨</button>
+              <input class="tel-inp" type="tel" inputmode="numeric" value="${e(r.tel||'')}" placeholder="電話番号" oninput="upd('${type}','${r.id}','tel',this.value)">
+              <button type="button" class="tel-btn" onclick="openTelModal('${type}','${r.id}')">テン<br>キー</button>
             </div>`
         }
       </td>
@@ -1302,8 +1302,8 @@ function renderLotte(){
         ${dis
           ? `<span style="font-size:13px;color:var(--text2);">${e(r.tel||'―')}</span>`
           : `<div style="display:flex;gap:3px;align-items:center;">
-              <input class="t-input" type="tel" inputmode="numeric" value="${e(r.tel||'')}" placeholder="電話番号" style="flex:1;min-width:0;" oninput="upd('lotte','${r.id}','tel',this.value)">
-              <button class="stamp-btn" style="padding:7px 8px;font-size:12px;min-height:38px;" onclick="openTelModal('lotte','${r.id}')" title="テンキーで入力">⌨</button>
+              <input class="tel-inp" type="tel" inputmode="numeric" value="${e(r.tel||'')}" placeholder="電話番号" oninput="upd('lotte','${r.id}','tel',this.value)">
+              <button type="button" class="tel-btn" onclick="openTelModal('lotte','${r.id}')">テン<br>キー</button>
             </div>`
         }
       </td>

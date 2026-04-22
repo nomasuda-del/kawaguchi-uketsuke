@@ -2190,15 +2190,6 @@ function renderWizard(){
             <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;">✏️</span>
           </div>
         </div>
-        <div class="wiz-field-row" style="background:#fafaf8;">
-          <div class="wiz-field-label">積み方</div>
-          <div style="flex:1;position:relative;">
-            <select class="wiz-edit-inp" id="wiz-tsumi" onchange="WIZ.tsumi=this.value" style="-webkit-appearance:none;">
-              <option value=""${!WIZ.tsumi?' selected':''}>選択してください</option>${['PL','バラ'].map(s=>`<option${WIZ.tsumi===s?' selected':''}>${s}</option>`).join('')}
-            </select>
-            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;">✏️</span>
-          </div>
-        </div>
       </div>`;
 
   // ===== STEP: 会社名・氏名（新規） =====
@@ -2233,11 +2224,16 @@ function renderWizard(){
             ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${WIZ.shakaku===s?' selected':''}>${s}</option>`).join('')}
           </select>
         </div>
-        <div class="wiz-field-row">
-          <div class="wiz-field-label">積み方</div>
-          <select class="wiz-field-select" id="wiz-tsumi" onchange="WIZ.tsumi=this.value">
-            <option value=""${!WIZ.tsumi?' selected':''}>選択してください</option>${['PL','バラ'].map(s=>`<option${WIZ.tsumi===s?' selected':''}>${s}</option>`).join('')}
-          </select>
+        <div class="wiz-field-row" style="padding:12px 16px;flex-direction:column;align-items:flex-start;gap:8px;">
+          <div class="wiz-field-label" style="padding:0;">積み方（任意）</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;">
+            <button type="button" onclick="WIZ.tsumi='PL';renderWizard()" style="padding:14px;border-radius:10px;border:2px solid ${WIZ.tsumi==='PL'?'var(--green)':'var(--border2)'};background:${WIZ.tsumi==='PL'?'var(--green-bg)':'#fff'};color:${WIZ.tsumi==='PL'?'var(--green)':'var(--text2)'};font-size:17px;font-weight:800;cursor:pointer;">
+              PL
+            </button>
+            <button type="button" onclick="WIZ.tsumi='バラ';renderWizard()" style="padding:14px;border-radius:10px;border:2px solid ${WIZ.tsumi==='バラ'?'var(--green)':'var(--border2)'};background:${WIZ.tsumi==='バラ'?'var(--green-bg)':'#fff'};color:${WIZ.tsumi==='バラ'?'var(--green)':'var(--text2)'};font-size:17px;font-weight:800;cursor:pointer;">
+              バラ
+            </button>
+          </div>
         </div>
         <div class="wiz-field-row">
           <div class="wiz-field-label">番号札</div>
@@ -2310,6 +2306,18 @@ function renderWizard(){
         <div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（入力） <span style="color:var(--red);">*</span></div>
         <input id="wiz-src-other" type="text" value="${e(WIZ.srcOther)}" placeholder="出発元を入力" oninput="WIZ.srcOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">
       </div>`:''}
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">積み方（任意）</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button type="button" onclick="WIZ.tsumi='PL';renderWizard()" style="padding:18px;border-radius:12px;border:2px solid ${WIZ.tsumi==='PL'?'var(--green)':'var(--border2)'};background:${WIZ.tsumi==='PL'?'var(--green-bg)':'#fff'};color:${WIZ.tsumi==='PL'?'var(--green)':'var(--text2)'};font-size:18px;font-weight:800;cursor:pointer;">
+            PL
+          </button>
+          <button type="button" onclick="WIZ.tsumi='バラ';renderWizard()" style="padding:18px;border-radius:12px;border:2px solid ${WIZ.tsumi==='バラ'?'var(--green)':'var(--border2)'};background:${WIZ.tsumi==='バラ'?'var(--green-bg)':'#fff'};color:${WIZ.tsumi==='バラ'?'var(--green)':'var(--text2)'};font-size:18px;font-weight:800;cursor:pointer;">
+            バラ
+          </button>
+        </div>
+      </div>
 
       <div style="font-size:13px;color:var(--text2);line-height:1.7;padding:8px 12px;background:var(--surface2);border-radius:8px;margin-top:8px;">
         ※ 必須項目（<span style="color:var(--red);">*</span>）を入力してから次へ進んでください<br>

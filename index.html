@@ -778,7 +778,7 @@ const FIREBASE_CONFIGURED = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
 //  CONSTANTS
 // ============================================================
 const SHAKAKU = ['2t','4t','大型','コンテナ','軽'];
-const TSUMI   = ['バラ','PL'];
+const TSUMI   = ['PL','バラ'];
 const LOTTE_SRC = ['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'];
 
 // ============================================================
@@ -2150,6 +2150,7 @@ function renderWizard(){
 
   // ===== STEP: 登録済み確認 =====
   } else if(WIZ.step==='confirm_existing'){
+    nextDisabled = !WIZ.shakaku || !WIZ.tsumi;
     nextLabel='この内容で受付する　→';
     body=`
       <div class="wiz-section-title">登録情報を<br>確認してください</div>
@@ -2217,6 +2218,7 @@ function renderWizard(){
 
   // ===== STEP: 車番・車格（新規） =====
   } else if(WIZ.step==='car'){
+    nextDisabled = !WIZ.shakaku || !WIZ.tsumi;
     body=`
       <div class="wiz-section-title">車番と<br>車格を入力</div>
       <div class="wiz-field">
@@ -2227,6 +2229,7 @@ function renderWizard(){
         <div class="wiz-field-row">
           <div class="wiz-field-label">車格</div>
           <select class="wiz-field-select" id="wiz-shakaku" onchange="WIZ.shakaku=this.value">
+            <option value=""${!WIZ.shakaku?' selected':''}>選択してください</option>
             ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${WIZ.shakaku===s?' selected':''}>${s}</option>`).join('')}
           </select>
         </div>

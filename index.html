@@ -1441,6 +1441,16 @@ function renderExport(){
       <button class="export-btn" onclick="dlCsv('lotte')">ロッテ様CSV</button>
     </div>
     <div class="export-card">
+      <h4>月単位CSV出力</h4>
+      <p>選択した月のデータをまとめてCSV出力します。</p>
+      <select id="exp-month" style="width:100%;font-size:14px;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);margin:6px 0 10px;">
+        ${getAllMonths().map(ym=>`<option value="${ym}">${ym.substring(0,4)}年${ym.substring(5,7)}月</option>`).join('')||'<option value="">データなし</option>'}
+      </select>
+      <button class="export-btn" onclick="dlMonthCsv('nyuuka')">月次入荷CSV</button>
+      <button class="export-btn" onclick="dlMonthCsv('shukka')">月次出荷CSV</button>
+      <button class="export-btn" onclick="dlMonthCsv('lotte')">月次ロッテCSV</button>
+    </div>
+    <div class="export-card">
       <h4>全期間まとめ出力</h4>
       <p>保存されている全日付を一括でCSV出力します。</p>
       <button class="export-btn" onclick="dlAllCsv()">全期間 入荷CSV一括</button>
@@ -1944,31 +1954,140 @@ function clearPin(){
 }
 
 function getExpDate(){return document.getElementById('exp-date')?.value||todayKey();}
-function toCsvNS(arr){
-  const h='No,番号札,会社名,氏名,電話番号,車番,車格,積み方,メーカー名,入庫時間,出庫時間,修正記録';
-  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[r.no,r.fuda||'',r.company,r.name||'',r.tel||'',r.car||'',r.shakaku,r.tsumi,r.nyuuko||'',r.shukko||'',r.biko||'',(r.editLog&&r.editLog.length?r.editLog.join('|'):'')].join(','));
+function toCsvNS(arr, dateKey){
+  const h='日付,No,番号札,会社名,氏名,電話番号,車番,車格,積み方,メーカー名,入庫時間,出庫時間,修正記録';
+  const d = dateKey||'';
+  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[
+    csvCell(d),
+    r.no,
+    csvCell(r.fuda||''),
+    csvCell(r.company),
+    csvCell(r.name||''),
+    csvTel(r.tel),
+    csvCell(r.car||''),
+    csvCell(r.shakaku),
+    csvCell(r.tsumi),
+    csvCell(r.nyuuko||''),
+    csvCell(r.shukko||''),
+    csvCell(r.biko||''),
+    csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):''))
+  ].join(','));
   return h+'\n'+rows.join('\n');
 }
-function toCsvL(arr){
-  const h='No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,出発元,到着時間,バース着車,作業終了,出発時間,修正記録';
-  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[r.no,r.company,r.name||'',r.tel||'',r.car||'',r.shakaku,r.order||'',r.type,r.src==='その他'?r.srcOther:r.src,r.tochaku||'',r.basu||'',r.sakuEnd||'',r.shuppatsu||'',(r.editLog&&r.editLog.length?r.editLog.join('|'):'')].join(','));
+function toCsvL(arr, dateKey){
+  const h='日付,No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,出発元,到着時間,バース着車,作業終了,出発時間,修正記録';
+  const d = dateKey||'';
+  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[
+    csvCell(d),
+    r.no,
+    csvCell(r.company),
+    csvCell(r.name||''),
+    csvTel(r.tel),
+    csvCell(r.car||''),
+    csvCell(r.shakaku),
+    csvCell(r.order||''),
+    csvCell(r.type),
+    csvCell(r.src==='その他'?r.srcOther:r.src),
+    csvCell(r.tochaku||''),
+    csvCell(r.basu||''),
+    csvCell(r.sakuEnd||''),
+    csvCell(r.shuppatsu||''),
+    csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):''))
+  ].join(','));
   return h+'\n'+rows.join('\n');
 }
 function dlCsv(type){
   const dk=getExpDate();const day=S.db[dk];if(!day)return;
-  const content=type==='lotte'?toCsvL(day.lotte):toCsvNS(day[type]);
+  const content=type==='lotte'?toCsvL(day.lotte,dk):toCsvNS(day[type],dk);
   const label=type==='nyuuka'?'入荷受付':type==='shukka'?'出荷受付':'ロッテ受付';
   _dl(`${label}_${dk}.csv`,content);
 }
 function dlAllCsv(){
   const dates=allDates().reverse();
-  const h='日付,No,番号札,会社名,氏名,電話番号,車番,車格,積み方,入庫時間,出庫時間,備考,修正記録';
-  const rows=dates.flatMap(k=>{const d=S.db[k];return d?d.nyuuka.filter(r=>r.company&&!r.deleted).map(r=>[k,r.no,r.fuda||'',r.company,r.name||'',r.tel||'',r.car||'',r.shakaku,r.tsumi,r.nyuuko||'',r.shukko||'',r.biko||'',(r.editLog&&r.editLog.length?r.editLog.join('|'):'')].join(',')):[];});
+  const h='日付,No,番号札,会社名,氏名,電話番号,車番,車格,積み方,メーカー名,入庫時間,出庫時間,修正記録';
+  const rows=dates.flatMap(k=>{const d=S.db[k];return d?d.nyuuka.filter(r=>r.company&&!r.deleted).map(r=>[
+    csvCell(k),r.no,csvCell(r.fuda||''),csvCell(r.company),csvCell(r.name||''),
+    csvTel(r.tel),csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.tsumi),csvCell(r.biko||''),
+    csvCell(r.nyuuko||''),csvCell(r.shukko||''),
+    csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):''))
+  ].join(',')):[];});
   _dl('入荷受付_全期間.csv',h+'\n'+rows.join('\n'));
+}
+
+// ============================================================
+// 月単位CSV出力
+// ============================================================
+function dlMonthCsv(type){
+  var monthSel = document.getElementById('exp-month');
+  var ym = monthSel ? monthSel.value : '';
+  if(!ym){ alert('月を選択してください'); return; }
+  var dates = allDates().filter(function(k){ return k.startsWith(ym); }).sort();
+  if(dates.length===0){ alert('選択した月のデータがありません'); return; }
+  
+  var header, rows = [];
+  if(type==='lotte'){
+    header = '日付,No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,出発元,到着時間,バース着車,作業終了,出発時間,修正記録';
+    dates.forEach(function(k){
+      var d = S.db[k];
+      if(!d) return;
+      d.lotte.filter(function(r){return r.company&&!r.deleted;}).forEach(function(r){
+        rows.push([
+          csvCell(k),r.no,csvCell(r.company),csvCell(r.name||''),csvTel(r.tel),
+          csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.order||''),csvCell(r.type),
+          csvCell(r.src==='その他'?r.srcOther:r.src),
+          csvCell(r.tochaku||''),csvCell(r.basu||''),csvCell(r.sakuEnd||''),csvCell(r.shuppatsu||''),
+          csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):''))
+        ].join(','));
+      });
+    });
+  } else {
+    header = '日付,No,番号札,会社名,氏名,電話番号,車番,車格,積み方,メーカー名,入庫時間,出庫時間,修正記録';
+    dates.forEach(function(k){
+      var d = S.db[k];
+      if(!d) return;
+      d[type].filter(function(r){return r.company&&!r.deleted;}).forEach(function(r){
+        rows.push([
+          csvCell(k),r.no,csvCell(r.fuda||''),csvCell(r.company),csvCell(r.name||''),
+          csvTel(r.tel),csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.tsumi),csvCell(r.biko||''),
+          csvCell(r.nyuuko||''),csvCell(r.shukko||''),
+          csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):''))
+        ].join(','));
+      });
+    });
+  }
+  
+  if(rows.length===0){ alert('該当するデータがありません'); return; }
+  
+  var label = type==='nyuuka'?'入荷受付':type==='shukka'?'出荷受付':'ロッテ受付';
+  _dl(label+'_'+ym+'.csv', header+'\n'+rows.join('\n'));
+}
+
+// 月選択肢を生成（全データの年月を取得）
+function getAllMonths(){
+  var months = {};
+  allDates().forEach(function(k){
+    months[k.substring(0,7)] = true;
+  });
+  return Object.keys(months).sort().reverse();
 }
 function _dl(fname,content){
   const blob=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+}
+// 電話番号を Excel で文字列として認識させる（先頭0消え対策）
+function csvTel(tel){
+  if(!tel) return '';
+  // ダブルクオートで囲んで = を付ける → Excel が文字列として扱う
+  return '="'+String(tel).replace(/"/g,'""')+'"';
+}
+// CSV セルのエスケープ（カンマや改行を含む場合）
+function csvCell(v){
+  if(v===null||v===undefined) return '';
+  var s=String(v);
+  if(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0){
+    return '"'+s.replace(/"/g,'""')+'"';
+  }
+  return s;
 }
 function printDay(){
   const dk=getExpDate();const day=S.db[dk];if(!day)return;
@@ -2209,7 +2328,7 @@ function renderWizard(){
 
   // ===== STEP: 車番・車格（新規） =====
   } else if(WIZ.step==='car'){
-    nextDisabled = !WIZ.shakaku || !WIZ.tsumi;
+    nextDisabled = !WIZ.shakaku || (WIZ.type!=='lotte' && !WIZ.tsumi);
     body=`
       <div class="wiz-section-title">車番と<br>車格を入力</div>
       <div class="wiz-field">
@@ -2224,7 +2343,7 @@ function renderWizard(){
             ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${WIZ.shakaku===s?' selected':''}>${s}</option>`).join('')}
           </select>
         </div>
-        <div class="wiz-field-row" style="padding:12px 16px;flex-direction:column;align-items:flex-start;gap:8px;">
+        ${WIZ.type!=='lotte'?`<div class="wiz-field-row" style="padding:12px 16px;flex-direction:column;align-items:flex-start;gap:8px;">
           <div class="wiz-field-label" style="padding:0;">積み方 <span style="color:var(--red);">*</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;">
             <button type="button" onclick="WIZ.tsumi='PL';renderWizard()" style="padding:14px;border-radius:10px;border:2px solid ${WIZ.tsumi==='PL'?'var(--green)':'var(--border2)'};background:${WIZ.tsumi==='PL'?'var(--green-bg)':'#fff'};color:${WIZ.tsumi==='PL'?'var(--green)':'var(--text2)'};font-size:17px;font-weight:800;cursor:pointer;">
@@ -2234,7 +2353,7 @@ function renderWizard(){
               バラ
             </button>
           </div>
-        </div>
+        </div>`:''}
         <div class="wiz-field-row">
           <div class="wiz-field-label">番号札</div>
           <input class="wiz-field-input" id="wiz-fuda" type="number" value="${WIZ.fuda||''}" placeholder="夜間番号（任意）" oninput="WIZ.fuda=this.value">

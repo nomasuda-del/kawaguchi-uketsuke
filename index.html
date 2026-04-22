@@ -2051,9 +2051,9 @@ function checkPin(){
 function startWizard(type){
   WIZ.active=true; WIZ.type=type; WIZ.step='tel';
   WIZ.tel=''; WIZ.company=''; WIZ.name='';
-  WIZ.car=''; WIZ.shakaku='2t'; WIZ.tsumi='バラ';
+  WIZ.car=''; WIZ.shakaku=''; WIZ.tsumi='';
   WIZ.fuda=''; WIZ.biko='';
-  WIZ.order=''; WIZ.nyukaType='入荷'; WIZ.src='狭山工場'; WIZ.srcOther='';
+  WIZ.order=''; WIZ.nyukaType=''; WIZ.src=''; WIZ.srcOther='';
   WIZ.driver=null; WIZ.isNew=false; WIZ.consent=false;
   renderWizard();
 }
@@ -2272,34 +2272,44 @@ function renderWizard(){
   // ===== STEP: ロッテ情報（オーダーNo・入荷出荷・出発元） =====
   } else if(WIZ.step==='lotte_info'){
     const srcOtherVisible = WIZ.src==='その他';
+    // 次へ進む条件：nyukaType が選択され、src も選択されている（その他ならsrcOtherも必要）
+    nextDisabled = !WIZ.nyukaType || !WIZ.src || (WIZ.src==='その他' && !WIZ.srcOther);
     body=`
       <div class="wiz-section-title">オーダー情報を<br>入力してください</div>
-      <div class="wiz-field">
-        <div class="wiz-field-row">
-          <div class="wiz-field-label">オーダーNo</div>
-          <input class="wiz-field-input" id="wiz-order" type="text" value="${e(WIZ.order)}" placeholder="例: 12345" oninput="WIZ.order=this.value">
-        </div>
-        <div class="wiz-field-row">
-          <div class="wiz-field-label">入荷 / 出荷</div>
-          <select class="wiz-field-select" id="wiz-nyuka-type" onchange="WIZ.nyukaType=this.value">
-            <option${WIZ.nyukaType==='入荷'?' selected':''}>入荷</option>
-            <option${WIZ.nyukaType==='出荷'?' selected':''}>出荷</option>
-          </select>
-        </div>
-        <div class="wiz-field-row">
-          <div class="wiz-field-label">出発元/<br>入荷元</div>
-          <select class="wiz-field-select" id="wiz-src"
-            onchange="WIZ.src=this.value;renderWizard()">
-            ${['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'].map(s=>`<option${WIZ.src===s?' selected':''}>${s}</option>`).join('')}
-          </select>
-        </div>
-        ${srcOtherVisible?`
-        <div class="wiz-field-row">
-          <div class="wiz-field-label">その他<br>（入力）</div>
-          <input class="wiz-field-input" id="wiz-src-other" type="text" value="${e(WIZ.srcOther)}" placeholder="出発元を入力" oninput="WIZ.srcOther=this.value">
-        </div>`:''}
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo</div>
+        <input class="wiz-field-input" id="wiz-order" type="text" value="${e(WIZ.order)}" placeholder="例: 12345" oninput="WIZ.order=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">
       </div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.7;padding:4px 0;">
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">入荷 / 出荷 <span style="color:var(--red);">*</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button type="button" onclick="WIZ.nyukaType='入荷';renderWizard()" style="padding:20px;border-radius:12px;border:2px solid ${WIZ.nyukaType==='入荷'?'var(--green)':'var(--border2)'};background:${WIZ.nyukaType==='入荷'?'var(--green-bg)':'#fff'};color:${WIZ.nyukaType==='入荷'?'var(--green)':'var(--text2)'};font-size:18px;font-weight:800;cursor:pointer;">
+            📥 入荷
+          </button>
+          <button type="button" onclick="WIZ.nyukaType='出荷';renderWizard()" style="padding:20px;border-radius:12px;border:2px solid ${WIZ.nyukaType==='出荷'?'var(--green)':'var(--border2)'};background:${WIZ.nyukaType==='出荷'?'var(--green-bg)':'#fff'};color:${WIZ.nyukaType==='出荷'?'var(--green)':'var(--text2)'};font-size:18px;font-weight:800;cursor:pointer;">
+            📤 出荷
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">出発元 / 入荷元 <span style="color:var(--red);">*</span></div>
+        <select id="wiz-src" onchange="WIZ.src=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid ${WIZ.src?'var(--border2)':'var(--red-bd)'};border-radius:10px;background:#fff;font-weight:${WIZ.src?'700':'400'};color:${WIZ.src?'var(--text)':'var(--text3)'};">
+          <option value=""${!WIZ.src?' selected':''}>選択してください</option>
+          ${['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'].map(s=>`<option${WIZ.src===s?' selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+
+      ${srcOtherVisible?`
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（入力） <span style="color:var(--red);">*</span></div>
+        <input id="wiz-src-other" type="text" value="${e(WIZ.srcOther)}" placeholder="出発元を入力" oninput="WIZ.srcOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">
+      </div>`:''}
+
+      <div style="font-size:13px;color:var(--text2);line-height:1.7;padding:8px 12px;background:var(--surface2);border-radius:8px;margin-top:8px;">
+        ※ 必須項目（<span style="color:var(--red);">*</span>）を入力してから次へ進んでください<br>
         ※ バース着車・作業終了・出発時間は一覧画面から打刻してください
       </div>`;
 
@@ -2399,7 +2409,8 @@ function wizNext(){
     if(d){
       WIZ.driver=d; WIZ.isNew=false;
       WIZ.company=d.company||''; WIZ.name=d.name||'';
-      WIZ.car=d.car||''; WIZ.shakaku=d.shakaku||'2t';
+      WIZ.car=d.car||''; WIZ.shakaku=d.shakaku||'';
+      WIZ.tsumi=d.tsumi||'';
       WIZ.step='confirm_existing';
     } else {
       WIZ.driver=null; WIZ.isNew=true; WIZ.step='name';
@@ -2474,8 +2485,8 @@ function wizComplete(){
     r.car=WIZ.car;
     r.shakaku=WIZ.shakaku;
     r.order=WIZ.order||'';
-    r.type=WIZ.nyukaType||'入荷';
-    r.src=WIZ.src||'狭山工場';
+    r.type=WIZ.nyukaType||'';
+    r.src=WIZ.src||'';
     r.srcOther=WIZ.src==='その他'?WIZ.srcOther:'';
     r.tochaku=nowStr(); // 到着時間を打刻
     r.basu=''; r.sakuEnd=''; r.shuppatsu='';
@@ -2487,8 +2498,8 @@ function wizComplete(){
     r.company=WIZ.company;
     r.name=WIZ.name;
     r.car=WIZ.car;
-    r.shakaku=WIZ.shakaku;
-    r.tsumi=WIZ.tsumi||'バラ';
+    r.shakaku=WIZ.shakaku||'';
+    r.tsumi=WIZ.tsumi||'';
     r.fuda=WIZ.fuda||'';
     r.nyuuko=nowStr();
     if(!slot) arr.push(r);
@@ -2498,13 +2509,13 @@ function wizComplete(){
   if(WIZ.isNew && WIZ.consent && WIZ.tel && WIZ.name){
     S.drivers.push({
       id:uid(),company:WIZ.company,name:WIZ.name,
-      tel:WIZ.tel,car:WIZ.car,shakaku:WIZ.shakaku
+      tel:WIZ.tel,car:WIZ.car,shakaku:WIZ.shakaku,tsumi:WIZ.tsumi||''
     });
   }
   // 登録済みドライバーの情報を更新（修正があれば）
   if(WIZ.driver){
     const idx=S.drivers.findIndex(d=>d.tel===WIZ.tel);
-    if(idx>=0) S.drivers[idx]={...S.drivers[idx],company:WIZ.company,name:WIZ.name,car:WIZ.car,shakaku:WIZ.shakaku};
+    if(idx>=0) S.drivers[idx]={...S.drivers[idx],company:WIZ.company,name:WIZ.name,car:WIZ.car,shakaku:WIZ.shakaku,tsumi:WIZ.tsumi||''};
   }
 
   save();

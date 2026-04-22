@@ -2271,14 +2271,14 @@ function renderWizard(){
   // ===== STEP: ロッテ情報（オーダーNo・入荷出荷・出発元） =====
   } else if(WIZ.step==='lotte_info'){
     const srcOtherVisible = WIZ.src==='その他';
-    // 次へ進む条件：nyukaType, src, tsumi が必須
-    nextDisabled = !WIZ.nyukaType || !WIZ.src || (WIZ.src==='その他' && !WIZ.srcOther) || !WIZ.tsumi;
+    // 次へ進む条件：order, nyukaType, src, tsumi が必須
+    nextDisabled = !WIZ.order || !WIZ.nyukaType || !WIZ.src || (WIZ.src==='その他' && !WIZ.srcOther) || !WIZ.tsumi;
     body=`
       <div class="wiz-section-title">オーダー情報を<br>入力してください</div>
 
       <div style="margin-bottom:16px;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo</div>
-        <input class="wiz-field-input" id="wiz-order" type="text" value="${e(WIZ.order)}" placeholder="例: 12345" oninput="WIZ.order=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo <span style="color:var(--red);">*</span></div>
+        <input class="wiz-field-input" id="wiz-order" type="text" value="${e(WIZ.order)}" placeholder="例: 12345" oninput="WIZ.order=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid ${WIZ.order?'var(--border2)':'var(--red-bd)'};border-radius:10px;background:#fff;">
       </div>
 
       <div style="margin-bottom:16px;">

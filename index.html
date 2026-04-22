@@ -2150,7 +2150,7 @@ function renderWizard(){
 
   // ===== STEP: 登録済み確認 =====
   } else if(WIZ.step==='confirm_existing'){
-    nextDisabled = !WIZ.shakaku || !WIZ.tsumi;
+    nextDisabled = !WIZ.shakaku;
     nextLabel='この内容で受付する　→';
     body=`
       <div class="wiz-section-title">登録情報を<br>確認してください</div>
@@ -2194,7 +2194,7 @@ function renderWizard(){
           <div class="wiz-field-label">積み方</div>
           <div style="flex:1;position:relative;">
             <select class="wiz-edit-inp" id="wiz-tsumi" onchange="WIZ.tsumi=this.value" style="-webkit-appearance:none;">
-              ${['バラ','PL'].map(s=>`<option${WIZ.tsumi===s?' selected':''}>${s}</option>`).join('')}
+              <option value=""${!WIZ.tsumi?' selected':''}>選択してください</option>${['PL','バラ'].map(s=>`<option${WIZ.tsumi===s?' selected':''}>${s}</option>`).join('')}
             </select>
             <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;">✏️</span>
           </div>
@@ -2218,7 +2218,7 @@ function renderWizard(){
 
   // ===== STEP: 車番・車格（新規） =====
   } else if(WIZ.step==='car'){
-    nextDisabled = !WIZ.shakaku || !WIZ.tsumi;
+    nextDisabled = !WIZ.shakaku;
     body=`
       <div class="wiz-section-title">車番と<br>車格を入力</div>
       <div class="wiz-field">
@@ -2236,7 +2236,7 @@ function renderWizard(){
         <div class="wiz-field-row">
           <div class="wiz-field-label">積み方</div>
           <select class="wiz-field-select" id="wiz-tsumi" onchange="WIZ.tsumi=this.value">
-            ${['バラ','PL'].map(s=>`<option${WIZ.tsumi===s?' selected':''}>${s}</option>`).join('')}
+            <option value=""${!WIZ.tsumi?' selected':''}>選択してください</option>${['PL','バラ'].map(s=>`<option${WIZ.tsumi===s?' selected':''}>${s}</option>`).join('')}
           </select>
         </div>
         <div class="wiz-field-row">

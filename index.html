@@ -1292,7 +1292,7 @@ function renderLotte(){
     <th style="width:68px;">車格</th>
     <th style="width:80px;">オーダーNo</th>
     <th style="width:60px;">入/出荷</th>
-    <th style="min-width:112px;">出発元/入荷先</th>
+    <th style="min-width:112px;">入荷元/出荷先</th>
     <th style="min-width:104px;">到着時間</th>
     <th style="min-width:104px;">バース着車</th>
     <th style="min-width:104px;">作業終了</th>
@@ -1510,9 +1510,9 @@ function renderModal(){
     const cur=r?.srcOther||'';
     modalContainer.innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeSrcOther('${id}');">
       <div class="modal" style="max-width:360px;">
-        <h3>出発元 / 入荷先（その他）</h3>
+        <h3>入荷元 / 出荷先（その他）</h3>
         <div class="fg">
-          <label>具体的な出発元・入荷先を入力してください</label>
+          <label>具体的な入荷元・出荷先を入力してください</label>
           <input id="src-other-modal-input" type="text" value="${cur}"
             placeholder="例：東京工場、大阪センター など"
             style="width:100%;font-size:16px;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);"
@@ -1616,7 +1616,7 @@ function renderModal(){
         <div class="fg"><label>オーダーNo</label><input id="m-order" type="text"></div>
         <div class="fg"><label>入荷 ／ 出荷</label><select id="m-type"><option>入荷</option><option>出荷</option></select></div>
       </div>
-      <div class="fg"><label>出発元 ／ 入荷先</label><select id="m-src">${LOTTE_SRC.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div class="fg"><label>入荷元 ／ 出荷先</label><select id="m-src">${LOTTE_SRC.map(s=>`<option>${s}</option>`).join('')}</select></div>
       <div class="fg hidden" id="m-src-other-fg"><label>その他（入力）</label><input id="m-src-other" type="text"></div>`;
     } else {
       fields=`
@@ -1992,7 +1992,7 @@ function toCsvNS(arr, dateKey){
   return h+'\n'+rows.join('\n');
 }
 function toCsvL(arr, dateKey){
-  const h='日付,No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,出発元,到着時間,バース着車,作業終了,出発時間,修正記録';
+  const h='日付,No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,入荷元,到着時間,バース着車,作業終了,出発時間,修正記録';
   const d = dateKey||'';
   const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[
     csvCell(d),
@@ -2043,7 +2043,7 @@ function dlMonthCsv(type){
   
   var header, rows = [];
   if(type==='lotte'){
-    header = '日付,No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,出発元,到着時間,バース着車,作業終了,出発時間,修正記録';
+    header = '日付,No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,入荷元,到着時間,バース着車,作業終了,出発時間,修正記録';
     dates.forEach(function(k){
       var d = S.db[k];
       if(!d) return;
@@ -2404,23 +2404,17 @@ function renderWizard(){
         <div style="font-size:15px;font-weight:700;color:${WIZ.consent?'var(--green)':'var(--text)'};">上記の内容に同意します</div>
       </div>`;
 
-  // ===== STEP: ロッテ情報（オーダーNo・入荷出荷・出発元） =====
+  // ===== STEP: ロッテ情報（オーダーNo・入荷出荷・入荷元） =====
   } else if(WIZ.step==='lotte_info'){
-    const srcOtherVisible = WIZ.src==='その他';
-    // 次へ進む条件：nyukaType, tsumi が必須、出荷なら src、入荷なら srcIn が必須
-    // オーダーNoはinputに直接入力するので、次へボタン押下時に再チェック
     var _hasN = hasNyukaType('入荷'), _hasS = hasNyukaType('出荷');
+    var _both = _hasN && _hasS;
+    const srcOtherVisible = WIZ.src==='その他';
+    // 次へ進む条件
     nextDisabled = !WIZ.nyukaType || !WIZ.tsumi
       || (_hasS && (!WIZ.src || (WIZ.src==='その他' && !WIZ.srcOther)))
       || (_hasN && (!WIZ.srcIn || (WIZ.srcIn==='その他' && !WIZ.srcInOther)));
     body=`
       <div class="wiz-section-title">オーダー情報を<br>入力してください</div>
-
-      <div style="margin-bottom:16px;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo <span style="color:var(--red);">*</span></div>
-        <input id="wiz-order" type="text" inputmode="numeric" value="${e(WIZ.order)}" placeholder="例: 12345 または 12345,67890" oninput="WIZ.order=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid ${WIZ.order?'var(--border2)':'var(--red-bd)'};border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
-        <div style="font-size:11px;color:var(--text2);margin-top:6px;">※ 複数ある場合はカンマ（,）で区切ってください</div>
-      </div>
 
       <div style="margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:10px;">入荷 / 出荷 <span style="color:var(--red);">*</span></div>
@@ -2437,33 +2431,29 @@ function renderWizard(){
         <div style="font-size:11px;color:var(--text2);margin-top:6px;padding:0 4px;">※ 両方ある場合は両方タップしてください（2行に分けて登録されます）</div>
       </div>
 
+      ${_both?`
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo（入荷）</div>
+        <input id="wiz-order-in" type="text" inputmode="numeric" value="${e(WIZ.orderIn)}" placeholder="例: 12345" oninput="WIZ.orderIn=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid var(--border2);border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo（出荷）</div>
+        <input id="wiz-order-out" type="text" inputmode="numeric" value="${e(WIZ.orderOut)}" placeholder="例: 12345" oninput="WIZ.orderOut=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid var(--border2);border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
+      </div>
+      `:`
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo</div>
+        <input id="wiz-order" type="text" inputmode="numeric" value="${e(WIZ.order)}" placeholder="例: 12345 または 12345,67890" oninput="WIZ.order=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid var(--border2);border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
+        <div style="font-size:11px;color:var(--text2);margin-top:6px;">※ 複数ある場合はカンマ（,）で区切ってください</div>
+      </div>
+      `}
+
       ${(function(){
-        var hasShukka = hasNyukaType('出荷');
-        var hasNyuuka = hasNyukaType('入荷');
-        var both = hasShukka && hasNyuuka;
         var srcOptions = ['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'];
         var html = '';
-        
-        // 出荷がある場合 → 出発元
-        if(hasShukka){
-          var lbl = both ? '出発元（出荷側）' : '出発元';
-          html += '<div style="margin-bottom:16px;">'
-            + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+lbl+' <span style="color:var(--red);">*</span></div>'
-            + '<select id="wiz-src" onchange="WIZ.src=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid '+(WIZ.src?'var(--border2)':'var(--red-bd)')+';border-radius:10px;background:#fff;font-weight:'+(WIZ.src?'700':'400')+';color:'+(WIZ.src?'var(--text)':'var(--text3)')+';">'
-            + '<option value=""'+(!WIZ.src?' selected':'')+'>選択してください</option>'
-            + srcOptions.map(function(s){return '<option'+(WIZ.src===s?' selected':'')+'>'+s+'</option>';}).join('')
-            + '</select></div>';
-          if(WIZ.src==='その他'){
-            html += '<div style="margin-bottom:16px;">'
-              + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（出発元を入力） <span style="color:var(--red);">*</span></div>'
-              + '<input id="wiz-src-other" type="text" value="'+e(WIZ.srcOther)+'" placeholder="出発元を入力" oninput="WIZ.srcOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">'
-              + '</div>';
-          }
-        }
-        
-        // 入荷がある場合 → 入荷先
-        if(hasNyuuka){
-          var lblIn = both ? '入荷先（入荷側）' : '入荷先';
+
+        if(_hasN){
+          var lblIn = _both ? '入荷元（入荷側）' : '入荷元';
           html += '<div style="margin-bottom:16px;">'
             + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+lblIn+' <span style="color:var(--red);">*</span></div>'
             + '<select id="wiz-srcin" onchange="WIZ.srcIn=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid '+(WIZ.srcIn?'var(--border2)':'var(--red-bd)')+';border-radius:10px;background:#fff;font-weight:'+(WIZ.srcIn?'700':'400')+';color:'+(WIZ.srcIn?'var(--text)':'var(--text3)')+';">'
@@ -2472,12 +2462,28 @@ function renderWizard(){
             + '</select></div>';
           if(WIZ.srcIn==='その他'){
             html += '<div style="margin-bottom:16px;">'
-              + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（入荷先を入力） <span style="color:var(--red);">*</span></div>'
-              + '<input id="wiz-srcin-other" type="text" value="'+e(WIZ.srcInOther)+'" placeholder="入荷先を入力" oninput="WIZ.srcInOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">'
+              + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（入荷元を入力） <span style="color:var(--red);">*</span></div>'
+              + '<input id="wiz-srcin-other" type="text" value="'+e(WIZ.srcInOther)+'" placeholder="入荷元を入力" oninput="WIZ.srcInOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">'
               + '</div>';
           }
         }
-        
+
+        if(_hasS){
+          var lbl = _both ? '出荷先（出荷側）' : '出荷先';
+          html += '<div style="margin-bottom:16px;">'
+            + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+lbl+' <span style="color:var(--red);">*</span></div>'
+            + '<select id="wiz-src" onchange="WIZ.src=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid '+(WIZ.src?'var(--border2)':'var(--red-bd)')+';border-radius:10px;background:#fff;font-weight:'+(WIZ.src?'700':'400')+';color:'+(WIZ.src?'var(--text)':'var(--text3)')+';">'
+            + '<option value=""'+(!WIZ.src?' selected':'')+'>選択してください</option>'
+            + srcOptions.map(function(s){return '<option'+(WIZ.src===s?' selected':'')+'>'+s+'</option>';}).join('')
+            + '</select></div>';
+          if(WIZ.src==='その他'){
+            html += '<div style="margin-bottom:16px;">'
+              + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（出荷先を入力） <span style="color:var(--red);">*</span></div>'
+              + '<input id="wiz-src-other" type="text" value="'+e(WIZ.srcOther)+'" placeholder="出荷先を入力" oninput="WIZ.srcOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">'
+              + '</div>';
+          }
+        }
+
         return html;
       })()}
 
@@ -2533,16 +2539,25 @@ function renderWizard(){
           <div class="wiz-confirm-label">入荷/出荷</div>
           <div class="wiz-confirm-val">${WIZ.nyukaType}</div>
         </div>
-        ${hasNyukaType('出荷')?`
-        <div class="wiz-confirm-row">
-          <div class="wiz-confirm-label">出発元</div>
-          <div class="wiz-confirm-val">${WIZ.src==='その他'?e(WIZ.srcOther||'その他'):WIZ.src}</div>
-        </div>`:''}
         ${hasNyukaType('入荷')?`
         <div class="wiz-confirm-row">
-          <div class="wiz-confirm-label">入荷先</div>
+          <div class="wiz-confirm-label">入荷元</div>
           <div class="wiz-confirm-val">${WIZ.srcIn==='その他'?e(WIZ.srcInOther||'その他'):WIZ.srcIn}</div>
         </div>`:''}
+        ${hasNyukaType('出荷')?`
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">出荷先</div>
+          <div class="wiz-confirm-val">${WIZ.src==='その他'?e(WIZ.srcOther||'その他'):WIZ.src}</div>
+        </div>`:''}
+        ${hasNyukaType('入荷')&&hasNyukaType('出荷')?`
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">オーダーNo</div>
+          <div class="wiz-confirm-val" style="font-size:12px;">入荷:${e(WIZ.orderIn||'―')} ／ 出荷:${e(WIZ.orderOut||'―')}</div>
+        </div>`:`
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">オーダーNo</div>
+          <div class="wiz-confirm-val">${e(WIZ.order||'―')}</div>
+        </div>`}
         <div class="wiz-confirm-row">
           <div class="wiz-confirm-label">積み方</div>
           <div class="wiz-confirm-val">${WIZ.tsumi||''}</div>
@@ -2700,7 +2715,7 @@ function wizComplete(){
       r.tsumi=WIZ.tsumi||'';
       r.order=WIZ.order||'';
       r.type=typ;
-      // 出荷なら出発元(src)、入荷なら入荷先(srcIn)を使用
+      // 出荷なら入荷元(src)、入荷なら出荷先(srcIn)を使用
       if(typ==='入荷'){
         r.src=WIZ.srcIn||'';
         r.srcOther=WIZ.srcIn==='その他'?WIZ.srcInOther:'';

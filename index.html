@@ -753,16 +753,16 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 .order-modal{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:440px;padding-bottom:env(safe-area-inset-bottom,12px);}
 .order-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid #e0ddd5;}
 .order-modal-title{font-size:17px;font-weight:800;}
-.order-modal-close{width:36px;height:36px;border-radius:50%;border:none;background:#f0efe9;font-size:18px;color:#666;}
+.order-modal-close{width:36px;height:36px;border-radius:50%;border:none;background:#f0efe9;font-size:18px;color:#666;cursor:pointer;-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:rgba(0,0,0,0);}
 .order-disp-wrap{text-align:center;padding:14px 20px 10px;border-bottom:1px solid #e0ddd5;min-height:70px;}
 .order-disp{font-size:28px;font-weight:800;letter-spacing:.04em;color:#1a1a1a;min-height:44px;word-break:break-all;padding:4px 8px;}
 .order-disp.empty{color:#ccc;font-size:20px;font-weight:400;}
 .order-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 14px 4px;}
-.order-key{height:62px;border-radius:10px;border:1px solid #ccc9be;background:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:rgba(0,0,0,0);}
+.order-key{height:62px;border-radius:10px;border:1px solid #ccc9be;background:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:rgba(0,0,0,0);cursor:pointer;-webkit-appearance:none;appearance:none;}
 .order-key:active{background:#f0efe9;}
 .order-comma{background:#e8f5ea;color:#2d7a3a;font-size:20px;}
 .order-del{background:#f0efe9;color:#666;font-size:20px;}
-.order-ok-btn{display:block;width:calc(100% - 28px);margin:6px 14px 4px;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:800;}
+.order-ok-btn{display:block;width:calc(100% - 28px);margin:6px 14px 4px;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:800;cursor:pointer;-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:rgba(0,0,0,0);}
 .order-ok-btn:disabled{background:#ccc;}
 </style>
 </head>
@@ -2417,7 +2417,7 @@ function renderWizard(){
 
       <div style="margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo <span style="color:var(--red);">*</span></div>
-        <button type="button" onclick="openOrderModal()" ontouchend="event.preventDefault();openOrderModal();" style="width:100%;font-size:20px;padding:16px 14px;border:1px solid ${WIZ.order?'var(--border2)':'var(--red-bd)'};border-radius:10px;background:#fff;text-align:left;font-weight:${WIZ.order?'700':'400'};color:${WIZ.order?'var(--text)':'var(--text3)'};cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,0);display:block;">
+        <button type="button" onclick="openOrderModal();return false;" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid ${WIZ.order?'var(--border2)':'var(--red-bd)'};border-radius:10px;background:#fff;text-align:left;font-weight:${WIZ.order?'700':'400'};color:${WIZ.order?'var(--text)':'var(--text3)'};cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);display:block;appearance:none;-webkit-appearance:none;min-height:56px;">
           ${WIZ.order||'タップして入力'}
         </button>
       </div>
@@ -2804,13 +2804,15 @@ function renderOrderModal(){
 
   var ov = document.createElement('div');
   ov.id='_order_overlay'; ov.className='order-modal-overlay';
+
   var md = document.createElement('div'); md.className='order-modal';
 
+  // 閉じるボタンのクリックでoverlayも閉じる
   var hdr = document.createElement('div'); hdr.className='order-modal-hdr';
   var ttl = document.createElement('div'); ttl.className='order-modal-title'; ttl.textContent='オーダーNo';
-  var cls = document.createElement('button'); cls.className='order-modal-close'; cls.textContent='✕';
-  cls.addEventListener('click', function(){ ov.remove(); });
-  cls.addEventListener('touchend', function(e){ e.preventDefault(); ov.remove(); });
+  var cls = document.createElement('button'); cls.className='order-modal-close'; cls.type='button';
+  cls.textContent='✕';
+  cls.onclick = function(){ ov.remove(); };
   hdr.appendChild(ttl); hdr.appendChild(cls); md.appendChild(hdr);
 
   var dw = document.createElement('div'); dw.className='order-disp-wrap';
@@ -2821,10 +2823,10 @@ function renderOrderModal(){
   var kp = document.createElement('div'); kp.className='order-keypad';
   function addKey(lbl, cls, handler){
     var b = document.createElement('button');
+    b.type = 'button';
     b.className = cls;
     b.textContent = lbl;
-    b.addEventListener('click', handler);
-    b.addEventListener('touchend', function(e){ e.preventDefault(); handler(); });
+    b.onclick = handler;
     return b;
   }
   [1,2,3,4,5,6,7,8,9].forEach(function(n){
@@ -2835,17 +2837,15 @@ function renderOrderModal(){
   kp.appendChild(addKey('⌫', 'order-key order-del', function(){ orderDel(); }));
   md.appendChild(kp);
 
-  var ok = document.createElement('button'); ok.className='order-ok-btn';
+  var ok = document.createElement('button'); ok.type='button'; ok.className='order-ok-btn';
   ok.textContent = buf.length>0 ? '確定（'+buf+'）' : 'オーダーNoを入力してください';
   if(buf.length===0) ok.disabled=true;
-  var okFn = function(){ 
-    if(buf.length>0) {
+  ok.onclick = function(){ 
+    if(WIZ.order && WIZ.order.length>0) {
       ov.remove();
       renderWizard();
     }
   };
-  ok.addEventListener('click', okFn);
-  ok.addEventListener('touchend', function(e){ e.preventDefault(); okFn(); });
   md.appendChild(ok);
 
   var sp = document.createElement('div'); sp.style.height='8px'; md.appendChild(sp);

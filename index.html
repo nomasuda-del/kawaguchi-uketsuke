@@ -809,22 +809,33 @@ function initFirebase() {
   if (typeof firebase === 'undefined') return;
   try {
     firebase.initializeApp(FIREBASE_CONFIG);
-    fbDb = firebase.database();
-    syncStatus = 'live';
-    // Listen for realtime updates from Firebase
-    fbDb.ref('kawaguchi').on('value', snap => {
-      const data = snap.val();
-      if (!data) return;
-      if (data.db) {
-        S.db = data.db;
-        // Ensure today exists
-        ensureDay(S.db, todayKey());
-      }
-      if (data.drivers) S.drivers = data.drivers;
-      if (!S.modal) render();
-    });
-  } catch(e) {
     
+    // 匿名認証でサインイン（セキュリティルールで auth != null の条件を満たす）
+    firebase.auth().signInAnonymously()
+      .then(function(userCred){
+        // 認証成功後にDBに接続
+        fbDb = firebase.database();
+        syncStatus = 'live';
+        render(); // UI更新（同期中表示）
+        
+        // Listen for realtime updates from Firebase
+        fbDb.ref('kawaguchi').on('value', function(snap){
+          var data = snap.val();
+          if (!data) return;
+          if (data.db) {
+            S.db = data.db;
+            ensureDay(S.db, todayKey());
+          }
+          if (data.drivers) S.drivers = data.drivers;
+          if (!S.modal) render();
+        });
+      })
+      .catch(function(err){
+        console.error('Firebase auth error:', err);
+        syncStatus = 'offline';
+        render();
+      });
+  } catch(e) {
     syncStatus = 'offline';
   }
 }

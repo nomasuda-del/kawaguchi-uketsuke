@@ -747,6 +747,23 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 .time-now-btn{display:block;width:calc(100% - 28px);margin:6px 14px 2px;padding:13px;background:#2d7a3a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;}
 .time-ok-btn{display:block;width:calc(100% - 28px);margin:4px 14px 4px;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;}
 .time-ok-btn:disabled{background:#ccc;}
+
+/* ===== ORDER INPUT MODAL ===== */
+.order-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:9999;}
+.order-modal{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:440px;padding-bottom:env(safe-area-inset-bottom,12px);}
+.order-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid #e0ddd5;}
+.order-modal-title{font-size:17px;font-weight:800;}
+.order-modal-close{width:36px;height:36px;border-radius:50%;border:none;background:#f0efe9;font-size:18px;color:#666;}
+.order-disp-wrap{text-align:center;padding:14px 20px 10px;border-bottom:1px solid #e0ddd5;min-height:70px;}
+.order-disp{font-size:28px;font-weight:800;letter-spacing:.04em;color:#1a1a1a;min-height:44px;word-break:break-all;padding:4px 8px;}
+.order-disp.empty{color:#ccc;font-size:20px;font-weight:400;}
+.order-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 14px 4px;}
+.order-key{height:62px;border-radius:10px;border:1px solid #ccc9be;background:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:rgba(0,0,0,0);}
+.order-key:active{background:#f0efe9;}
+.order-comma{background:#e8f5ea;color:#2d7a3a;font-size:20px;}
+.order-del{background:#f0efe9;color:#666;font-size:20px;}
+.order-ok-btn{display:block;width:calc(100% - 28px);margin:6px 14px 4px;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:800;}
+.order-ok-btn:disabled{background:#ccc;}
 </style>
 </head>
 <body>
@@ -2397,19 +2414,24 @@ function renderWizard(){
 
       <div style="margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo <span style="color:var(--red);">*</span></div>
-        <input class="wiz-field-input" id="wiz-order" type="text" value="${e(WIZ.order)}" placeholder="例: 12345" oninput="WIZ.order=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid ${WIZ.order?'var(--border2)':'var(--red-bd)'};border-radius:10px;background:#fff;">
+        <button type="button" onclick="openOrderModal()" style="width:100%;font-size:20px;padding:16px 14px;border:1px solid ${WIZ.order?'var(--border2)':'var(--red-bd)'};border-radius:10px;background:#fff;text-align:left;font-weight:${WIZ.order?'700':'400'};color:${WIZ.order?'var(--text)':'var(--text3)'};cursor:pointer;">
+          ${WIZ.order||'タップして入力'}
+        </button>
       </div>
 
       <div style="margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:10px;">入荷 / 出荷 <span style="color:var(--red);">*</span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <button type="button" onclick="WIZ.nyukaType='入荷';renderWizard()" style="padding:20px;border-radius:12px;border:2px solid ${WIZ.nyukaType==='入荷'?'var(--green)':'var(--border2)'};background:${WIZ.nyukaType==='入荷'?'var(--green-bg)':'#fff'};color:${WIZ.nyukaType==='入荷'?'var(--green)':'var(--text2)'};font-size:18px;font-weight:800;cursor:pointer;">
+          <button type="button" onclick="toggleNyukaType('入荷')" style="padding:20px;border-radius:12px;border:2px solid ${hasNyukaType('入荷')?'var(--green)':'var(--border2)'};background:${hasNyukaType('入荷')?'var(--green-bg)':'#fff'};color:${hasNyukaType('入荷')?'var(--green)':'var(--text2)'};font-size:18px;font-weight:800;cursor:pointer;position:relative;">
+            ${hasNyukaType('入荷')?'<span style="position:absolute;top:6px;right:8px;font-size:16px;">✓</span>':''}
             📥 入荷
           </button>
-          <button type="button" onclick="WIZ.nyukaType='出荷';renderWizard()" style="padding:20px;border-radius:12px;border:2px solid ${WIZ.nyukaType==='出荷'?'var(--green)':'var(--border2)'};background:${WIZ.nyukaType==='出荷'?'var(--green-bg)':'#fff'};color:${WIZ.nyukaType==='出荷'?'var(--green)':'var(--text2)'};font-size:18px;font-weight:800;cursor:pointer;">
+          <button type="button" onclick="toggleNyukaType('出荷')" style="padding:20px;border-radius:12px;border:2px solid ${hasNyukaType('出荷')?'var(--green)':'var(--border2)'};background:${hasNyukaType('出荷')?'var(--green-bg)':'#fff'};color:${hasNyukaType('出荷')?'var(--green)':'var(--text2)'};font-size:18px;font-weight:800;cursor:pointer;position:relative;">
+            ${hasNyukaType('出荷')?'<span style="position:absolute;top:6px;right:8px;font-size:16px;">✓</span>':''}
             📤 出荷
           </button>
         </div>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px;padding:0 4px;">※ 両方ある場合は両方タップしてください（2行に分けて登録されます）</div>
       </div>
 
       <div style="margin-bottom:16px;">
@@ -2607,20 +2629,26 @@ function wizComplete(){
   const day=todayData();
   const arr=day[WIZ.type];
   if(WIZ.type==='lotte'){
-    const slot=arr.find(r=>!r.company&&!r.tochaku&&!r.deleted);
-    const r=slot||mkLRow(arr.length+1);
-    r.tel=WIZ.tel;
-    r.company=WIZ.company;
-    r.name=WIZ.name;
-    r.car=WIZ.car;
-    r.shakaku=WIZ.shakaku;
-    r.order=WIZ.order||'';
-    r.type=WIZ.nyukaType||'';
-    r.src=WIZ.src||'';
-    r.srcOther=WIZ.src==='その他'?WIZ.srcOther:'';
-    r.tochaku=nowStr(); // 到着時間を打刻
-    r.basu=''; r.sakuEnd=''; r.shuppatsu='';
-    if(!slot) arr.push(r);
+    // 入荷/出荷両方選択されている場合は2行に分ける
+    var types = WIZ.nyukaType ? WIZ.nyukaType.split(',').filter(function(x){return x;}) : [''];
+    var nowT = nowStr();
+    types.forEach(function(typ){
+      var slot=arr.find(function(r){return !r.company&&!r.tochaku&&!r.deleted;});
+      var r=slot||mkLRow(arr.length+1);
+      r.tel=WIZ.tel;
+      r.company=WIZ.company;
+      r.name=WIZ.name;
+      r.car=WIZ.car;
+      r.shakaku=WIZ.shakaku;
+      r.tsumi=WIZ.tsumi||'';
+      r.order=WIZ.order||'';
+      r.type=typ;
+      r.src=WIZ.src||'';
+      r.srcOther=WIZ.src==='その他'?WIZ.srcOther:'';
+      r.tochaku=nowT; // 到着時間を打刻（両行とも同じ時刻）
+      r.basu=''; r.sakuEnd=''; r.shuppatsu='';
+      if(!slot) arr.push(r);
+    });
   } else {
     const slot=arr.find(r=>!r.company&&!r.nyuuko&&!r.deleted);
     const r=slot||mkNRow(arr.length+1);
@@ -2691,6 +2719,95 @@ function timeInputBlur(el, saveFn) {
   el.title = '時刻は HH:MM 形式で入力してください（例: 14:30）';
 }
 
+
+
+// ============================================================
+// ORDER NO INPUT MODAL
+// ============================================================
+
+// ============================================================
+// NYUKATYPE TOGGLE (multi-select)
+// ============================================================
+function hasNyukaType(t){
+  if(!WIZ.nyukaType) return false;
+  return WIZ.nyukaType.split(',').indexOf(t)>=0;
+}
+function toggleNyukaType(t){
+  var arr = WIZ.nyukaType ? WIZ.nyukaType.split(',').filter(function(x){return x;}) : [];
+  var i = arr.indexOf(t);
+  if(i>=0) arr.splice(i,1);
+  else arr.push(t);
+  // 順序固定（入荷→出荷）
+  var sorted=[];
+  if(arr.indexOf('入荷')>=0) sorted.push('入荷');
+  if(arr.indexOf('出荷')>=0) sorted.push('出荷');
+  WIZ.nyukaType = sorted.join(',');
+  renderWizard();
+}
+
+function openOrderModal(){
+  renderOrderModal();
+}
+function renderOrderModal(){
+  var old = document.getElementById('_order_overlay');
+  if(old) old.remove();
+  var buf = WIZ.order || '';
+
+  var ov = document.createElement('div');
+  ov.id='_order_overlay'; ov.className='order-modal-overlay';
+  var md = document.createElement('div'); md.className='order-modal';
+
+  var hdr = document.createElement('div'); hdr.className='order-modal-hdr';
+  var ttl = document.createElement('div'); ttl.className='order-modal-title'; ttl.textContent='オーダーNo';
+  var cls = document.createElement('button'); cls.className='order-modal-close'; cls.textContent='✕';
+  cls.onclick=function(){ ov.remove(); };
+  hdr.appendChild(ttl); hdr.appendChild(cls); md.appendChild(hdr);
+
+  var dw = document.createElement('div'); dw.className='order-disp-wrap';
+  var dp = document.createElement('div'); dp.className='order-disp'+(buf.length===0?' empty':'');
+  dp.textContent = buf.length===0 ? '例: 12345 または 12345,67890' : buf;
+  dw.appendChild(dp); md.appendChild(dw);
+
+  var kp = document.createElement('div'); kp.className='order-keypad';
+  [1,2,3,4,5,6,7,8,9].forEach(function(n){
+    var b=document.createElement('button'); b.className='order-key'; b.textContent=n;
+    b.onclick=function(){ orderKey(String(n)); }; kp.appendChild(b);
+  });
+  var cm = document.createElement('button'); cm.className='order-key order-comma'; cm.textContent=',';
+  cm.onclick=function(){ orderKey(','); }; kp.appendChild(cm);
+  var z = document.createElement('button'); z.className='order-key'; z.textContent='0';
+  z.onclick=function(){ orderKey('0'); }; kp.appendChild(z);
+  var dl = document.createElement('button'); dl.className='order-key order-del'; dl.textContent='⌫';
+  dl.onclick=function(){ orderDel(); }; kp.appendChild(dl);
+  md.appendChild(kp);
+
+  var ok = document.createElement('button'); ok.className='order-ok-btn';
+  ok.textContent = buf.length>0 ? '確定（'+buf+'）' : 'オーダーNoを入力してください';
+  if(buf.length===0) ok.disabled=true;
+  ok.onclick=function(){ 
+    if(buf.length>0) {
+      ov.remove();
+      renderWizard();
+    }
+  };
+  md.appendChild(ok);
+
+  var sp = document.createElement('div'); sp.style.height='8px'; md.appendChild(sp);
+  ov.appendChild(md);
+  document.body.appendChild(ov);
+}
+function orderKey(c){
+  if(c===','){
+    if(!WIZ.order || WIZ.order.length===0) return;
+    if(WIZ.order.endsWith(',')) return;
+  }
+  WIZ.order = (WIZ.order||'') + c;
+  renderOrderModal();
+}
+function orderDel(){
+  WIZ.order = (WIZ.order||'').slice(0,-1);
+  renderOrderModal();
+}
 
 // ============================================================
 // TIME INPUT MODAL

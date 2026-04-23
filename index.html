@@ -943,15 +943,19 @@ const WIZ = {
   company: '',
   name: '',
   car: '',
-  shakaku: '2t',
-  tsumi: 'バラ',
+  shakaku: '',
+  tsumi: '',
   fuda: '',
   biko: '',
   // lotte専用
   order: '',
-  nyukaType: '入荷',
-  src: '狭山工場',
+  orderIn: '',
+  orderOut: '',
+  nyukaType: '',
+  src: '',
   srcOther: '',
+  srcIn: '',
+  srcInOther: '',
   driver: null,
   isNew: false,
   consent: false,
@@ -2413,6 +2417,44 @@ function renderWizard(){
     nextDisabled = !WIZ.nyukaType || !WIZ.tsumi
       || (_hasS && (!WIZ.src || (WIZ.src==='その他' && !WIZ.srcOther)))
       || (_hasN && (!WIZ.srcIn || (WIZ.srcIn==='その他' && !WIZ.srcInOther)));
+    // IIFE を外側で評価して変数化（template literal 内で例外が発生して真っ白になる対策）
+    var _srcSectionHtml = '';
+    try {
+      var srcOptions = ['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'];
+      if(_hasN){
+        var lblIn = _both ? '入荷元（入荷側）' : '入荷元';
+        _srcSectionHtml += '<div style="margin-bottom:16px;">'
+          + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+lblIn+' <span style="color:var(--red);">*</span></div>'
+          + '<select id="wiz-srcin" onchange="WIZ.srcIn=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid '+((WIZ.srcIn||'')?'var(--border2)':'var(--red-bd)')+';border-radius:10px;background:#fff;font-weight:'+((WIZ.srcIn||'')?'700':'400')+';color:'+((WIZ.srcIn||'')?'var(--text)':'var(--text3)')+';">'
+          + '<option value=""'+(!(WIZ.srcIn||'')?' selected':'')+'>選択してください</option>'
+          + srcOptions.map(function(s){return '<option'+((WIZ.srcIn||'')===s?' selected':'')+'>'+s+'</option>';}).join('')
+          + '</select></div>';
+        if((WIZ.srcIn||'')==='その他'){
+          _srcSectionHtml += '<div style="margin-bottom:16px;">'
+            + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（入荷元を入力） <span style="color:var(--red);">*</span></div>'
+            + '<input id="wiz-srcin-other" type="text" value="'+e(WIZ.srcInOther||'')+'" placeholder="入荷元を入力" oninput="WIZ.srcInOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">'
+            + '</div>';
+        }
+      }
+      if(_hasS){
+        var lblOut = _both ? '出荷先（出荷側）' : '出荷先';
+        _srcSectionHtml += '<div style="margin-bottom:16px;">'
+          + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+lblOut+' <span style="color:var(--red);">*</span></div>'
+          + '<select id="wiz-src" onchange="WIZ.src=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid '+((WIZ.src||'')?'var(--border2)':'var(--red-bd)')+';border-radius:10px;background:#fff;font-weight:'+((WIZ.src||'')?'700':'400')+';color:'+((WIZ.src||'')?'var(--text)':'var(--text3)')+';">'
+          + '<option value=""'+(!(WIZ.src||'')?' selected':'')+'>選択してください</option>'
+          + srcOptions.map(function(s){return '<option'+((WIZ.src||'')===s?' selected':'')+'>'+s+'</option>';}).join('')
+          + '</select></div>';
+        if((WIZ.src||'')==='その他'){
+          _srcSectionHtml += '<div style="margin-bottom:16px;">'
+            + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（出荷先を入力） <span style="color:var(--red);">*</span></div>'
+            + '<input id="wiz-src-other" type="text" value="'+e(WIZ.srcOther||'')+'" placeholder="出荷先を入力" oninput="WIZ.srcOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">'
+            + '</div>';
+        }
+      }
+    } catch(err) {
+      console.error('src section error:', err);
+      _srcSectionHtml = '<div style="color:red;padding:12px;">エラー: '+err.message+'</div>';
+    }
     body=`
       <div class="wiz-section-title">オーダー情報を<br>入力してください</div>
 
@@ -2434,58 +2476,21 @@ function renderWizard(){
       ${_both?`
       <div style="margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo（入荷）</div>
-        <input id="wiz-order-in" type="text" inputmode="numeric" value="${e(WIZ.orderIn)}" placeholder="例: 12345" oninput="WIZ.orderIn=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid var(--border2);border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
+        <input id="wiz-order-in" type="text" inputmode="numeric" value="${e(WIZ.orderIn||'')}" placeholder="例: 12345" oninput="WIZ.orderIn=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid var(--border2);border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
       </div>
       <div style="margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo（出荷）</div>
-        <input id="wiz-order-out" type="text" inputmode="numeric" value="${e(WIZ.orderOut)}" placeholder="例: 12345" oninput="WIZ.orderOut=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid var(--border2);border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
+        <input id="wiz-order-out" type="text" inputmode="numeric" value="${e(WIZ.orderOut||'')}" placeholder="例: 12345" oninput="WIZ.orderOut=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid var(--border2);border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
       </div>
       `:`
       <div style="margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo</div>
-        <input id="wiz-order" type="text" inputmode="numeric" value="${e(WIZ.order)}" placeholder="例: 12345 または 12345,67890" oninput="WIZ.order=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid var(--border2);border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
+        <input id="wiz-order" type="text" inputmode="numeric" value="${e(WIZ.order||'')}" placeholder="例: 12345 または 12345,67890" oninput="WIZ.order=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid var(--border2);border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
         <div style="font-size:11px;color:var(--text2);margin-top:6px;">※ 複数ある場合はカンマ（,）で区切ってください</div>
       </div>
       `}
 
-      ${(function(){
-        var srcOptions = ['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'];
-        var html = '';
-
-        if(_hasN){
-          var lblIn = _both ? '入荷元（入荷側）' : '入荷元';
-          html += '<div style="margin-bottom:16px;">'
-            + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+lblIn+' <span style="color:var(--red);">*</span></div>'
-            + '<select id="wiz-srcin" onchange="WIZ.srcIn=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid '+(WIZ.srcIn?'var(--border2)':'var(--red-bd)')+';border-radius:10px;background:#fff;font-weight:'+(WIZ.srcIn?'700':'400')+';color:'+(WIZ.srcIn?'var(--text)':'var(--text3)')+';">'
-            + '<option value=""'+(!WIZ.srcIn?' selected':'')+'>選択してください</option>'
-            + srcOptions.map(function(s){return '<option'+(WIZ.srcIn===s?' selected':'')+'>'+s+'</option>';}).join('')
-            + '</select></div>';
-          if(WIZ.srcIn==='その他'){
-            html += '<div style="margin-bottom:16px;">'
-              + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（入荷元を入力） <span style="color:var(--red);">*</span></div>'
-              + '<input id="wiz-srcin-other" type="text" value="'+e(WIZ.srcInOther)+'" placeholder="入荷元を入力" oninput="WIZ.srcInOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">'
-              + '</div>';
-          }
-        }
-
-        if(_hasS){
-          var lbl = _both ? '出荷先（出荷側）' : '出荷先';
-          html += '<div style="margin-bottom:16px;">'
-            + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+lbl+' <span style="color:var(--red);">*</span></div>'
-            + '<select id="wiz-src" onchange="WIZ.src=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid '+(WIZ.src?'var(--border2)':'var(--red-bd)')+';border-radius:10px;background:#fff;font-weight:'+(WIZ.src?'700':'400')+';color:'+(WIZ.src?'var(--text)':'var(--text3)')+';">'
-            + '<option value=""'+(!WIZ.src?' selected':'')+'>選択してください</option>'
-            + srcOptions.map(function(s){return '<option'+(WIZ.src===s?' selected':'')+'>'+s+'</option>';}).join('')
-            + '</select></div>';
-          if(WIZ.src==='その他'){
-            html += '<div style="margin-bottom:16px;">'
-              + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（出荷先を入力） <span style="color:var(--red);">*</span></div>'
-              + '<input id="wiz-src-other" type="text" value="'+e(WIZ.srcOther)+'" placeholder="出荷先を入力" oninput="WIZ.srcOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">'
-              + '</div>';
-          }
-        }
-
-        return html;
-      })()}
+${_srcSectionHtml}
 
       <div style="margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:10px;">積み方 <span style="color:var(--red);">*</span></div>

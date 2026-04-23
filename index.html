@@ -1292,7 +1292,7 @@ function renderLotte(){
     <th style="width:68px;">車格</th>
     <th style="width:80px;">オーダーNo</th>
     <th style="width:60px;">入/出荷</th>
-    <th style="min-width:112px;">出発元/入荷元</th>
+    <th style="min-width:112px;">出発元/入荷先</th>
     <th style="min-width:104px;">到着時間</th>
     <th style="min-width:104px;">バース着車</th>
     <th style="min-width:104px;">作業終了</th>
@@ -1510,9 +1510,9 @@ function renderModal(){
     const cur=r?.srcOther||'';
     modalContainer.innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeSrcOther('${id}');">
       <div class="modal" style="max-width:360px;">
-        <h3>出発元 / 入荷元（その他）</h3>
+        <h3>出発元 / 入荷先（その他）</h3>
         <div class="fg">
-          <label>具体的な出発元・入荷元を入力してください</label>
+          <label>具体的な出発元・入荷先を入力してください</label>
           <input id="src-other-modal-input" type="text" value="${cur}"
             placeholder="例：東京工場、大阪センター など"
             style="width:100%;font-size:16px;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);"
@@ -1616,7 +1616,7 @@ function renderModal(){
         <div class="fg"><label>オーダーNo</label><input id="m-order" type="text"></div>
         <div class="fg"><label>入荷 ／ 出荷</label><select id="m-type"><option>入荷</option><option>出荷</option></select></div>
       </div>
-      <div class="fg"><label>出発元 ／ 入荷元</label><select id="m-src">${LOTTE_SRC.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div class="fg"><label>出発元 ／ 入荷先</label><select id="m-src">${LOTTE_SRC.map(s=>`<option>${s}</option>`).join('')}</select></div>
       <div class="fg hidden" id="m-src-other-fg"><label>その他（入力）</label><input id="m-src-other" type="text"></div>`;
     } else {
       fields=`
@@ -2407,14 +2407,17 @@ function renderWizard(){
   // ===== STEP: ロッテ情報（オーダーNo・入荷出荷・出発元） =====
   } else if(WIZ.step==='lotte_info'){
     const srcOtherVisible = WIZ.src==='その他';
-    // 次へ進む条件：order, nyukaType, src, tsumi が必須
-    nextDisabled = !WIZ.order || !WIZ.nyukaType || !WIZ.src || (WIZ.src==='その他' && !WIZ.srcOther) || !WIZ.tsumi;
+    // 次へ進む条件：order, nyukaType, tsumi が必須、出荷なら src、入荷なら srcIn が必須
+    var _hasN = hasNyukaType('入荷'), _hasS = hasNyukaType('出荷');
+    nextDisabled = !WIZ.order || !WIZ.nyukaType || !WIZ.tsumi
+      || (_hasS && (!WIZ.src || (WIZ.src==='その他' && !WIZ.srcOther)))
+      || (_hasN && (!WIZ.srcIn || (WIZ.srcIn==='その他' && !WIZ.srcInOther)));
     body=`
       <div class="wiz-section-title">オーダー情報を<br>入力してください</div>
 
       <div style="margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo <span style="color:var(--red);">*</span></div>
-        <button type="button" onclick="openOrderModal()" style="width:100%;font-size:20px;padding:16px 14px;border:1px solid ${WIZ.order?'var(--border2)':'var(--red-bd)'};border-radius:10px;background:#fff;text-align:left;font-weight:${WIZ.order?'700':'400'};color:${WIZ.order?'var(--text)':'var(--text3)'};cursor:pointer;">
+        <button type="button" onclick="openOrderModal()" ontouchend="event.preventDefault();openOrderModal();" style="width:100%;font-size:20px;padding:16px 14px;border:1px solid ${WIZ.order?'var(--border2)':'var(--red-bd)'};border-radius:10px;background:#fff;text-align:left;font-weight:${WIZ.order?'700':'400'};color:${WIZ.order?'var(--text)':'var(--text3)'};cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,0);display:block;">
           ${WIZ.order||'タップして入力'}
         </button>
       </div>
@@ -2434,19 +2437,49 @@ function renderWizard(){
         <div style="font-size:11px;color:var(--text2);margin-top:6px;padding:0 4px;">※ 両方ある場合は両方タップしてください（2行に分けて登録されます）</div>
       </div>
 
-      <div style="margin-bottom:16px;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">出発元 / 入荷元 <span style="color:var(--red);">*</span></div>
-        <select id="wiz-src" onchange="WIZ.src=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid ${WIZ.src?'var(--border2)':'var(--red-bd)'};border-radius:10px;background:#fff;font-weight:${WIZ.src?'700':'400'};color:${WIZ.src?'var(--text)':'var(--text3)'};">
-          <option value=""${!WIZ.src?' selected':''}>選択してください</option>
-          ${['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'].map(s=>`<option${WIZ.src===s?' selected':''}>${s}</option>`).join('')}
-        </select>
-      </div>
-
-      ${srcOtherVisible?`
-      <div style="margin-bottom:16px;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（入力） <span style="color:var(--red);">*</span></div>
-        <input id="wiz-src-other" type="text" value="${e(WIZ.srcOther)}" placeholder="出発元を入力" oninput="WIZ.srcOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">
-      </div>`:''}
+      ${(function(){
+        var hasShukka = hasNyukaType('出荷');
+        var hasNyuuka = hasNyukaType('入荷');
+        var both = hasShukka && hasNyuuka;
+        var srcOptions = ['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'];
+        var html = '';
+        
+        // 出荷がある場合 → 出発元
+        if(hasShukka){
+          var lbl = both ? '出発元（出荷側）' : '出発元';
+          html += '<div style="margin-bottom:16px;">'
+            + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+lbl+' <span style="color:var(--red);">*</span></div>'
+            + '<select id="wiz-src" onchange="WIZ.src=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid '+(WIZ.src?'var(--border2)':'var(--red-bd)')+';border-radius:10px;background:#fff;font-weight:'+(WIZ.src?'700':'400')+';color:'+(WIZ.src?'var(--text)':'var(--text3)')+';">'
+            + '<option value=""'+(!WIZ.src?' selected':'')+'>選択してください</option>'
+            + srcOptions.map(function(s){return '<option'+(WIZ.src===s?' selected':'')+'>'+s+'</option>';}).join('')
+            + '</select></div>';
+          if(WIZ.src==='その他'){
+            html += '<div style="margin-bottom:16px;">'
+              + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（出発元を入力） <span style="color:var(--red);">*</span></div>'
+              + '<input id="wiz-src-other" type="text" value="'+e(WIZ.srcOther)+'" placeholder="出発元を入力" oninput="WIZ.srcOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">'
+              + '</div>';
+          }
+        }
+        
+        // 入荷がある場合 → 入荷先
+        if(hasNyuuka){
+          var lblIn = both ? '入荷先（入荷側）' : '入荷先';
+          html += '<div style="margin-bottom:16px;">'
+            + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+lblIn+' <span style="color:var(--red);">*</span></div>'
+            + '<select id="wiz-srcin" onchange="WIZ.srcIn=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid '+(WIZ.srcIn?'var(--border2)':'var(--red-bd)')+';border-radius:10px;background:#fff;font-weight:'+(WIZ.srcIn?'700':'400')+';color:'+(WIZ.srcIn?'var(--text)':'var(--text3)')+';">'
+            + '<option value=""'+(!WIZ.srcIn?' selected':'')+'>選択してください</option>'
+            + srcOptions.map(function(s){return '<option'+(WIZ.srcIn===s?' selected':'')+'>'+s+'</option>';}).join('')
+            + '</select></div>';
+          if(WIZ.srcIn==='その他'){
+            html += '<div style="margin-bottom:16px;">'
+              + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（入荷先を入力） <span style="color:var(--red);">*</span></div>'
+              + '<input id="wiz-srcin-other" type="text" value="'+e(WIZ.srcInOther)+'" placeholder="入荷先を入力" oninput="WIZ.srcInOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">'
+              + '</div>';
+          }
+        }
+        
+        return html;
+      })()}
 
       <div style="margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:10px;">積み方 <span style="color:var(--red);">*</span></div>
@@ -2500,9 +2533,19 @@ function renderWizard(){
           <div class="wiz-confirm-label">入荷/出荷</div>
           <div class="wiz-confirm-val">${WIZ.nyukaType}</div>
         </div>
+        ${hasNyukaType('出荷')?`
         <div class="wiz-confirm-row">
           <div class="wiz-confirm-label">出発元</div>
           <div class="wiz-confirm-val">${WIZ.src==='その他'?e(WIZ.srcOther||'その他'):WIZ.src}</div>
+        </div>`:''}
+        ${hasNyukaType('入荷')?`
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">入荷先</div>
+          <div class="wiz-confirm-val">${WIZ.srcIn==='その他'?e(WIZ.srcInOther||'その他'):WIZ.srcIn}</div>
+        </div>`:''}
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">積み方</div>
+          <div class="wiz-confirm-val">${WIZ.tsumi||''}</div>
         </div>`:`
         <div class="wiz-confirm-row">
           <div class="wiz-confirm-label">積み方</div>
@@ -2643,8 +2686,14 @@ function wizComplete(){
       r.tsumi=WIZ.tsumi||'';
       r.order=WIZ.order||'';
       r.type=typ;
-      r.src=WIZ.src||'';
-      r.srcOther=WIZ.src==='その他'?WIZ.srcOther:'';
+      // 出荷なら出発元(src)、入荷なら入荷先(srcIn)を使用
+      if(typ==='入荷'){
+        r.src=WIZ.srcIn||'';
+        r.srcOther=WIZ.srcIn==='その他'?WIZ.srcInOther:'';
+      } else {
+        r.src=WIZ.src||'';
+        r.srcOther=WIZ.src==='その他'?WIZ.srcOther:'';
+      }
       r.tochaku=nowT; // 到着時間を打刻（両行とも同じ時刻）
       r.basu=''; r.sakuEnd=''; r.shuppatsu='';
       if(!slot) arr.push(r);
@@ -2746,7 +2795,7 @@ function toggleNyukaType(t){
 }
 
 function openOrderModal(){
-  renderOrderModal();
+  try { renderOrderModal(); } catch(e) { console.error('openOrderModal error:', e); alert('入力モーダルが開けません: '+e.message); }
 }
 function renderOrderModal(){
   var old = document.getElementById('_order_overlay');
@@ -2760,7 +2809,8 @@ function renderOrderModal(){
   var hdr = document.createElement('div'); hdr.className='order-modal-hdr';
   var ttl = document.createElement('div'); ttl.className='order-modal-title'; ttl.textContent='オーダーNo';
   var cls = document.createElement('button'); cls.className='order-modal-close'; cls.textContent='✕';
-  cls.onclick=function(){ ov.remove(); };
+  cls.addEventListener('click', function(){ ov.remove(); });
+  cls.addEventListener('touchend', function(e){ e.preventDefault(); ov.remove(); });
   hdr.appendChild(ttl); hdr.appendChild(cls); md.appendChild(hdr);
 
   var dw = document.createElement('div'); dw.className='order-disp-wrap';
@@ -2769,27 +2819,33 @@ function renderOrderModal(){
   dw.appendChild(dp); md.appendChild(dw);
 
   var kp = document.createElement('div'); kp.className='order-keypad';
+  function addKey(lbl, cls, handler){
+    var b = document.createElement('button');
+    b.className = cls;
+    b.textContent = lbl;
+    b.addEventListener('click', handler);
+    b.addEventListener('touchend', function(e){ e.preventDefault(); handler(); });
+    return b;
+  }
   [1,2,3,4,5,6,7,8,9].forEach(function(n){
-    var b=document.createElement('button'); b.className='order-key'; b.textContent=n;
-    b.onclick=function(){ orderKey(String(n)); }; kp.appendChild(b);
+    kp.appendChild(addKey(n, 'order-key', function(){ orderKey(String(n)); }));
   });
-  var cm = document.createElement('button'); cm.className='order-key order-comma'; cm.textContent=',';
-  cm.onclick=function(){ orderKey(','); }; kp.appendChild(cm);
-  var z = document.createElement('button'); z.className='order-key'; z.textContent='0';
-  z.onclick=function(){ orderKey('0'); }; kp.appendChild(z);
-  var dl = document.createElement('button'); dl.className='order-key order-del'; dl.textContent='⌫';
-  dl.onclick=function(){ orderDel(); }; kp.appendChild(dl);
+  kp.appendChild(addKey(',', 'order-key order-comma', function(){ orderKey(','); }));
+  kp.appendChild(addKey('0', 'order-key', function(){ orderKey('0'); }));
+  kp.appendChild(addKey('⌫', 'order-key order-del', function(){ orderDel(); }));
   md.appendChild(kp);
 
   var ok = document.createElement('button'); ok.className='order-ok-btn';
   ok.textContent = buf.length>0 ? '確定（'+buf+'）' : 'オーダーNoを入力してください';
   if(buf.length===0) ok.disabled=true;
-  ok.onclick=function(){ 
+  var okFn = function(){ 
     if(buf.length>0) {
       ov.remove();
       renderWizard();
     }
   };
+  ok.addEventListener('click', okFn);
+  ok.addEventListener('touchend', function(e){ e.preventDefault(); okFn(); });
   md.appendChild(ok);
 
   var sp = document.createElement('div'); sp.style.height='8px'; md.appendChild(sp);

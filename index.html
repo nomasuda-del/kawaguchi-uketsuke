@@ -2621,12 +2621,27 @@ function wizNext(){
   const idx=flow.indexOf(WIZ.step);
   // lotte_info でオーダーNoチェック（inputから取得）
   if(WIZ.step==='lotte_info'){
-    var ordInp = document.getElementById('wiz-order');
-    if(ordInp) WIZ.order = ordInp.value.trim();
-    if(!WIZ.order){
-      alert('オーダーNoを入力してください');
-      if(ordInp) ordInp.focus();
-      return;
+    var _hN = hasNyukaType('入荷'), _hS = hasNyukaType('出荷');
+    if(_hN && _hS){
+      // 両方選択
+      var oin = document.getElementById('wiz-order-in');
+      var oout = document.getElementById('wiz-order-out');
+      if(oin) WIZ.orderIn = oin.value.trim();
+      if(oout) WIZ.orderOut = oout.value.trim();
+      if(!WIZ.orderIn && !WIZ.orderOut){
+        alert('オーダーNoを入力してください（入荷・出荷どちらかは必須）');
+        if(oin) oin.focus();
+        return;
+      }
+    } else {
+      // 単独選択
+      var ordInp = document.getElementById('wiz-order');
+      if(ordInp) WIZ.order = ordInp.value.trim();
+      if(!WIZ.order){
+        alert('オーダーNoを入力してください');
+        if(ordInp) ordInp.focus();
+        return;
+      }
     }
   }
   if(WIZ.step==='tel'){

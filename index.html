@@ -1033,6 +1033,18 @@ const modalContainer = document.getElementById('modal-container');
 
 function render(){
   modalContainer.innerHTML = '';
+  // アプリPINチェック
+  var appPin = getAppPin();
+  if(!appPin){
+    // 初回：PIN設定画面
+    renderAppLogin('setup');
+    return;
+  }
+  if(!isAppLoggedIn()){
+    // ログインが切れている：ログイン画面
+    renderAppLogin('login');
+    return;
+  }
   if(WIZ.active){ renderWizard(); return; }
   if(S.modal){ renderModal(); return; }
   root.innerHTML = '';
@@ -1492,6 +1504,16 @@ function renderExport(){
       <h4>印刷プレビュー</h4>
       <p>選択した日付のデータを印刷用フォーマットで表示します。</p>
       <button class="export-btn" onclick="printDay()">印刷プレビューを開く</button>
+    </div>
+    <div class="export-card" style="border-color:var(--blue-bd);">
+      <h4>🔑 アプリログインPIN（4桁）</h4>
+      <p>アプリを起動するときに必要なPINです。退職者が出た場合は変更してください。変更すると全端末で次回アクセス時に再入力が必要になります。</p>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span style="font-size:13px;color:var(--text2);">現在の設定:</span>
+        <span style="font-size:13px;font-weight:700;">設定済み（30日間有効）</span>
+      </div>
+      <button class="export-btn" onclick="renderAppLogin('change')">PINを変更する</button>
+      <button class="export-btn" style="color:var(--amber);border-color:var(--amber-bd);" onclick="appLogout()">この端末からログアウト</button>
     </div>
     <div class="export-card" style="border-color:var(--border2);">
       <h4>🔐 セキュリティ設定（削除PIN）</h4>
@@ -2200,6 +2222,188 @@ function checkPin(){
 // ============================================================
 //  WIZARD
 // ============================================================
+
+// ============================================================
+// APP LOGIN PIN (30日有効)
+// ============================================================
+const APP_PIN_KEY = 'kw_app_pin';
+const APP_LOGIN_KEY = 'kw_app_login_until';
+const APP_PIN_VALID_DAYS = 30;
+
+function getAppPin(){
+  return localStorage.getItem(APP_PIN_KEY) || null;
+}
+function setAppPin(pin){
+  if(pin) localStorage.setItem(APP_PIN_KEY, pin);
+  else localStorage.removeItem(APP_PIN_KEY);
+}
+function isAppLoggedIn(){
+  var until = parseInt(localStorage.getItem(APP_LOGIN_KEY)||'0');
+  return until > Date.now();
+}
+function markAppLoggedIn(){
+  var until = Date.now() + APP_PIN_VALID_DAYS*24*60*60*1000;
+  localStorage.setItem(APP_LOGIN_KEY, String(until));
+}
+function clearAppLogin(){
+  localStorage.removeItem(APP_LOGIN_KEY);
+}
+
+// ============================================================
+// APP LOGIN SCREEN
+// ============================================================
+var _appLoginBuf = '';
+var _appLoginMode = 'login'; // 'login' | 'setup' | 'change'
+var _appLoginStep = 1; // for setup/change: 1=new pin, 2=confirm
+var _appLoginNewPin = '';
+
+function renderAppLogin(mode){
+  mode = mode || 'login';
+  _appLoginMode = mode;
+  _appLoginBuf = '';
+  _appLoginStep = 1;
+  _appLoginNewPin = '';
+  renderAppLoginUi();
+}
+
+function renderAppLoginUi(){
+  var title, sub;
+  if(_appLoginMode==='setup'){
+    title = _appLoginStep===1 ? '初回PIN設定' : 'PINの確認';
+    sub = _appLoginStep===1 ? '4桁のPINを設定してください' : 'もう一度同じPINを入力してください';
+  } else if(_appLoginMode==='change'){
+    title = _appLoginStep===1 ? '新しいPINを設定' : '新しいPINの確認';
+    sub = _appLoginStep===1 ? '4桁の新しいPINを入力してください' : 'もう一度同じPINを入力してください';
+  } else {
+    title = 'アプリPINを入力';
+    sub = '4桁のPINでログインしてください';
+  }
+
+  var dotsHtml = '';
+  for(var i=0;i<4;i++){
+    dotsHtml += '<div class="pin-dot'+(i<_appLoginBuf.length?' filled':'')+'" id="apd'+i+'"></div>';
+  }
+
+  var keysHtml = '';
+  for(var n=1;n<=9;n++){
+    keysHtml += '<button class="pin-key" onclick="appPinPress('+n+')">'+n+'</button>';
+  }
+  keysHtml += '<div></div>';
+  keysHtml += '<button class="pin-key" onclick="appPinPress(0)">0</button>';
+  keysHtml += '<button class="pin-key pin-del-key" onclick="appPinDel()">⌫</button>';
+
+  var cancelBtn = (_appLoginMode==='change')
+    ? '<div style="text-align:center;margin-top:16px;"><button onclick="S.screen=\'home\';render();" style="font-size:13px;color:var(--text2);background:none;border:none;cursor:pointer;">キャンセル</button></div>'
+    : '';
+
+  root.innerHTML = '<div class="login-screen">'
+    + '<div class="login-card">'
+    + '<div class="login-logo">🔒</div>'
+    + '<div class="pin-title" style="font-size:17px;font-weight:800;margin-bottom:6px;">'+title+'</div>'
+    + '<div class="pin-sub">'+sub+'</div>'
+    + '<div class="pin-display">'+dotsHtml+'</div>'
+    + '<div class="pin-pad">'+keysHtml+'</div>'
+    + '<div class="pin-err" id="app-pin-err"></div>'
+    + cancelBtn
+    + '</div>'
+    + '</div>';
+}
+
+function appPinPress(n){
+  if(_appLoginBuf.length >= 4) return;
+  _appLoginBuf += String(n);
+  // 表示更新
+  for(var i=0;i<4;i++){
+    var d = document.getElementById('apd'+i);
+    if(d) d.classList.toggle('filled', i < _appLoginBuf.length);
+  }
+  if(_appLoginBuf.length===4){
+    setTimeout(appPinCheck, 120);
+  }
+}
+
+function appPinDel(){
+  _appLoginBuf = _appLoginBuf.slice(0,-1);
+  for(var i=0;i<4;i++){
+    var d = document.getElementById('apd'+i);
+    if(d) d.classList.toggle('filled', i < _appLoginBuf.length);
+  }
+  var errEl = document.getElementById('app-pin-err');
+  if(errEl) errEl.textContent = '';
+}
+
+function appPinCheck(){
+  var err = document.getElementById('app-pin-err');
+  
+  if(_appLoginMode==='login'){
+    // ログインモード: 既存PINと照合
+    var saved = getAppPin();
+    if(_appLoginBuf === saved){
+      markAppLoggedIn();
+      render();
+    } else {
+      if(err) err.textContent = 'PINが違います';
+      pinFlashError();
+    }
+  } else {
+    // setup/change: 2段階入力
+    if(_appLoginStep===1){
+      // 1回目入力完了 → 確認ステップへ
+      _appLoginNewPin = _appLoginBuf;
+      _appLoginBuf = '';
+      _appLoginStep = 2;
+      renderAppLoginUi();
+    } else {
+      // 2回目入力完了 → 一致チェック
+      if(_appLoginBuf === _appLoginNewPin){
+        setAppPin(_appLoginNewPin);
+        markAppLoggedIn();
+        if(_appLoginMode==='change'){
+          alert('PINを変更しました。\n全端末で次回アクセス時に再入力が必要になります。');
+          // 全端末の再入力強制のため、ログインフラグをクリア
+          // (この端末は今setしたので、30日有効)
+        } else {
+          alert('PINを設定しました。');
+        }
+        render();
+      } else {
+        if(err) err.textContent = 'PINが一致しません。最初からやり直してください';
+        pinFlashError();
+        setTimeout(function(){
+          _appLoginBuf = '';
+          _appLoginStep = 1;
+          _appLoginNewPin = '';
+          renderAppLoginUi();
+        }, 1500);
+      }
+    }
+  }
+}
+
+function pinFlashError(){
+  for(var i=0;i<4;i++){
+    var d = document.getElementById('apd'+i);
+    if(d){ d.classList.add('err'); d.classList.remove('filled'); }
+  }
+  setTimeout(function(){
+    _appLoginBuf = '';
+    for(var i=0;i<4;i++){
+      var d = document.getElementById('apd'+i);
+      if(d){ d.classList.remove('err'); d.classList.remove('filled'); }
+    }
+    var err = document.getElementById('app-pin-err');
+    if(err) err.textContent = '';
+  }, 1200);
+}
+
+function appLogout(){
+  if(!confirm('ログアウトしますか？\n次回アクセス時にPINの再入力が必要になります。')) return;
+  clearAppLogin();
+  render();
+}
+
+
+
 function startWizard(type){
   WIZ.active=true; WIZ.type=type; WIZ.step='tel';
   WIZ.tel=''; WIZ.company=''; WIZ.name='';
@@ -2336,7 +2540,7 @@ function renderWizard(){
         <div class="wiz-field-row" style="background:#fafaf8;">
           <div class="wiz-field-label">車格</div>
           <div style="flex:1;position:relative;">
-            <select class="wiz-edit-inp" id="wiz-shakaku" onchange="WIZ.shakaku=this.value" style="-webkit-appearance:none;">
+            <select class="wiz-edit-inp" id="wiz-shakaku" onchange="WIZ.shakaku=this.value;renderWizard();" style="-webkit-appearance:none;">
               ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${WIZ.shakaku===s?' selected':''}>${s}</option>`).join('')}
             </select>
             <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;">✏️</span>
@@ -2371,7 +2575,7 @@ function renderWizard(){
         </div>
         <div class="wiz-field-row">
           <div class="wiz-field-label">車格</div>
-          <select class="wiz-field-select" id="wiz-shakaku" onchange="WIZ.shakaku=this.value">
+          <select class="wiz-field-select" id="wiz-shakaku" onchange="WIZ.shakaku=this.value;renderWizard();">
             <option value=""${!WIZ.shakaku?' selected':''}>選択してください</option>
             ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${WIZ.shakaku===s?' selected':''}>${s}</option>`).join('')}
           </select>

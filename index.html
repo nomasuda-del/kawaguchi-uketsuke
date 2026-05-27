@@ -657,7 +657,12 @@ function renderLotte(){
       <td><select class="t-select" style="width:52px;" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','type',this.value)"><option${r.type==='入荷'?' selected':''}>入荷</option><option${r.type==='出荷'?' selected':''}>出荷</option></select></td>
       <td>
         ${r.src==='複数'
-          ? `<div style="font-size:12px;color:var(--text);line-height:1.5;">${e(r.srcOther||'')}</div>`
+          ? (dis
+              ? `<div style="font-size:12px;color:var(--text);line-height:1.5;">${e(r.srcOther||'')}</div>`
+              : `<div style="font-size:11px;color:var(--text2);margin-bottom:2px;">入荷元/出荷先（カンマ区切り）</div>
+                 <input class="t-input" type="text" value="${e(r.srcOther||'')}" placeholder="例: 狭山工場，浦和工場"
+                   style="font-size:12px;padding:4px 6px;"
+                   onblur="updMultiSrc('${r.id}',this.value)">`)
           : `<select class="t-select" style="width:98px;" ${dis?'disabled':''} onchange="lotSrc('${r.id}',this.value)">${srcList.map(s=>`<option${r.src===s?' selected':''}>${s}</option>`).join('')}</select>
              ${r.src==='その他'?`<div style="margin-top:3px;font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px;"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;">${e(r.srcOther||'（未入力）')}</span>${!dis?`<button style="font-size:10px;padding:2px 6px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);cursor:pointer;white-space:nowrap;" onclick="lotSrc('${r.id}','その他')">編集</button>`:''}</div>`:''}`
         }
@@ -992,6 +997,19 @@ function confirmTelInput(){
 function lotSrc(id,val){
   upd('lotte',id,'src',val);
   if(val==='その他'){S.modal='srcOther';S.modalData={id};render();}else{render();}
+}
+// 複数入荷元/出荷先のテキスト直接編集
+function updMultiSrc(id,val){
+  const day=S.db[S.viewDate];if(!day)return;
+  const r=day.lotte.find(x=>x.id===id);if(!r||r.deleted)return;
+  const old=r.srcOther;
+  r.srcOther=val.trim();
+  if(!isToday()&&old!==r.srcOther){
+    if(!r.editLog)r.editLog=[];
+    r.editLog.push(nowFull()+' 入荷元/出荷先「'+(old||'空')+'」→「'+r.srcOther+'」');
+  }
+  save();
+  // renderは呼ばない（フォーカスが外れたタイミングなので再描画不要）
 }
 function addRows(type){
   if(!isToday())return;const day=todayData();const base=day[type].length;

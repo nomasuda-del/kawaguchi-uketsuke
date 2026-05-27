@@ -1145,7 +1145,7 @@ function renderAppLoginUi(){
   var keysHtml='';for(var n=1;n<=9;n++){keysHtml+='<button class="pin-key" onclick="appPinPress('+n+')">'+n+'</button>';}
   keysHtml+='<div></div><button class="pin-key" onclick="appPinPress(0)">0</button><button class="pin-key pin-del-key" onclick="appPinDel()">⌫</button>';
   var forgotLink=(_appLoginMode==='login')?'<div style="text-align:center;margin-top:12px;"><button onclick="renderForgotPin()" style="font-size:12px;color:var(--text2);background:none;border:none;cursor:pointer;text-decoration:underline;">PINを忘れた場合はこちら</button></div>':'';
-  var cancelBtn=(_appLoginMode==='change')?'<div style="text-align:center;margin-top:12px;"><button onclick="S.screen='home';render();" style="font-size:13px;color:var(--text2);background:none;border:none;cursor:pointer;">キャンセル</button></div>':'';
+  var cancelBtn=(_appLoginMode==='change')?'<div style="text-align:center;margin-top:12px;"><button onclick="go(\x27home\x27)" style="font-size:13px;color:var(--text2);background:none;border:none;cursor:pointer;">キャンセル</button></div>':'';
   root.innerHTML='<div class="login-screen"><div class="login-card"><div class="login-logo">🔒</div>'
     +'<div class="pin-title" style="font-size:17px;font-weight:800;margin-bottom:6px;">'+title+'</div>'
     +'<div class="pin-sub">'+sub+'</div>'
@@ -1174,8 +1174,7 @@ function appPinCheck(){
     else{
       if(_appLoginBuf===_appLoginNewPin){
         setAppPin(_appLoginNewPin);markAppLoggedIn();
-        var msg=_appLoginMode==='change'?'PINを変更しました。
-全端末で次回アクセス時に再入力が必要になります。':'PINを設定しました。';
+        var msg=_appLoginMode==='change'?'PINを変更しました。\n全端末で次回アクセス時に再入力が必要になります。':'PINを設定しました。';
         alert(msg);render();
       }else{if(err)err.textContent='PINが一致しません。最初からやり直してください';pinFlashError();setTimeout(function(){_appLoginBuf='';_appLoginStep=1;_appLoginNewPin='';renderAppLoginUi();},1500);}
     }

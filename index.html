@@ -434,7 +434,7 @@ const modalContainer=document.getElementById('modal-container');
 function render(){
   modalContainer.innerHTML='';
   var appPin=getAppPin();
-  if(!appPin){renderAppLogin('setup');return;}
+  if(!appPin){renderNoPin();return;}
   if(!isAppLoggedIn()){renderAppLogin('login');return;}
   if(WIZ.active){renderWizard();return;}
   if(S.modal){renderModal();return;}
@@ -580,8 +580,8 @@ function renderTable(type){
     const hasLog=r.editLog&&r.editLog.length>0;
     html+=`<tr class="${rowCls(st)}">
       <td style="text-align:center;padding:4px 2px;">${isDel
-        ?`<button class="restore-btn" onpointerup="confirmRestore('${type}','${r.id}')" onclick="confirmRestore('${type}','${r.id}')">↩</button>`
-        :`<button class="del-btn" ${!ed?'disabled':''} onpointerup="confirmDelete('${type}','${r.id}')" onclick="confirmDelete('${type}','${r.id}')">×</button>`
+        ?`<button class="restore-btn" onclick="confirmRestore('${type}','${r.id}')">↩</button>`
+        :`<button class="del-btn" ${!ed?'disabled':''} onclick="confirmDelete('${type}','${r.id}')">×</button>`
       }</td>
       <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
       <td><input class="t-input" style="width:36px;" type="number" value="${r.fuda||''}" ${dis?'disabled':''} placeholder="―" oninput="upd('${type}','${r.id}','fuda',this.value)"></td>
@@ -607,10 +607,10 @@ function renderTable(type){
   html+=`</tbody></table></div>
   <div class="fab-area">
     <button class="fab-driver" ${!isToday()?'disabled':''}
-      onpointerup="if(!this.disabled){startWizard('${type}')}" onclick="if(!this.disabled){startWizard('${type}')}">
+      onclick="if(!this.disabled){startWizard('${type}')}">
       <span class="fab-driver-icon">📋</span><span>ドライバー受付 ／ 新規登録</span>
     </button>
-    <div class="fab-sub-row">${ed&&isToday()?`<button class="fab-sub" onpointerup="addRows('${type}')" onclick="addRows('${type}')">＋ 行を追加</button>`:''}</div>
+    <div class="fab-sub-row">${ed&&isToday()?`<button class="fab-sub" onclick="addRows('${type}')">＋ 行を追加</button>`:''}</div>
   </div>`;
   root.innerHTML=html;
 }
@@ -642,8 +642,8 @@ function renderLotte(){
     const tC=(a,b)=>a&&b&&toMin(a)>toMin(b)?'err':'';const hasLog=r.editLog&&r.editLog.length>0;
     html+=`<tr class="${rowCls(st)}">
       <td style="text-align:center;padding:4px 2px;">${isDel
-        ?`<button class="restore-btn" onpointerup="confirmRestore('lotte','${r.id}')" onclick="confirmRestore('lotte','${r.id}')">↩</button>`
-        :`<button class="del-btn" ${!ed?'disabled':''} onpointerup="confirmDelete('lotte','${r.id}')" onclick="confirmDelete('lotte','${r.id}')">×</button>`
+        ?`<button class="restore-btn" onclick="confirmRestore('lotte','${r.id}')">↩</button>`
+        :`<button class="del-btn" ${!ed?'disabled':''} onclick="confirmDelete('lotte','${r.id}')">×</button>`
       }</td>
       <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
       <td><input class="t-input" style="min-width:94px;" type="text" value="${e(r.company||'')}" ${dis?'disabled':''} placeholder="会社名" oninput="upd('lotte','${r.id}','company',this.value)"></td>
@@ -656,8 +656,11 @@ function renderLotte(){
       <td><input class="t-input" style="width:66px;" type="text" value="${e(r.order||'')}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','order',this.value)"></td>
       <td><select class="t-select" style="width:52px;" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','type',this.value)"><option${r.type==='入荷'?' selected':''}>入荷</option><option${r.type==='出荷'?' selected':''}>出荷</option></select></td>
       <td>
-        <select class="t-select" style="width:98px;" ${dis?'disabled':''} onchange="lotSrc('${r.id}',this.value)">${srcList.map(s=>`<option${r.src===s?' selected':''}>${s}</option>`).join('')}</select>
-        ${r.src==='その他'?`<div style="margin-top:3px;font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px;"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;">${e(r.srcOther||'（未入力）')}</span>${!dis?`<button style="font-size:10px;padding:2px 6px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);cursor:pointer;white-space:nowrap;" onclick="lotSrc('${r.id}','その他')">編集</button>`:''}</div>`:''}
+        ${r.src==='複数'
+          ? `<div style="font-size:12px;color:var(--text);line-height:1.5;">${e(r.srcOther||'')}</div>`
+          : `<select class="t-select" style="width:98px;" ${dis?'disabled':''} onchange="lotSrc('${r.id}',this.value)">${srcList.map(s=>`<option${r.src===s?' selected':''}>${s}</option>`).join('')}</select>
+             ${r.src==='その他'?`<div style="margin-top:3px;font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px;"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;">${e(r.srcOther||'（未入力）')}</span>${!dis?`<button style="font-size:10px;padding:2px 6px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);cursor:pointer;white-space:nowrap;" onclick="lotSrc('${r.id}','その他')">編集</button>`:''}</div>`:''}`
+        }
       </td>
       <td><div class="time-wrap"><input class="time-inp ${r.tochaku?'done':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.tochaku||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','tochaku',this.value);render()"><button class="stamp-btn${r.tochaku?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','tochaku')">今</button></div></td>
       <td><div class="time-wrap"><input class="time-inp ${r.basu?'done':''} ${tC(r.tochaku,r.basu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.basu||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','basu',this.value);render()"><button class="stamp-btn${r.basu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','basu')">今</button></div></td>
@@ -667,10 +670,10 @@ function renderLotte(){
   });
   html+=`</tbody></table></div>
   <div class="fab-area">
-    <button class="fab-driver" ${!isToday()?'disabled':''} onpointerup="if(!this.disabled){startWizard('lotte')}" onclick="if(!this.disabled){startWizard('lotte')}">
+    <button class="fab-driver" ${!isToday()?'disabled':''} onclick="if(!this.disabled){startWizard('lotte')}">
       <span class="fab-driver-icon">⭐</span><span>ドライバー受付 ／ 新規登録</span>
     </button>
-    <div class="fab-sub-row">${ed&&isToday()?`<button class="fab-sub" onpointerup="addRows('lotte')" onclick="addRows('lotte')">＋ 行を追加</button>`:''}</div>
+    <div class="fab-sub-row">${ed&&isToday()?`<button class="fab-sub" onclick="addRows('lotte')">＋ 行を追加</button>`:''}</div>
   </div>`;
   root.innerHTML=html;
 }
@@ -792,10 +795,34 @@ function renderExport(){
       <button class="export-btn" onclick="dlAllCsv()">全期間 入荷CSV一括</button></div>
     <div class="export-card"><h4>印刷プレビュー</h4><p>選択した日付のデータを印刷用フォーマットで表示します。</p>
       <button class="export-btn" onclick="printDay()">印刷プレビューを開く</button></div>
-    <div class="export-card" style="border-color:var(--blue-bd);"><h4>🔑 アプリログインPIN（4桁）</h4>
-      <p>アプリを起動するときに必要なPINです。退職者が出た場合は変更してください。</p>
+    <div class="export-card" style="border-color:var(--blue-bd);">
+      <h4>🔑 アプリPIN管理</h4>
+      <p style="line-height:1.7;">スタッフが使う4桁のPINです。退職者が出た場合や漏洩した場合は変更してください。<br><span style="color:var(--red);font-weight:600;">変更すると全端末で次回ログイン時に再入力が必要になります。</span></p>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span style="font-size:13px;color:var(--text2);">現在のアプリPIN：</span>
+        <span style="font-size:13px;font-weight:700;">${getAppPin()?'設定済み（●●●●）':'未設定'}</span>
+      </div>
       <button class="export-btn" onclick="renderAppLogin('change')">PINを変更する</button>
-      <button class="export-btn" style="color:var(--amber);border-color:var(--amber-bd);" onclick="appLogout()">この端末からログアウト</button></div>
+      <button class="export-btn" style="color:var(--amber);border-color:var(--amber-bd);" onclick="appLogout()">この端末からログアウト</button>
+    </div>
+    <div class="export-card" style="border-color:var(--red-bd);">
+      <h4>🔐 管理者パスワード変更</h4>
+      <p style="line-height:1.7;">過去データ・ドライバーDB・各設定にアクセスするためのパスワードです。<br><span style="color:var(--red);font-weight:600;">初期値「kawaguchi2024」のままにしないでください。</span></p>
+      <div class="fg" style="margin-bottom:8px;">
+        <label>現在のパスワード</label>
+        <input id="admin-pw-old" type="password" placeholder="現在の管理者パスワード">
+      </div>
+      <div class="fg" style="margin-bottom:8px;">
+        <label>新しいパスワード（6文字以上）</label>
+        <input id="admin-pw-new1" type="password" placeholder="新しいパスワードを入力">
+      </div>
+      <div class="fg" style="margin-bottom:10px;">
+        <label>新しいパスワード（確認）</label>
+        <input id="admin-pw-new2" type="password" placeholder="もう一度入力">
+      </div>
+      <button class="export-btn" onclick="changeAdminPass()" style="background:var(--text);color:#fff;border-color:var(--text);">管理者パスワードを変更</button>
+      <div id="admin-pw-change-msg" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+    </div>
     <div class="export-card"><h4>🔐 セキュリティ設定（削除PIN）</h4>
       <p>設定するとデータ削除時に4桁PINの入力が必要になります。スタッフの誤削除を防止できます。</p>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
@@ -836,9 +863,9 @@ function renderModal(){
     const pinSection=pin?`<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
       <div class="pin-title">削除PINを入力</div><div class="pin-sub">4桁のPINで削除を認証します</div>
       <div class="pin-display"><div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div><div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div></div>
-      <div class="pin-pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-key" onpointerup="pinPress(${n})" onclick="pinPress(${n})">${n}</button>`).join('')}<button class="pin-key pin-del-key pin-zero" onpointerup="pinDel()" onclick="pinDel()">⌫</button></div>
+      <div class="pin-pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-key" onclick="pinPress(${n})">${n}</button>`).join('')}<button class="pin-key pin-del-key pin-zero" onclick="pinDel()">⌫</button></div>
       <div class="pin-err" id="pin-err"></div></div>`:
-      `<div class="modal-actions" style="margin-top:16px;"><button class="btn-cancel" onpointerup="closeModal()" onclick="closeModal()">キャンセル</button><button class="btn-danger" onpointerup="doDelete()" onclick="doDelete()">削除する</button></div>`;
+      `<div class="modal-actions" style="margin-top:16px;"><button class="btn-cancel" onclick="closeModal()">キャンセル</button><button class="btn-danger" onclick="if(!this.disabled){this.disabled=true;doDelete()}">削除する</button></div>`;
     html=`<div class="modal"><h3>⚠ この行を削除しますか？</h3>
       <div class="modal-record"><strong>No.${r.no}　${e(r.company||'（会社名未入力）')}</strong><br>${e(r.name||'')} ${r.tel?'／ '+e(r.tel):''}<br>${label}</div>
       <div class="modal-body">削除してもデータは保持されます（グレー表示）。↩ ボタンからいつでも復元できます。</div>${pinSection}</div>`;
@@ -847,7 +874,7 @@ function renderModal(){
     html=`<div class="modal"><h3>削除を取り消しますか？</h3>
       <div class="modal-record"><strong>No.${r.no}　${e(r.company||'')}</strong>　${e(r.name||'')}</div>
       <div class="modal-body">元の状態に復元します。</div>
-      <div class="modal-actions"><button class="btn-cancel" onpointerup="closeModal()" onclick="closeModal()">キャンセル</button><button class="btn-ok" onpointerup="doRestore()" onclick="doRestore()">復元する</button></div></div>`;
+      <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">キャンセル</button><button class="btn-ok" onclick="if(!this.disabled){this.disabled=true;doRestore()}">復元する</button></div></div>`;
   }else if(m==='confirmDelDriver'){
     const{name}=S.modalData;
     html=`<div class="modal"><h3>ドライバーを削除しますか？</h3>
@@ -926,14 +953,14 @@ function renderTelModal(){
     `<div class="tel-lookup-result notfound"><div style="font-size:14px;font-weight:600;">新規ドライバー</div><div class="tel-lookup-sub">DBに登録がありません。下欄に会社名・氏名を入力してください。</div></div>`):'';
   const showFields=buf.length>=10;
   const keyLabels=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ']];
-  const keysHtml=keyLabels.map(([n,s])=>`<button class="tel-key" onpointerup="telKeyPress('${n}')" onclick="telKeyPress('${n}')">${n}<span class="tel-key-sub">${s}</span></button>`).join('');
+  const keysHtml=keyLabels.map(([n,s])=>`<button class="tel-key" onclick="telKeyPress('${n}')">${n}<span class="tel-key-sub">${s}</span></button>`).join('');
   const ex=document.getElementById('tel-modal-overlay');if(ex)ex.remove();
   const div=document.createElement('div');div.id='tel-modal-overlay';div.className='tel-modal-overlay';
   div.innerHTML=`<div class="tel-modal">
-    <div class="tel-modal-header"><div class="tel-modal-title">電話番号を入力</div><button class="tel-modal-close" onpointerup="closeTelModal()" onclick="closeTelModal()">✕</button></div>
+    <div class="tel-modal-header"><div class="tel-modal-title">電話番号を入力</div><button class="tel-modal-close" onclick="closeTelModal()">✕</button></div>
     <div class="tel-display ${buf.length===0?'placeholder':''}">${buf.length===0?'090-0000-0000':dispBuf}</div>
     ${resultHtml}
-    <div class="tel-keypad">${keysHtml}<button class="tel-key" style="visibility:hidden;"></button><button class="tel-key" onpointerup="telKeyPress('0')" onclick="telKeyPress('0')">0</button><button class="tel-key tel-del" onpointerup="telKeyDel()" onclick="telKeyDel()">⌫</button></div>
+    <div class="tel-keypad">${keysHtml}<button class="tel-key" style="visibility:hidden;"></button><button class="tel-key" onclick="telKeyPress('0')">0</button><button class="tel-key tel-del" onclick="telKeyDel()">⌫</button></div>
     <div class="tel-fields ${showFields?'show':''}" id="tel-fields">
       <div style="font-size:12px;color:var(--text2);padding:4px 0 8px;font-weight:600;">確認・修正してください</div>
       <div class="tel-field-row"><div class="tel-field-label">運送会社名</div><input class="tel-field-val" id="tf-company" type="text" value="${company}" placeholder="（株）〇〇運輸"></div>
@@ -941,7 +968,7 @@ function renderTelModal(){
       <div class="tel-field-row"><div class="tel-field-label">車番</div><input class="tel-field-val" id="tf-car" type="text" value="${car}" placeholder="1234"></div>
       <div class="tel-field-row"><div class="tel-field-label">車格</div><select class="tel-field-val" id="tf-shakaku">${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${shakaku===s?' selected':''}>${s}</option>`).join('')}</select></div>
     </div>
-    <button class="tel-confirm-btn" ${buf.length<10?'disabled style="opacity:.4;"':''} onpointerup="confirmTelInput()" onclick="confirmTelInput()">
+    <button class="tel-confirm-btn" ${buf.length<10?'disabled style="opacity:.4;"':''} onclick="if(!this.disabled){this.disabled=true;confirmTelInput()}">
       ${buf.length<10?'電話番号を入力してください':'確定して受付に反映'}
     </button>
     <div style="height:8px;"></div>
@@ -1008,25 +1035,125 @@ function isAppLoggedIn(){var until=parseInt(localStorage.getItem(APP_LOGIN_KEY)|
 function markAppLoggedIn(){localStorage.setItem(APP_LOGIN_KEY,String(Date.now()+APP_PIN_VALID_DAYS*24*60*60*1000));}
 function clearAppLogin(){localStorage.removeItem(APP_LOGIN_KEY);}
 function appLogout(){if(!confirm('ログアウトしますか？\n次回アクセス時にPINの再入力が必要になります。'))return;clearAppLogin();render();}
+function changeAdminPass(){
+  var old=document.getElementById('admin-pw-old')?.value||'';
+  var nw1=document.getElementById('admin-pw-new1')?.value||'';
+  var nw2=document.getElementById('admin-pw-new2')?.value||'';
+  var msg=document.getElementById('admin-pw-change-msg');
+  var setMsg=function(text,color){if(msg){msg.textContent=text;msg.style.color=color||'var(--red)';}};
+  if(old!==getAdminPass()){setMsg('現在のパスワードが違います');return;}
+  if(nw1.length<6){setMsg('新しいパスワードは6文字以上にしてください');return;}
+  if(nw1!==nw2){setMsg('新しいパスワードが一致しません');return;}
+  localStorage.setItem('kw_admin_pw',nw1);
+  setMsg('✓ 管理者パスワードを変更しました','var(--green)');
+  document.getElementById('admin-pw-old').value='';
+  document.getElementById('admin-pw-new1').value='';
+  document.getElementById('admin-pw-new2').value='';
+  setTimeout(function(){if(msg)msg.textContent='';},3000);
+}
 
 var _appLoginBuf='',_appLoginMode='login',_appLoginStep=1,_appLoginNewPin='';
 function renderAppLogin(mode){mode=mode||'login';_appLoginMode=mode;_appLoginBuf='';_appLoginStep=1;_appLoginNewPin='';renderAppLoginUi();}
+// PINが未設定の場合の画面
+function renderNoPin(){
+  root.innerHTML=`
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">🔒</div>
+      <div class="login-title">初期設定が必要です</div>
+      <div class="login-sub" style="line-height:1.8;font-size:13px;margin-bottom:20px;">
+        アプリPINがまだ設定されていません。<br>
+        管理者が管理者パスワードで認証後、<br>スタッフ共通のPINを設定してください。
+      </div>
+      <button onclick="renderAdminSetupPin()" class="login-btn">管理者パスワードで認証してPINを設定</button>
+    </div>
+  </div>`;
+}
+
+// 管理者がPINを初期設定する画面
+function renderAdminSetupPin(){
+  root.innerHTML=`
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">🔐</div>
+      <div class="login-title">管理者認証</div>
+      <div class="login-sub">管理者パスワードを入力してPINを設定します</div>
+      <div class="login-fg">
+        <label>管理者パスワード</label>
+        <input type="password" id="admin-setup-pw" placeholder="管理者パスワードを入力"
+          onkeydown="if(event.key==='Enter')doAdminSetupPin()">
+      </div>
+      <button class="login-btn" onclick="doAdminSetupPin()">認証してPINを設定</button>
+      <div class="login-err" id="admin-setup-err"></div>
+      <div style="text-align:center;margin-top:12px;">
+        <button onclick="render()" style="font-size:13px;color:var(--text2);background:none;border:none;cursor:pointer;">← 戻る</button>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>document.getElementById('admin-setup-pw')?.focus(), 50);
+}
+function doAdminSetupPin(){
+  var pw=document.getElementById('admin-setup-pw')?.value||'';
+  if(pw!==getAdminPass()){
+    document.getElementById('admin-setup-err').textContent='パスワードが違います';
+    document.getElementById('admin-setup-pw').value='';return;
+  }
+  _appLoginMode='setup';_appLoginBuf='';_appLoginStep=1;_appLoginNewPin='';
+  renderAppLoginUi();
+}
+
+// PINを忘れた場合 → 管理者パスワードで解除
+function renderForgotPin(){
+  root.innerHTML=`
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">🔓</div>
+      <div class="login-title">PINを忘れた場合</div>
+      <div class="login-sub">管理者パスワードで認証するとPINをリセットできます</div>
+      <div class="login-fg">
+        <label>管理者パスワード</label>
+        <input type="password" id="forgot-pw" placeholder="管理者パスワードを入力"
+          onkeydown="if(event.key==='Enter')doForgotPin()">
+      </div>
+      <button class="login-btn" onclick="doForgotPin()">認証してPINをリセット</button>
+      <div class="login-err" id="forgot-err"></div>
+      <div style="text-align:center;margin-top:12px;">
+        <button onclick="render()" style="font-size:13px;color:var(--text2);background:none;border:none;cursor:pointer;">← 戻る</button>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>document.getElementById('forgot-pw')?.focus(), 50);
+}
+function doForgotPin(){
+  var pw=document.getElementById('forgot-pw')?.value||'';
+  if(pw!==getAdminPass()){
+    document.getElementById('forgot-err').textContent='パスワードが違います';
+    document.getElementById('forgot-pw').value='';return;
+  }
+  setAppPin(null);clearAppLogin();
+  alert('PINをリセットしました。\n引き続き管理者としてPINを再設定してください。');
+  _appLoginMode='setup';_appLoginBuf='';_appLoginStep=1;_appLoginNewPin='';
+  renderAppLoginUi();
+}
+
 function renderAppLoginUi(){
   var title,sub;
-  if(_appLoginMode==='setup'){title=_appLoginStep===1?'初回PIN設定':'PINの確認';sub=_appLoginStep===1?'4桁のPINを設定してください':'もう一度同じPINを入力してください';}
+  if(_appLoginMode==='setup'){title=_appLoginStep===1?'アプリPINを設定':'PINの確認';sub=_appLoginStep===1?'スタッフ全員が使う4桁PINを設定してください':'もう一度同じPINを入力してください';}
   else if(_appLoginMode==='change'){title=_appLoginStep===1?'新しいPINを設定':'新しいPINの確認';sub=_appLoginStep===1?'4桁の新しいPINを入力してください':'もう一度同じPINを入力してください';}
   else{title='アプリPINを入力';sub='4桁のPINでログインしてください';}
   var dotsHtml='';for(var i=0;i<4;i++){dotsHtml+='<div class="pin-dot'+(i<_appLoginBuf.length?' filled':'')+'" id="apd'+i+'"></div>';}
   var keysHtml='';for(var n=1;n<=9;n++){keysHtml+='<button class="pin-key" onclick="appPinPress('+n+')">'+n+'</button>';}
   keysHtml+='<div></div><button class="pin-key" onclick="appPinPress(0)">0</button><button class="pin-key pin-del-key" onclick="appPinDel()">⌫</button>';
-  var cancelBtn=(_appLoginMode==='change')?'<div style="text-align:center;margin-top:16px;"><button onclick="S.screen=\'home\';render();" style="font-size:13px;color:var(--text2);background:none;border:none;cursor:pointer;">キャンセル</button></div>':'';
+  var forgotLink=(_appLoginMode==='login')?'<div style="text-align:center;margin-top:12px;"><button onclick="renderForgotPin()" style="font-size:12px;color:var(--text2);background:none;border:none;cursor:pointer;text-decoration:underline;">PINを忘れた場合はこちら</button></div>':'';
+  var cancelBtn=(_appLoginMode==='change')?'<div style="text-align:center;margin-top:12px;"><button onclick="S.screen='home';render();" style="font-size:13px;color:var(--text2);background:none;border:none;cursor:pointer;">キャンセル</button></div>':'';
   root.innerHTML='<div class="login-screen"><div class="login-card"><div class="login-logo">🔒</div>'
     +'<div class="pin-title" style="font-size:17px;font-weight:800;margin-bottom:6px;">'+title+'</div>'
     +'<div class="pin-sub">'+sub+'</div>'
     +'<div class="pin-display">'+dotsHtml+'</div>'
     +'<div class="pin-pad">'+keysHtml+'</div>'
-    +'<div class="pin-err" id="app-pin-err"></div>'+cancelBtn+'</div></div>';
+    +'<div class="pin-err" id="app-pin-err"></div>'+forgotLink+cancelBtn+'</div></div>';
 }
+
 function appPinPress(n){
   if(_appLoginBuf.length>=4)return;_appLoginBuf+=String(n);
   for(var i=0;i<4;i++){var d=document.getElementById('apd'+i);if(d)d.classList.toggle('filled',i<_appLoginBuf.length);}
@@ -1045,8 +1172,12 @@ function appPinCheck(){
   }else{
     if(_appLoginStep===1){_appLoginNewPin=_appLoginBuf;_appLoginBuf='';_appLoginStep=2;renderAppLoginUi();}
     else{
-      if(_appLoginBuf===_appLoginNewPin){setAppPin(_appLoginNewPin);markAppLoggedIn();alert(_appLoginMode==='change'?'PINを変更しました。':'PINを設定しました。');render();}
-      else{if(err)err.textContent='PINが一致しません。最初からやり直してください';pinFlashError();setTimeout(function(){_appLoginBuf='';_appLoginStep=1;_appLoginNewPin='';renderAppLoginUi();},1500);}
+      if(_appLoginBuf===_appLoginNewPin){
+        setAppPin(_appLoginNewPin);markAppLoggedIn();
+        var msg=_appLoginMode==='change'?'PINを変更しました。
+全端末で次回アクセス時に再入力が必要になります。':'PINを設定しました。';
+        alert(msg);render();
+      }else{if(err)err.textContent='PINが一致しません。最初からやり直してください';pinFlashError();setTimeout(function(){_appLoginBuf='';_appLoginStep=1;_appLoginNewPin='';renderAppLoginUi();},1500);}
     }
   }
 }
@@ -1243,8 +1374,8 @@ function renderWizard(){
       <div class="wiz-confirm-row"><div class="wiz-confirm-label">車格</div><div class="wiz-confirm-val">${WIZ.shakaku}</div></div>
       ${WIZ.type==='lotte'?`
       <div class="wiz-confirm-row"><div class="wiz-confirm-label">入荷/出荷</div><div class="wiz-confirm-val">${WIZ.nyukaType}</div></div>
-      ${hasNyukaType('入荷')?`<div class="wiz-confirm-row"><div class="wiz-confirm-label">入荷元</div><div class="wiz-confirm-val" style="font-size:14px;">${WIZ.srcInRows.filter(r=>r.val).map(r=>e(r.val==='その他'?(r.other||'その他'):r.val)).join('<br>')||'―'}</div></div>`:''}
-      ${hasNyukaType('出荷')?`<div class="wiz-confirm-row"><div class="wiz-confirm-label">出荷先</div><div class="wiz-confirm-val" style="font-size:14px;">${WIZ.srcRows.filter(r=>r.val).map(r=>e(r.val==='その他'?(r.other||'その他'):r.val)).join('<br>')||'―'}</div></div>`:''}
+      ${hasNyukaType('入荷')?`<div class="wiz-confirm-row"><div class="wiz-confirm-label">入荷元</div><div class="wiz-confirm-val" style="font-size:14px;">${WIZ.srcInRows.filter(r=>r.val).map(r=>e(r.val==='その他'?(r.other||'その他'):r.val)).join('，')||'―'}</div></div>`:''}
+      ${hasNyukaType('出荷')?`<div class="wiz-confirm-row"><div class="wiz-confirm-label">出荷先</div><div class="wiz-confirm-val" style="font-size:14px;">${WIZ.srcRows.filter(r=>r.val).map(r=>e(r.val==='その他'?(r.other||'その他'):r.val)).join('，')||'―'}</div></div>`:''}
       ${hasNyukaType('入荷')&&hasNyukaType('出荷')?`<div class="wiz-confirm-row"><div class="wiz-confirm-label">オーダーNo</div><div class="wiz-confirm-val" style="font-size:12px;">入荷:${e(WIZ.orderIn||'―')} ／ 出荷:${e(WIZ.orderOut||'―')}</div></div>`:`<div class="wiz-confirm-row"><div class="wiz-confirm-label">オーダーNo</div><div class="wiz-confirm-val">${e(WIZ.order||'―')}</div></div>`}
       <div class="wiz-confirm-row"><div class="wiz-confirm-label">積み方</div><div class="wiz-confirm-val">${WIZ.tsumi||''}</div></div>
       `:`<div class="wiz-confirm-row"><div class="wiz-confirm-label">積み方</div><div class="wiz-confirm-val">${WIZ.tsumi||'バラ'}</div></div>`}
@@ -1256,15 +1387,15 @@ function renderWizard(){
 
   root.innerHTML=`<div class="wiz-screen">
     <div class="wiz-header">
-      <button class="wiz-back" onpointerup="wizBack()" onclick="wizBack()">←</button>
+      <button class="wiz-back" onclick="wizBack()">←</button>
       <div class="wiz-header-info"><div class="wiz-title">${label} 受付</div><div class="wiz-step-label">${stepLabels[WIZ.step]||''}</div></div>
     </div>
     <div class="wiz-progress"><div class="wiz-progress-bar" style="width:${prog}%;"></div></div>
     <div class="wiz-body">${body}</div>
     <div class="wiz-footer">
       ${isStampStep
-        ?`<button class="wiz-next-btn stamp" onpointerup="wizComplete()" onclick="wizComplete()">${WIZ.type==='lotte'?'受付完了 ＋ 到着打刻':'受付完了 ＋ 入庫打刻'}</button>`
-        :`<button class="wiz-next-btn" ${nextDisabled?'disabled':''} onpointerup="if(!this.disabled){wizNext()}" onclick="if(!this.disabled){wizNext()}">${nextLabel}</button>`
+        ?`<button class="wiz-next-btn stamp" id="wiz-complete-btn" onclick="wizComplete()">${WIZ.type==='lotte'?'受付完了 ＋ 到着打刻':'受付完了 ＋ 入庫打刻'}</button>`
+        :`<button class="wiz-next-btn" ${nextDisabled?'disabled':''} onclick="if(!this.disabled){this.disabled=true;wizNext()}">${nextLabel}</button>`
       }
     </div>
   </div>`;
@@ -1299,23 +1430,34 @@ function wizNext(){
 }
 
 function wizComplete(){
+  // 多重実行防止: ボタンを即座に無効化
+  var btn=document.getElementById('wiz-complete-btn');
+  if(btn){
+    if(btn.disabled)return; // 既に処理中なら無視
+    btn.disabled=true;
+    btn.textContent='登録中...';
+  }
   const day=todayData();const arr=day[WIZ.type];
   if(WIZ.type==='lotte'){
+    // 入荷/出荷 × 入荷元/出荷先複数 → タイプごとに1行、入荷元はカンマ区切りでまとめる
     var types=WIZ.nyukaType?WIZ.nyukaType.split(',').filter(function(x){return x;}):[''];
     var nowT=nowStr();
     types.forEach(function(typ){
       var rows=(typ==='入荷')?WIZ.srcInRows:WIZ.srcRows;
       var validRows=rows.filter(function(row){return row.val;});
-      if(validRows.length===0)validRows=[{val:'',other:''}];
-      validRows.forEach(function(row){
-        var slot=arr.find(function(r){return !r.company&&!r.tochaku&&!r.deleted;});
-        var r=slot||mkLRow(arr.length+1);
-        r.tel=WIZ.tel;r.company=WIZ.company;r.name=WIZ.name;r.car=WIZ.car;r.shakaku=WIZ.shakaku;r.tsumi=WIZ.tsumi||'';
-        r.order=(typ==='入荷'?WIZ.orderIn:WIZ.orderOut)||WIZ.order||'';
-        r.type=typ;r.src=row.val||'';r.srcOther=(row.val==='その他')?row.other:'';
-        r.tochaku=nowT;r.basu='';r.sakuEnd='';r.shuppatsu='';
-        if(!slot)arr.push(r);
-      });
+      // 複数の入荷元/出荷先をカンマ区切りの文字列にまとめる
+      var srcJoined=validRows.map(function(row){
+        return row.val==='その他'?(row.other||'その他'):row.val;
+      }).join('，'); // 全角カンマで区切り（CSV出力と区別するため）
+      var slot=arr.find(function(r){return !r.company&&!r.tochaku&&!r.deleted;});
+      var r=slot||mkLRow(arr.length+1);
+      r.tel=WIZ.tel;r.company=WIZ.company;r.name=WIZ.name;r.car=WIZ.car;r.shakaku=WIZ.shakaku;r.tsumi=WIZ.tsumi||'';
+      r.order=(typ==='入荷'?WIZ.orderIn:WIZ.orderOut)||WIZ.order||'';
+      r.type=typ;
+      r.src=validRows.length>0?'複数':( srcJoined||'');
+      r.srcOther=srcJoined; // カンマ区切りの全拠点をsrcOtherに保存
+      r.tochaku=nowT;r.basu='';r.sakuEnd='';r.shuppatsu='';
+      if(!slot)arr.push(r);
     });
   }else{
     const slot=arr.find(r=>!r.company&&!r.nyuuko&&!r.deleted);

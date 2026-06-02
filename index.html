@@ -1538,7 +1538,7 @@ function toCsvNS(arr,dateKey){
 }
 function toCsvL(arr,dateKey){
   const h='日付,No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,入荷元,到着時間,バース着車,作業終了,出発時間,修正記録';const d=dateKey||'';
-  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[csvCell(d),r.no,csvCell(r.company),csvCell(r.name||''),csvTel(r.tel),csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.order||''),csvCell(r.type),csvCell(r.src==='その他'?r.srcOther:r.src),csvCell(r.tochaku||''),csvCell(r.basu||''),csvCell(r.sakuEnd||''),csvCell(r.shuppatsu||''),csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):'')),].join(','));
+  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[csvCell(d),r.no,csvCell(r.company),csvCell(r.name||''),csvTel(r.tel),csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.order||''),csvCell(r.type),csvCell(r.src==='その他'||r.src==='複数'?r.srcOther:r.src),csvCell(r.tochaku||''),csvCell(r.basu||''),csvCell(r.sakuEnd||''),csvCell(r.shuppatsu||''),csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):'')),].join(','));
   return h+'\n'+rows.join('\n');
 }
 function dlCsv(type){const dk=getExpDate();const day=S.db[dk];if(!day)return;const content=type==='lotte'?toCsvL(day.lotte,dk):toCsvNS(day[type],dk);const label=type==='nyuuka'?'入荷受付':type==='shukka'?'出荷受付':'ロッテ受付';_dl(`${label}_${dk}.csv`,content);}
@@ -1553,7 +1553,7 @@ function dlMonthCsv(type){
   var header,rows=[];
   if(type==='lotte'){
     header='日付,No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,入荷元,到着時間,バース着車,作業終了,出発時間,修正記録';
-    dates.forEach(function(k){var d=S.db[k];if(!d)return;d.lotte.filter(function(r){return r.company&&!r.deleted;}).forEach(function(r){rows.push([csvCell(k),r.no,csvCell(r.company),csvCell(r.name||''),csvTel(r.tel),csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.order||''),csvCell(r.type),csvCell(r.src==='その他'?r.srcOther:r.src),csvCell(r.tochaku||''),csvCell(r.basu||''),csvCell(r.sakuEnd||''),csvCell(r.shuppatsu||''),csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):'')),].join(','));});});
+    dates.forEach(function(k){var d=S.db[k];if(!d)return;d.lotte.filter(function(r){return r.company&&!r.deleted;}).forEach(function(r){rows.push([csvCell(k),r.no,csvCell(r.company),csvCell(r.name||''),csvTel(r.tel),csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.order||''),csvCell(r.type),csvCell(r.src==='その他'||r.src==='複数'?r.srcOther:r.src),csvCell(r.tochaku||''),csvCell(r.basu||''),csvCell(r.sakuEnd||''),csvCell(r.shuppatsu||''),csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):'')),].join(','));});});
   }else{
     header='日付,No,番号札,会社名,氏名,電話番号,車番,車格,積み方,メーカー名,入庫時間,出庫時間,修正記録';
     dates.forEach(function(k){var d=S.db[k];if(!d)return;d[type].filter(function(r){return r.company&&!r.deleted;}).forEach(function(r){rows.push([csvCell(k),r.no,csvCell(r.fuda||''),csvCell(r.company),csvCell(r.name||''),csvTel(r.tel),csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.tsumi),csvCell(r.biko||''),csvCell(r.nyuuko||''),csvCell(r.shukko||''),csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):'')),].join(','));});});

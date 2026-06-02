@@ -303,7 +303,11 @@ function getLotteSrc(){
   try{var s=localStorage.getItem(SRC_STORAGE_KEY);if(s){var a=JSON.parse(s);if(Array.isArray(a)&&a.length>0)return a;}}catch(e){}
   return SRC_DEFAULT.slice();
 }
-function saveLotteSrc(arr){try{localStorage.setItem(SRC_STORAGE_KEY,JSON.stringify(arr));}catch(e){}}
+function saveLotteSrc(arr){
+  try{localStorage.setItem(SRC_STORAGE_KEY,JSON.stringify(arr));}catch(e){}
+  // Firebaseにも保存（全デバイスに反映）
+  if(fbDb){try{fbDb.ref('kawaguchi/lotteSrc').set(arr);}catch(e){}}
+}
 function addSrc(){
   var inp=document.getElementById('src-add-inp');if(!inp)return;
   var val=inp.value.trim();if(!val){alert('追加する名称を入力してください');return;}
@@ -352,12 +356,13 @@ function initFirebase(){
         var data=snap.val();if(!data)return;
         if(data.db){S.db=data.db;ensureDay(S.db,todayKey());}
         if(data.drivers)S.drivers=data.drivers;
+        if(data.lotteSrc&&Array.isArray(data.lotteSrc)&&data.lotteSrc.length>0){saveLotteSrc(data.lotteSrc);}
         if(!S.modal)render();
       });
     }).catch(function(err){console.error('Firebase auth error:',err);syncStatus='offline';render();});
   }catch(e){syncStatus='offline';}
 }
-function remoteSave(){if(!fbDb){localSave();return;}try{fbDb.ref('kawaguchi').set({db:S.db,drivers:S.drivers});}catch(e){localSave();}}
+function remoteSave(){if(!fbDb){localSave();return;}try{fbDb.ref('kawaguchi').set({db:S.db,drivers:S.drivers,lotteSrc:getLotteSrc()});}catch(e){localSave();}}
 function localSave(){try{localStorage.setItem('kw_db_v5',JSON.stringify(S.db));localStorage.setItem('kw_dr_v5',JSON.stringify(S.drivers));}catch(e){}}
 function save(){localSave();remoteSave();}
 function loadLocal(){let db={},drivers=[];try{db=JSON.parse(localStorage.getItem('kw_db_v5')||'{}');}catch{}try{drivers=JSON.parse(localStorage.getItem('kw_dr_v5')||'[]');}catch{}return{db,drivers};}

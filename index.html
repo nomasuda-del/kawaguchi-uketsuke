@@ -123,6 +123,8 @@ tbody tr.row-flash{animation:rowFlash 1.6s ease-out;}
 .fab-primary:hover{opacity:.88;}
 .fab:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 .edit-log-row td{font-size:11px;color:var(--text2);padding:2px 4px 5px;border-bottom:none;background:transparent!important;}
+.kw-notice{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:14px;font-weight:700;padding:12px 22px;border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,.3);z-index:9999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:92%;text-align:center;line-height:1.5;}
+.kw-notice.show{opacity:.95;transform:translateX(-50%) translateY(0);}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:500;}
 .modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);width:100%;max-width:460px;padding:22px;max-height:90vh;overflow-y:auto;}
 .modal h3{font-size:17px;font-weight:800;margin-bottom:16px;}
@@ -381,18 +383,67 @@ function initFirebase(){
     });
   }catch(e){authReady=true;syncStatus='offline';}
 }
+let _pendingRemote=null;
+function isTypingNow(){
+  var a=document.activeElement;
+  if(!a||!a.tagName)return false;
+  return /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName);
+}
+function flushUpd(){
+  var any=false;
+  for(var k in _updTimer){if(_updTimer[k]){clearTimeout(_updTimer[k]);_updTimer[k]=null;any=true;}}
+  if(any)save();
+}
+function applyRemote(data){
+  if(!data)return;
+  if(data.db){S.db=data.db;ensureDay(S.db,todayKey());}
+  if(data.drivers)S.drivers=data.drivers;
+  if(data.lotteSrc&&Array.isArray(data.lotteSrc)&&data.lotteSrc.length>0){saveLotteSrc(data.lotteSrc);}
+  if(!S.modal)render();
+}
 function connectDb(){
   try{
     fbDb=firebase.database();syncStatus='live';
     fbDb.ref('kawaguchi').on('value',function(snap){
       var data=snap.val();if(!data)return;
-      if(data.db){S.db=data.db;ensureDay(S.db,todayKey());}
-      if(data.drivers)S.drivers=data.drivers;
-      if(data.lotteSrc&&Array.isArray(data.lotteSrc)&&data.lotteSrc.length>0){saveLotteSrc(data.lotteSrc);}
-      if(!S.modal)render();
+      if(isTypingNow()){_pendingRemote=data;return;}
+      applyRemote(data);
     },function(err){console.error('DB read error:',err);syncStatus='offline';render();});
   }catch(e){syncStatus='offline';}
 }
+const IDLE_LIMIT_MS=120000;
+let _idleTimer=null;
+function armIdleTimer(){
+  clearTimeout(_idleTimer);
+  _idleTimer=setTimeout(idleForceExit,IDLE_LIMIT_MS);
+}
+function idleForceExit(){
+  if(!isTypingNow())return;
+  try{document.activeElement.blur();}catch(e){}
+  flushUpd();
+  showNotice('2分間操作がなかったため入力を確定し、最新データに更新しました');
+}
+function showNotice(msg){
+  var d=document.getElementById('kw-notice');
+  if(!d){d=document.createElement('div');d.id='kw-notice';d.className='kw-notice';document.body.appendChild(d);}
+  d.textContent=msg;d.classList.add('show');
+  clearTimeout(d._t);d._t=setTimeout(function(){d.classList.remove('show');},4000);
+}
+document.addEventListener('focusin',function(ev){
+  var t=ev.target;
+  if(t&&t.tagName&&/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName))armIdleTimer();
+});
+['input','keydown','touchstart','click'].forEach(function(evt){
+  document.addEventListener(evt,function(){if(isTypingNow())armIdleTimer();},{passive:true});
+});
+document.addEventListener('focusout',function(){
+  clearTimeout(_idleTimer);
+  flushUpd();
+  setTimeout(function(){
+    if(isTypingNow())return;
+    if(_pendingRemote){var d=_pendingRemote;_pendingRemote=null;applyRemote(d);}
+  },400);
+});
 function doFbLogin(){
   if(authBusy)return;
   var em=(document.getElementById('fb-email')?.value||'').trim();
@@ -1721,7 +1772,11 @@ document.addEventListener('focusin',function(ev){
 // ===== BOOT =====
 initFirebase();
 render();
-setInterval(()=>{if(!S.modal&&['nyuuka','shukka','lotte','home'].includes(S.screen))render();},30000);
+setInterval(()=>{
+  if(S.modal||WIZ.active)return;
+  if(isTypingNow()||_pendingRemote)return;
+  if(['nyuuka','shukka','lotte','home'].includes(S.screen))render();
+},30000);
 </script>
 </body>
 </html>

@@ -753,7 +753,7 @@ function renderLotte(){
     html+=`<tr class="${rowCls(st)}" id="row-${r.id}">
       <td style="text-align:center;padding:4px 2px;">${isDel
         ?`<button class="restore-btn" onclick="confirmRestore('lotte','${r.id}')">↩</button>`
-        :`<div class="rowact"><button class="del-btn" ${!ed?'disabled':''} onclick="confirmDelete('lotte','${r.id}')">×</button>${ed&&isToday()?`<button class="ins-btn" title="この行の下に1行挿入（入荷⇔出荷を反転）" onclick="insertRowAfter('lotte','${r.id}')">＋</button>`:''}</div>`
+        :`<div class="rowact"><button class="del-btn" ${!ed?'disabled':''} onclick="confirmDelete('lotte','${r.id}')">×</button>${ed&&isToday()?`<button class="ins-btn" title="この行の下に空行を1行挿入" onclick="insertRowAfter('lotte','${r.id}')">＋</button>`:''}</div>`
       }</td>
       <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
       <td><input class="t-input" style="min-width:94px;" type="text" value="${e(r.company||'')}" ${dis?'disabled':''} placeholder="会社名" oninput="upd('lotte','${r.id}','company',this.value)"></td>
@@ -1134,15 +1134,6 @@ function insertRowAfter(type,rowId){
   const idx=arr.findIndex(function(r){return r.id===rowId;});
   if(idx<0)return;
   const nr=(type==='lotte')?mkLRow(idx+2):mkNRow(idx+2);
-  const src=arr[idx];
-  if(type==='lotte'){
-    nr.company=src.company||'';nr.name=src.name||'';nr.tel=src.tel||'';
-    nr.car=src.car||'';nr.shakaku=src.shakaku||'2t';
-    nr.type=(src.type==='入荷')?'出荷':'入荷';
-  }else{
-    nr.company=src.company||'';nr.name=src.name||'';nr.tel=src.tel||'';
-    nr.car=src.car||'';nr.shakaku=src.shakaku||'2t';
-  }
   arr.splice(idx+1,0,nr);
   renumber(arr);
   save();render();

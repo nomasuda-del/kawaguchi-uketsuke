@@ -383,15 +383,23 @@ function initFirebase(){
     });
   }catch(e){authReady=true;syncStatus='offline';}
 }
-let _pendingRemote=null;
+let _pendingVals={};
 function isTypingNow(){
   var a=document.activeElement;
   if(!a||!a.tagName)return false;
   return /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName);
 }
+function reapplyPendingVals(){
+  for(var k in _pendingVals){
+    var p=_pendingVals[k];if(!p)continue;
+    var day=S.db[p.date];if(!day||!day[p.type])continue;
+    var r=day[p.type].find(function(x){return x.id===p.id;});
+    if(r&&!r.deleted)r[p.field]=p.val;
+  }
+}
 function flushUpd(){
   var any=false;
-  for(var k in _updTimer){if(_updTimer[k]){clearTimeout(_updTimer[k]);_updTimer[k]=null;any=true;}}
+  for(var k in _updTimer){if(_updTimer[k]){clearTimeout(_updTimer[k]);_updTimer[k]=null;delete _pendingVals[k];any=true;}}
   if(any)save();
 }
 function applyRemote(data){
@@ -399,14 +407,16 @@ function applyRemote(data){
   if(data.db){S.db=data.db;ensureDay(S.db,todayKey());}
   if(data.drivers)S.drivers=data.drivers;
   if(data.lotteSrc&&Array.isArray(data.lotteSrc)&&data.lotteSrc.length>0){saveLotteSrc(data.lotteSrc);}
-  if(!S.modal)render();
+  reapplyPendingVals();
+  if(S.modal)return;
+  if(isTypingNow())return;
+  render();
 }
 function connectDb(){
   try{
     fbDb=firebase.database();syncStatus='live';
     fbDb.ref('kawaguchi').on('value',function(snap){
       var data=snap.val();if(!data)return;
-      if(isTypingNow()){_pendingRemote=data;return;}
       applyRemote(data);
     },function(err){console.error('DB read error:',err);syncStatus='offline';render();});
   }catch(e){syncStatus='offline';}
@@ -440,8 +450,8 @@ document.addEventListener('focusout',function(){
   clearTimeout(_idleTimer);
   flushUpd();
   setTimeout(function(){
-    if(isTypingNow())return;
-    if(_pendingRemote){var d=_pendingRemote;_pendingRemote=null;applyRemote(d);}
+    if(isTypingNow()||S.modal)return;
+    render();
   },400);
 });
 function doFbLogin(){
@@ -511,7 +521,22 @@ function renderAuthLoading(){
     <div class="login-sub">認証情報を確認しています</div>
   </div></div>`;
 }
-function remoteSave(){if(!fbDb){localSave();return;}try{fbDb.ref('kawaguchi').set({db:S.db,drivers:S.drivers,lotteSrc:getLotteSrc()});}catch(e){localSave();}}
+function remoteSave(){
+  if(!fbDb){localSave();return;}
+  try{
+    var dk=S.viewDate||todayKey();
+    var payload={};
+    if(S.db[dk])payload['db/'+dk]=S.db[dk];
+    payload['drivers']=S.drivers;
+    payload['lotteSrc']=getLotteSrc();
+    fbDb.ref('kawaguchi').update(payload);
+  }catch(e){localSave();}
+}
+function remoteSaveFull(){
+  if(!fbDb){localSave();return;}
+  try{fbDb.ref('kawaguchi').set({db:S.db,drivers:S.drivers,lotteSrc:getLotteSrc()});}catch(e){localSave();}
+}
+function saveFull(){localSave();remoteSaveFull();}
 function localSave(){try{localStorage.setItem('kw_db_v5',JSON.stringify(S.db));localStorage.setItem('kw_dr_v5',JSON.stringify(S.drivers));}catch(e){}}
 function save(){localSave();remoteSave();}
 function loadLocal(){let db={},drivers=[];try{db=JSON.parse(localStorage.getItem('kw_db_v5')||'{}');}catch{}try{drivers=JSON.parse(localStorage.getItem('kw_dr_v5')||'[]');}catch{}return{db,drivers};}
@@ -1099,7 +1124,10 @@ function upd(type,id,field,val){
   const r=day[type].find(x=>x.id===id);if(!r||r.deleted)return;
   const old=r[field];r[field]=val;
   if(!isToday()&&old!==val&&old!==undefined&&old!==''){if(!r.editLog)r.editLog=[];r.editLog.push(`${nowFull()} ${field}「${old||'空'}」→「${val}」`);}
-  const key=`${type}-${id}-${field}`;clearTimeout(_updTimer[key]);_updTimer[key]=setTimeout(()=>save(),600);
+  const key=`${type}-${id}-${field}`;
+  _pendingVals[key]={date:S.viewDate,type:type,id:id,field:field,val:val};
+  clearTimeout(_updTimer[key]);
+  _updTimer[key]=setTimeout(()=>{delete _pendingVals[key];save();},600);
 }
 function stamp(type,id,field){if(!isToday())return;const r=todayData()[type].find(x=>x.id===id);if(!r||r.deleted)return;r[field]=nowStr();save();render();}
 
@@ -1774,7 +1802,7 @@ initFirebase();
 render();
 setInterval(()=>{
   if(S.modal||WIZ.active)return;
-  if(isTypingNow()||_pendingRemote)return;
+  if(isTypingNow())return;
   if(['nyuuka','shukka','lotte','home'].includes(S.screen))render();
 },30000);
 </script>

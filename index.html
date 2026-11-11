@@ -376,7 +376,7 @@ function initFirebase(){
   try{
     if(!_fbInited){firebase.initializeApp(FIREBASE_CONFIG);_fbInited=true;}
     firebase.auth().signInAnonymously().then(function(){
-      fbDb=firebase.database();syncStatus='live';render();
+      fbDb=firebase.database();syncStatus='live';softRender();
       fbDb.ref('kawaguchi').on('value',function(snap){
         var data=snap.val();if(!data)return;
         if(data.db){S.db=data.db;ensureDay(S.db,todayKey());}
@@ -392,7 +392,7 @@ function initFirebase(){
 // ===== 安定化ヘルパー =====
 let _renderPending=false;
 function isEditingNow(){const a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));}
-function softRender(){if(isEditingNow()){_renderPending=true;return;}_renderPending=false;render();}
+function softRender(){if(document.querySelector('.login-screen'))return;if(isEditingNow()){_renderPending=true;return;}_renderPending=false;render();}
 document.addEventListener('focusout',function(){setTimeout(function(){if(_renderPending&&!isEditingNow()&&!WIZ.active&&!S.modal){_renderPending=false;render();}},300);});
 function telSlots(buf){let h='';for(let i=0;i<11;i++){if(i===3||i===7)h+='<span class="tn-dash">-</span>';h+='<span class="tn-d '+(i<buf.length?'tn-on':'tn-off')+'">'+(i<buf.length?buf[i]:'0')+'</span>';}return h;}
 function wizTelRefresh(){const kp=document.querySelector('.wiz-keypad');renderWizard();const nk=document.querySelector('.wiz-keypad');if(kp&&nk&&kp!==nk)nk.replaceWith(kp);}
@@ -1625,7 +1625,7 @@ function printDay(){
 // ===== BOOT =====
 initFirebase();
 render();
-setInterval(()=>{if(!S.modal&&!WIZ.active&&!isEditingNow()&&['nyuuka','shukka','lotte','home'].includes(S.screen))render();},30000);
+setInterval(()=>{if(!S.modal&&!WIZ.active&&!isEditingNow()&&!document.querySelector('.login-screen')&&['nyuuka','shukka','lotte','home'].includes(S.screen))render();},30000);
 </script>
 </body>
 </html>

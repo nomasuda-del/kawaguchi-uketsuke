@@ -369,10 +369,12 @@ function renderSrcManager(){
 
 // ===== FIREBASE =====
 let fbDb=null,syncStatus='offline';
+let _fbTry=0,_fbInited=false;
+window.addEventListener('online',function(){if(syncStatus!=='live'){_fbTry=0;initFirebase();}});
 function initFirebase(){
-  if(!FIREBASE_CONFIGURED||typeof firebase==='undefined')return;
+  if(!FIREBASE_CONFIGURED||typeof firebase==='undefined'){console.error('Firebase SDK not loaded');if(_fbTry++<6)setTimeout(initFirebase,5000);return;}
   try{
-    firebase.initializeApp(FIREBASE_CONFIG);
+    if(!_fbInited){firebase.initializeApp(FIREBASE_CONFIG);_fbInited=true;}
     firebase.auth().signInAnonymously().then(function(){
       fbDb=firebase.database();syncStatus='live';render();
       fbDb.ref('kawaguchi').on('value',function(snap){
@@ -383,7 +385,7 @@ function initFirebase(){
         if(data.settings)applySettings(data.settings);
         if(!S.modal&&!WIZ.active)softRender();else if(WIZ.active)_renderPending=true;
       });
-    }).catch(function(err){console.error('Firebase auth error:',err);syncStatus='offline';render();});
+    }).catch(function(err){console.error('Firebase auth error:',err);syncStatus='offline';if(!S.modal&&!WIZ.active)softRender();if(_fbTry++<6)setTimeout(initFirebase,5000);});
   }catch(e){syncStatus='offline';}
 }
 

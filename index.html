@@ -32,10 +32,6 @@ input,select,button,textarea{font-family:inherit;}
 .bar-badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;}
 .bar-badge.sync{background:var(--blue-bg);color:var(--blue);}
 .bar-badge.offline{background:var(--amber-bg);color:var(--amber);}
-.acct-bar{display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);}
-.acct-bar-msg{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.acct-logout{font-size:11px;padding:5px 12px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-weight:700;white-space:nowrap;min-height:32px;}
-.acct-logout:active{background:var(--border);}
 .home-hero{padding:20px 16px 14px;background:var(--surface);border-bottom:1px solid var(--border);}
 .home-title{font-size:22px;font-weight:800;letter-spacing:-.02em;}
 .home-subtitle{font-size:12px;color:var(--text2);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -63,7 +59,7 @@ input,select,button,textarea{font-family:inherit;}
 .mod-bar-msg{flex:1;font-weight:600;}
 .toggle-edit-btn{font-size:12px;padding:5px 12px;border-radius:var(--radius);border:1px solid currentColor;background:var(--surface);cursor:pointer;font-weight:600;white-space:nowrap;color:inherit;}
 .alert-bar{margin:8px 14px;padding:8px 12px;background:var(--red-bg);border:1px solid var(--red-bd);border-radius:var(--radius);font-size:12px;color:var(--red);font-weight:600;}
-.tbl-wrap{overflow-x:auto;flex:1;-webkit-overflow-scrolling:touch;padding-bottom:24px;}
+.tbl-wrap{overflow-x:auto;flex:1;-webkit-overflow-scrolling:touch;}
 table{width:100%;border-collapse:collapse;min-width:800px;table-layout:fixed;}
 thead th{background:var(--surface2);padding:7px 5px;font-size:11px;font-weight:700;color:var(--text2);text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:10;}
 tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
@@ -72,15 +68,6 @@ tbody tr.row-ok{background:#e8f5ea;}
 tbody tr.row-alert{background:#fdeaea;}
 tbody tr.row-warn{background:#fdf3d8;}
 tbody tr.row-deleted{background:var(--gray-bg,#f0efe9);opacity:.55;}
-tbody tr.row-active{background:#eef4fb;}
-tbody tr.row-empty{background:#fbfaf7;}
-tbody tr.row-empty td{padding:3px 4px;}
-tbody tr.row-empty .t-input,tbody tr.row-empty .t-select,tbody tr.row-empty .time-inp{opacity:.5;border-style:dashed;background:transparent;}
-tbody tr.row-empty .stamp-btn,tbody tr.row-empty .tel-btn{opacity:.4;}
-tbody tr.row-empty .t-input:focus,tbody tr.row-empty .t-select:focus{opacity:1;border-style:solid;background:var(--surface);}
-.row-legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:6px 14px;font-size:11px;color:var(--text2);background:var(--surface);border-bottom:1px solid var(--border);}
-.row-legend .lg{display:flex;align-items:center;gap:4px;white-space:nowrap;}
-.row-legend .lg i{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid var(--border);}
 td{padding:5px 4px;vertical-align:middle;}
 td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 .t-input{width:100%;font-size:16px;padding:7px 6px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);min-width:0;-webkit-appearance:none;touch-action:manipulation;}
@@ -92,15 +79,10 @@ td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
 .time-inp.err{border-color:var(--red);background:var(--red-bg);}
 .time-inp:disabled{opacity:.45;}
 .time-inp::placeholder{font-size:11px;font-weight:400;letter-spacing:0;color:#bbb;}
-.stamp-btn{font-size:15px;padding:10px 12px;border:1px solid var(--border2);border-radius:8px;background:var(--surface2);color:var(--text2);white-space:nowrap;transition:background .1s;font-weight:700;min-height:44px;min-width:46px;}
+.stamp-btn{font-size:14px;padding:9px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text2);white-space:nowrap;transition:background .1s;font-weight:600;min-height:40px;}
 .stamp-btn:active,.stamp-btn:hover{background:var(--border);}
 .stamp-btn.stamped{background:var(--green-bg);border-color:var(--green-bd);color:var(--green);font-weight:700;}
 .stamp-btn:disabled{opacity:.35;cursor:not-allowed;}
-.rowact{display:flex;flex-direction:column;align-items:center;gap:4px;}
-.ins-btn{width:36px;height:30px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;}
-.ins-btn:active{transform:scale(.92);background:var(--border);}
-tbody tr.row-flash{animation:rowFlash 1.6s ease-out;}
-@keyframes rowFlash{0%{background:#fff3bf;}100%{background:transparent;}}
 .del-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--red-bd);background:var(--red-bg);color:var(--red);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;}
 .del-btn:active{transform:scale(.92);}
 .del-btn:disabled{opacity:.3;cursor:not-allowed;}
@@ -123,9 +105,7 @@ tbody tr.row-flash{animation:rowFlash 1.6s ease-out;}
 .fab-primary:hover{opacity:.88;}
 .fab:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 .edit-log-row td{font-size:11px;color:var(--text2);padding:2px 4px 5px;border-bottom:none;background:transparent!important;}
-.kw-notice{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:14px;font-weight:700;padding:12px 22px;border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,.3);z-index:9999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:92%;text-align:center;line-height:1.5;}
-.kw-notice.show{opacity:.95;transform:translateX(-50%) translateY(0);}
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:500;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:500;}
 .modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);width:100%;max-width:460px;padding:22px;max-height:90vh;overflow-y:auto;}
 .modal h3{font-size:17px;font-weight:800;margin-bottom:16px;}
 .modal-record{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:14px;font-size:13px;line-height:1.8;}
@@ -178,7 +158,7 @@ tbody tr.row-flash{animation:rowFlash 1.6s ease-out;}
 .pin-title{font-size:15px;font-weight:700;text-align:center;margin-bottom:4px;}
 .pin-sub{font-size:12px;color:var(--text2);text-align:center;margin-bottom:16px;}
 .pin-err{font-size:12px;color:var(--red);text-align:center;margin-top:8px;min-height:16px;}
-.tel-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:600;padding:0;}
+.tel-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:600;padding:0;}
 .tel-modal{background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:0 0 env(safe-area-inset-bottom,12px);max-height:96vh;overflow-y:auto;}
 .tel-modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border);}
 .tel-modal-title{font-size:17px;font-weight:800;}
@@ -209,10 +189,7 @@ tbody tr.row-flash{animation:rowFlash 1.6s ease-out;}
 .logout-btn{font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;cursor:pointer;}
 .logout-btn:hover{background:rgba(255,255,255,.1);}
 @media(max-width:480px){.menu-grid{grid-template-columns:1fr;}}
-.wiz-screen{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:300;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;}
-.wiz-body-wrap{position:relative;flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;}
-.wiz-scroll-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:10px;background:var(--text);color:#fff;font-size:13px;font-weight:700;padding:8px 18px;border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.28);pointer-events:none;opacity:0;transition:opacity .2s;z-index:5;white-space:nowrap;}
-.wiz-scroll-hint.show{opacity:.92;}
+.wiz-screen{min-height:100vh;display:flex;flex-direction:column;background:var(--bg);}
 .wiz-header{padding:14px 16px 10px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
 .wiz-back{width:40px;height:40px;border-radius:50%;border:none;background:var(--surface2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;flex-shrink:0;color:var(--text);}
 .wiz-back:active{transform:scale(.92);}
@@ -221,7 +198,7 @@ tbody tr.row-flash{animation:rowFlash 1.6s ease-out;}
 .wiz-step-label{font-size:12px;color:var(--text2);margin-top:2px;}
 .wiz-progress{height:4px;background:var(--border);}
 .wiz-progress-bar{height:4px;background:var(--text);transition:width .3s ease;}
-.wiz-body{flex:1;padding:24px 20px 48px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;min-height:0;}
+.wiz-body{flex:1;padding:24px 20px 16px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
 .wiz-section-title{font-size:22px;font-weight:800;line-height:1.3;}
 .wiz-tel-display{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;text-align:center;}
 .wiz-tel-number{font-size:36px;font-weight:800;letter-spacing:.08em;color:var(--text);min-height:52px;display:flex;align-items:center;justify-content:center;}
@@ -247,7 +224,7 @@ tbody tr.row-flash{animation:rowFlash 1.6s ease-out;}
 .wiz-edit-inp{width:100%;font-size:20px;font-weight:700;padding:16px 40px 16px 8px;border:none;background:transparent;color:var(--text);outline:none;}
 .wiz-edit-inp::placeholder{color:var(--border2);font-weight:400;font-size:16px;}
 .wiz-edit-inp:focus{background:#fffdf0;}
-.wiz-footer{flex-shrink:0;padding:12px 20px calc(env(safe-area-inset-bottom,0px) + 12px);background:var(--surface);border-top:1px solid var(--border);box-shadow:0 -4px 14px rgba(0,0,0,.07);}
+.wiz-footer{padding:12px 20px env(safe-area-inset-bottom,12px);background:var(--surface);border-top:1px solid var(--border);}
 .wiz-next-btn{width:100%;padding:20px;background:var(--text);color:var(--surface);border:none;border-radius:14px;font-size:20px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;user-select:none;}
 .wiz-next-btn:active{opacity:.85;transform:scale(.98);}
 .wiz-next-btn:disabled{opacity:.35;transform:none;}
@@ -256,7 +233,7 @@ tbody tr.row-flash{animation:rowFlash 1.6s ease-out;}
 .wiz-found-name{font-size:22px;font-weight:800;color:var(--green);}
 .wiz-found-sub{font-size:14px;color:var(--text2);margin-top:4px;line-height:1.7;}
 .wiz-new-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd);margin-bottom:8px;}
-.time-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:9998;}
+.time-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:9998;}
 .time-modal{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:420px;padding-bottom:env(safe-area-inset-bottom,12px);}
 .time-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid #e0ddd5;}
 .time-modal-title{font-size:17px;font-weight:800;}
@@ -272,7 +249,7 @@ tbody tr.row-flash{animation:rowFlash 1.6s ease-out;}
 .time-now-btn{display:block;width:calc(100% - 28px);margin:6px 14px 2px;padding:13px;background:#2d7a3a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;}
 .time-ok-btn{display:block;width:calc(100% - 28px);margin:4px 14px 4px;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;}
 .time-ok-btn:disabled{background:#ccc;}
-.order-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:9999;}
+.order-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:9999;}
 .order-modal{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:440px;padding-bottom:env(safe-area-inset-bottom,12px);}
 .order-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid #e0ddd5;}
 .order-modal-title{font-size:17px;font-weight:800;}
@@ -307,6 +284,17 @@ tbody tr.row-flash{animation:rowFlash 1.6s ease-out;}
 .src-mgr-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:7px;}
 .src-mgr-label{flex:1;font-size:14px;font-weight:600;}
 .src-mgr-del{padding:5px 12px;border:1px solid var(--red-bd);background:var(--red-bg);color:var(--red);border-radius:var(--radius);font-size:12px;font-weight:700;cursor:pointer;}
+
+html,body{touch-action:manipulation;-webkit-touch-callout:none;}
+.wiz-key,.tel-key{touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+.tn-d{display:inline-block;width:.64em;text-align:center;font-variant-numeric:tabular-nums;}
+.tn-on{color:var(--text);}.tn-off{color:var(--border2);}
+.tn-dash{display:inline-block;width:.4em;text-align:center;color:var(--border2);}
+.wiz-tel-number,.tel-display{letter-spacing:0 !important;white-space:nowrap;}
+.menu-card.disabled{opacity:.45;pointer-events:none;filter:grayscale(1);}
+.use-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:8px;font-size:13px;font-weight:600;}
+.use-toggle{padding:8px 16px;border-radius:999px;border:1px solid var(--border2);background:var(--surface2);font-size:12px;font-weight:700;cursor:pointer;}
+.use-toggle.on{background:#e8f5ea;border-color:#90c896;color:#2d7a3a;}
 </style>
 </head>
 <body>
@@ -369,174 +357,36 @@ function renderSrcManager(){
 
 // ===== FIREBASE =====
 let fbDb=null,syncStatus='offline';
-let authUser=null,authReady=false,authBusy=false;
 function initFirebase(){
-  if(!FIREBASE_CONFIGURED||typeof firebase==='undefined'){authReady=true;return;}
+  if(!FIREBASE_CONFIGURED||typeof firebase==='undefined')return;
   try{
     firebase.initializeApp(FIREBASE_CONFIG);
-    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
-    firebase.auth().onAuthStateChanged(function(user){
-      authReady=true;authUser=user||null;
-      if(user){connectDb();}
-      else{fbDb=null;syncStatus='offline';}
-      render();
-    });
-  }catch(e){authReady=true;syncStatus='offline';}
-}
-let _pendingVals={};
-function isTypingNow(){
-  var a=document.activeElement;
-  if(!a||!a.tagName)return false;
-  return /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName);
-}
-function reapplyPendingVals(){
-  for(var k in _pendingVals){
-    var p=_pendingVals[k];if(!p)continue;
-    var day=S.db[p.date];if(!day||!day[p.type])continue;
-    var r=day[p.type].find(function(x){return x.id===p.id;});
-    if(r&&!r.deleted)r[p.field]=p.val;
-  }
-}
-function flushUpd(){
-  var any=false;
-  for(var k in _updTimer){if(_updTimer[k]){clearTimeout(_updTimer[k]);_updTimer[k]=null;delete _pendingVals[k];any=true;}}
-  if(any)save();
-}
-function applyRemote(data){
-  if(!data)return;
-  if(data.db){S.db=data.db;ensureDay(S.db,todayKey());}
-  if(data.drivers)S.drivers=data.drivers;
-  if(data.lotteSrc&&Array.isArray(data.lotteSrc)&&data.lotteSrc.length>0){saveLotteSrc(data.lotteSrc);}
-  reapplyPendingVals();
-  if(S.modal)return;
-  if(isTypingNow())return;
-  render();
-}
-function connectDb(){
-  try{
-    fbDb=firebase.database();syncStatus='live';
-    fbDb.ref('kawaguchi').on('value',function(snap){
-      var data=snap.val();if(!data)return;
-      applyRemote(data);
-    },function(err){console.error('DB read error:',err);syncStatus='offline';render();});
+    firebase.auth().signInAnonymously().then(function(){
+      fbDb=firebase.database();syncStatus='live';render();
+      fbDb.ref('kawaguchi').on('value',function(snap){
+        var data=snap.val();if(!data)return;
+        if(data.db){S.db=data.db;ensureDay(S.db,todayKey());}
+        if(data.drivers)S.drivers=data.drivers;
+        if(data.lotteSrc&&Array.isArray(data.lotteSrc)&&data.lotteSrc.length>0){saveLotteSrc(data.lotteSrc);}
+        if(data.settings)applySettings(data.settings);
+        if(!S.modal&&!WIZ.active)softRender();else if(WIZ.active)_renderPending=true;
+      });
+    }).catch(function(err){console.error('Firebase auth error:',err);syncStatus='offline';render();});
   }catch(e){syncStatus='offline';}
 }
-const IDLE_LIMIT_MS=120000;
-let _idleTimer=null;
-function armIdleTimer(){
-  clearTimeout(_idleTimer);
-  _idleTimer=setTimeout(idleForceExit,IDLE_LIMIT_MS);
-}
-function idleForceExit(){
-  if(!isTypingNow())return;
-  try{document.activeElement.blur();}catch(e){}
-  flushUpd();
-  showNotice('2分間操作がなかったため入力を確定し、最新データに更新しました');
-}
-function showNotice(msg){
-  var d=document.getElementById('kw-notice');
-  if(!d){d=document.createElement('div');d.id='kw-notice';d.className='kw-notice';document.body.appendChild(d);}
-  d.textContent=msg;d.classList.add('show');
-  clearTimeout(d._t);d._t=setTimeout(function(){d.classList.remove('show');},4000);
-}
-document.addEventListener('focusin',function(ev){
-  var t=ev.target;
-  if(t&&t.tagName&&/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName))armIdleTimer();
-});
-['input','keydown','touchstart','click'].forEach(function(evt){
-  document.addEventListener(evt,function(){if(isTypingNow())armIdleTimer();},{passive:true});
-});
-document.addEventListener('focusout',function(){
-  clearTimeout(_idleTimer);
-  flushUpd();
-  setTimeout(function(){
-    if(isTypingNow()||S.modal)return;
-    render();
-  },400);
-});
-function doFbLogin(){
-  if(authBusy)return;
-  var em=(document.getElementById('fb-email')?.value||'').trim();
-  var pw=document.getElementById('fb-pass')?.value||'';
-  var err=document.getElementById('fb-err');
-  if(!em||!pw){if(err)err.textContent='メールアドレスとパスワードを入力してください';return;}
-  authBusy=true;
-  var btn=document.getElementById('fb-login-btn');if(btn){btn.disabled=true;btn.textContent='ログイン中…';}
-  if(err)err.textContent='';
-  firebase.auth().signInWithEmailAndPassword(em,pw)
-    .then(function(){authBusy=false;})
-    .catch(function(e){
-      authBusy=false;
-      var m='ログインできませんでした';
-      if(e.code==='auth/invalid-email')m='メールアドレスの形式が正しくありません';
-      else if(e.code==='auth/user-disabled')m='このアカウントは無効化されています。管理者に連絡してください';
-      else if(e.code==='auth/network-request-failed')m='通信エラーです。ネットワークを確認してください';
-      else if(e.code==='auth/too-many-requests')m='試行回数が多すぎます。しばらく待ってから再度お試しください';
-      else if(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found')m='メールアドレスまたはパスワードが違います';
-      var el=document.getElementById('fb-err');if(el)el.textContent=m;
-      var b=document.getElementById('fb-login-btn');if(b){b.disabled=false;b.textContent='ログイン';}
-    });
-}
-function fbLogout(){
-  if(!confirm('ログアウトしますか？\n次回アクセス時にメールアドレスとパスワードの入力が必要になります。'))return;
-  firebase.auth().signOut().then(function(){authUser=null;fbDb=null;syncStatus='offline';render();});
-}
-function fbResetPw(){
-  var em=(document.getElementById('fb-email')?.value||'').trim();
-  var err=document.getElementById('fb-err');
-  if(!em){if(err){err.textContent='先にメールアドレスを入力してください';err.style.color='var(--red)';}return;}
-  firebase.auth().sendPasswordResetEmail(em).then(function(){
-    if(err){err.textContent='パスワード再設定メールを送信しました';err.style.color='var(--green)';}
-  }).catch(function(){
-    if(err){err.textContent='送信できませんでした。メールアドレスを確認してください';err.style.color='var(--red)';}
-  });
-}
-function renderFbLogin(){
-  root.innerHTML=`
-  <div class="login-screen"><div class="login-card">
-    <div class="login-logo">🔐</div>
-    <div class="login-title">川口弥平センター 受付</div>
-    <div class="login-sub">社内アカウントでログインしてください</div>
-    <div class="login-fg"><label>メールアドレス</label>
-      <input type="email" id="fb-email" inputmode="email" autocomplete="username" placeholder="taro@example.co.jp"
-        onkeydown="if(event.key==='Enter')document.getElementById('fb-pass').focus()"></div>
-    <div class="login-fg"><label>パスワード</label>
-      <input type="password" id="fb-pass" autocomplete="current-password" placeholder="パスワード"
-        onkeydown="if(event.key==='Enter')doFbLogin()"></div>
-    <button class="login-btn" id="fb-login-btn" onclick="doFbLogin()">ログイン</button>
-    <div class="login-err" id="fb-err"></div>
-    <div style="text-align:center;margin-top:6px;">
-      <button onclick="fbResetPw()" style="font-size:12px;color:var(--text2);background:none;border:none;cursor:pointer;text-decoration:underline;">パスワードを忘れた場合</button>
-    </div>
-    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);line-height:1.6;text-align:center;">
-      一度ログインすると、この端末では次回からログイン不要です。<br>アカウントの追加は管理者にご依頼ください。
-    </div>
-  </div></div>`;
-  setTimeout(function(){document.getElementById('fb-email')?.focus();},50);
-}
-function renderAuthLoading(){
-  root.innerHTML=`<div class="login-screen"><div class="login-card" style="text-align:center;">
-    <div class="login-logo">⏳</div>
-    <div class="login-title">読み込み中…</div>
-    <div class="login-sub">認証情報を確認しています</div>
-  </div></div>`;
-}
-function remoteSave(){
-  if(!fbDb){localSave();return;}
-  try{
-    var dk=S.viewDate||todayKey();
-    var payload={};
-    if(S.db[dk])payload['db/'+dk]=S.db[dk];
-    payload['drivers']=S.drivers;
-    payload['lotteSrc']=getLotteSrc();
-    fbDb.ref('kawaguchi').update(payload);
-  }catch(e){localSave();}
-}
-function remoteSaveFull(){
-  if(!fbDb){localSave();return;}
-  try{fbDb.ref('kawaguchi').set({db:S.db,drivers:S.drivers,lotteSrc:getLotteSrc()});}catch(e){localSave();}
-}
-function saveFull(){localSave();remoteSaveFull();}
+
+// ===== 安定化ヘルパー =====
+let _renderPending=false;
+function isEditingNow(){const a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));}
+function softRender(){if(isEditingNow()){_renderPending=true;return;}_renderPending=false;render();}
+document.addEventListener('focusout',function(){setTimeout(function(){if(_renderPending&&!isEditingNow()&&!WIZ.active&&!S.modal){_renderPending=false;render();}},300);});
+function telSlots(buf){let h='';for(let i=0;i<11;i++){if(i===3||i===7)h+='<span class="tn-dash">-</span>';h+='<span class="tn-d '+(i<buf.length?'tn-on':'tn-off')+'">'+(i<buf.length?buf[i]:'0')+'</span>';}return h;}
+function wizTelRefresh(){const kp=document.querySelector('.wiz-keypad');renderWizard();const nk=document.querySelector('.wiz-keypad');if(kp&&nk&&kp!==nk)nk.replaceWith(kp);}
+// ===== 画面利用設定（管理者） =====
+const SETTINGS_KEY='kw_settings_v1';
+function applySettings(o){if(!o)return;S.useNyuuka=o.useNyuuka!==false;S.useShukka=o.useShukka!==false;try{localStorage.setItem(SETTINGS_KEY,JSON.stringify({useNyuuka:S.useNyuuka,useShukka:S.useShukka}));}catch(e){}}
+function toggleMenuUse(k){if(!isAdminLoggedIn())return;if(k==='nyuuka')S.useNyuuka=!S.useNyuuka;else S.useShukka=!S.useShukka;const o={useNyuuka:S.useNyuuka,useShukka:S.useShukka};applySettings(o);try{if(fbDb)fbDb.ref('kawaguchi/settings').set(o);}catch(e){}render();}
+function remoteSave(){if(!fbDb){localSave();return;}try{fbDb.ref('kawaguchi').update({db:S.db,drivers:S.drivers,lotteSrc:getLotteSrc()});}catch(e){localSave();}}
 function localSave(){try{localStorage.setItem('kw_db_v5',JSON.stringify(S.db));localStorage.setItem('kw_dr_v5',JSON.stringify(S.drivers));}catch(e){}}
 function save(){localSave();remoteSave();}
 function loadLocal(){let db={},drivers=[];try{db=JSON.parse(localStorage.getItem('kw_db_v5')||'{}');}catch{}try{drivers=JSON.parse(localStorage.getItem('kw_dr_v5')||'[]');}catch{}return{db,drivers};}
@@ -576,6 +426,8 @@ const WIZ={
   driver:null,isNew:false,consent:false,
 };
 const S={screen:'home',viewDate:todayKey(),editMode:false,modal:null,modalData:{},alertWarn:60,alertDanger:90,db:initDb,drivers:initDrivers};
+S.useNyuuka=true;S.useShukka=true;
+try{applySettings(JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null'));}catch(e){}
 ensureDay(S.db,todayKey());
 localSave();
 
@@ -598,8 +450,7 @@ function rowStatus(r,type){
   return r.company?'active':'empty';
 }
 function dotCls(st){return'dot dot-'+({empty:'empty',active:'active',warn:'warn',alert:'alert',done:'done',deleted:'del'}[st]||'empty');}
-function rowCls(st){return({alert:'row-alert',warn:'row-warn',done:'row-ok',deleted:'row-deleted',active:'row-active',empty:'row-empty'}[st]||'');}
-function legendHtml(){return `<div class="row-legend"><span style="font-weight:700;">行の色:</span><span class="lg"><i style="background:#fbfaf7;"></i>未入力</span><span class="lg"><i style="background:#eef4fb;"></i>受付済</span><span class="lg"><i style="background:#fdf3d8;"></i>滞留注意</span><span class="lg"><i style="background:#fdeaea;"></i>要確認</span><span class="lg"><i style="background:#e8f5ea;"></i>完了</span></div>`;}
+function rowCls(st){return({alert:'row-alert',warn:'row-warn',done:'row-ok',deleted:'row-deleted'}[st]||'');}
 function findDriver(tel){const t=(tel||'').replace(/[-\s]/g,'');return S.drivers.find(d=>d.tel===t);}
 function allDates(){return Object.keys(S.db).filter(k=>k.match(/^\d{4}-\d{2}-\d{2}$/)).sort().reverse();}
 function isToday(){return S.viewDate===todayKey();}
@@ -613,14 +464,9 @@ const modalContainer=document.getElementById('modal-container');
 
 function render(){
   modalContainer.innerHTML='';
-  if(FIREBASE_CONFIGURED){
-    if(!authReady){renderAuthLoading();return;}
-    if(!authUser){WIZ.active=false;renderFbLogin();return;}
-  }else{
-    var appPin=getAppPin();
-    if(!appPin){renderNoPin();return;}
-    if(!isAppLoggedIn()){renderAppLogin('login');return;}
-  }
+  var appPin=getAppPin();
+  if(!appPin){renderNoPin();return;}
+  if(!isAppLoggedIn()){renderAppLogin('login');return;}
   if(WIZ.active){renderWizard();return;}
   if(S.modal){renderModal();return;}
   root.innerHTML='';
@@ -631,7 +477,7 @@ function render(){
   else if(S.screen==='shukka') renderTable('shukka');
   else if(S.screen==='lotte')  renderLotte();
   else if(S.screen==='drivers') renderDrivers();
-  else if(S.screen==='history'){_historyDetailDate=null;renderHistory();}
+  else if(S.screen==='history'){renderHistory();}
   else if(S.screen==='export')  renderExport();
   else if(S.screen==='srcmgr')  renderSrcManager();
 }
@@ -659,7 +505,7 @@ function doAdminLogin(destScreen){
   if(adminLogin(pw)){S.screen='home';render();}
   else{document.getElementById('admin-err').textContent='パスワードが違います';document.getElementById('admin-pw-input').value='';document.getElementById('admin-pw-input').focus();}
 }
-function go(sc){S.screen=sc;S.editMode=false;render();}
+function go(sc){if(sc==='history')_historyDetailDate=null;S.screen=sc;S.editMode=false;render();}
 function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // ===== HOME =====
@@ -681,22 +527,21 @@ function renderHome(){
     <span class="bar-badge ${syncCls}">${syncLabel}</span>
   </div>
   ${isAdm?`<div class="admin-bar"><span class="admin-bar-msg">🔐 管理者モードでログイン中</span><button class="logout-btn" onclick="adminLogout()">ログアウト</button></div>`:''}
-  ${authUser?`<div class="acct-bar"><span class="acct-bar-msg">👤 ${e(authUser.email||'')}</span><button class="acct-logout" onclick="fbLogout()">ログアウト</button></div>`:''}
   <div class="home-hero">
     <div class="home-title">${fmtKey(tk)}</div>
     <div class="home-subtitle">受付管理システム${total>0?` &nbsp;<span style="color:var(--red);font-weight:700;">⚠ 要対応 ${total}件</span>`:''}</div>
   </div>
   ${total>0?`<div class="home-alert-bar show">⚠ 要対応: 入荷 ${alertN}件 ／ 出荷 ${alertS}件 ／ ロッテ ${alertL}件</div>`:''}
   <div class="menu-grid">
-    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
+    <div class="menu-card${S.useNyuuka?'':' disabled'}" ${S.useNyuuka?`onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')"`:''}>
       <div class="menu-card-icon">📥</div><div class="menu-card-label">入荷受付</div>
-      <div class="menu-card-sub">作業中 ${actN}件</div>
-      ${alertN>0?`<div class="menu-card-alert">要対応 ${alertN}件</div>`:''}
+      <div class="menu-card-sub">${S.useNyuuka?`作業中 ${actN}件`:'使用停止中'}</div>
+      ${S.useNyuuka&&alertN>0?`<div class="menu-card-alert">要対応 ${alertN}件</div>`:''}
     </div>
-    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
+    <div class="menu-card${S.useShukka?'':' disabled'}" ${S.useShukka?`onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')"`:''}>
       <div class="menu-card-icon">📤</div><div class="menu-card-label">出荷受付</div>
-      <div class="menu-card-sub">作業中 ${actS}件</div>
-      ${alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
+      <div class="menu-card-sub">${S.useShukka?`作業中 ${actS}件`:'使用停止中'}</div>
+      ${S.useShukka&&alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
     </div>
     <div class="menu-card lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
       <div class="menu-card-icon">⭐</div><div class="menu-card-label">ロッテ様専用受付</div>
@@ -712,6 +557,9 @@ function renderHome(){
       <div style="font-size:22px;">🗂️</div>
       <div><div style="font-size:13px;font-weight:700;">入荷元・出荷先の管理</div><div style="font-size:11px;color:var(--text2);">ロッテ様受付の拠点リストを追加・削除</div></div>
     </div>
+    <div class="section-label">画面の使用設定（全端末に反映）</div>
+    <div class="use-row"><span>📥 入荷受付</span><button class="use-toggle ${S.useNyuuka?'on':''}" onclick="toggleMenuUse('nyuuka')">${S.useNyuuka?'使用中':'使用停止'}</button></div>
+    <div class="use-row"><span>📤 出荷受付</span><button class="use-toggle ${S.useShukka?'on':''}" onclick="toggleMenuUse('shukka')">${S.useShukka?'使用中':'使用停止'}</button></div>
     <div class="section-label">アラート設定（入庫後の経過時間）</div>
     <div style="display:flex;align-items:center;gap:10px;padding:0 0 16px;flex-wrap:wrap;font-size:12px;color:var(--text2);">
       警告（黄） <input type="number" value="${S.alertWarn}" min="10" max="480" style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;" onchange="S.alertWarn=+this.value"> 分 &nbsp;
@@ -749,7 +597,7 @@ function renderTable(type){
   <div class="app-bar-title">${label}</div>
   ${syncStatus==='live'?'<span class="bar-badge sync">同期中</span>':'<span class="bar-badge offline">オフライン</span>'}
   </div>
-  ${dateNavHtml(label)}${modBarHtml()}${legendHtml()}
+  ${dateNavHtml(label)}${modBarHtml()}
   ${alertRows.length>0&&ed?`<div class="alert-bar">⚠ 要対応: ${alertRows.map(r=>`No.${r.no} ${e(r.company||'')}`).join('、')}</div>`:''}
   <div class="tbl-wrap"><table>
   <thead><tr>
@@ -764,10 +612,10 @@ function renderTable(type){
     const st=rowStatus(r,type);const isDel=r.deleted;const dis=!ed||isDel;
     const tErr=r.nyuuko&&r.shukko&&!timeOk(r.nyuuko,r.shukko)?'err':'';
     const hasLog=r.editLog&&r.editLog.length>0;
-    html+=`<tr class="${rowCls(st)}" id="row-${r.id}">
+    html+=`<tr class="${rowCls(st)}">
       <td style="text-align:center;padding:4px 2px;">${isDel
         ?`<button class="restore-btn" onclick="confirmRestore('${type}','${r.id}')">↩</button>`
-        :`<div class="rowact"><button class="del-btn" ${!ed?'disabled':''} onclick="confirmDelete('${type}','${r.id}')">×</button>${ed&&isToday()?`<button class="ins-btn" title="この行の下に1行挿入" onclick="insertRowAfter('${type}','${r.id}')">＋</button>`:''}</div>`
+        :`<button class="del-btn" ${!ed?'disabled':''} onclick="confirmDelete('${type}','${r.id}')">×</button>`
       }</td>
       <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
       <td><input class="t-input" style="width:36px;" type="number" value="${r.fuda||''}" ${dis?'disabled':''} placeholder="―" oninput="upd('${type}','${r.id}','fuda',this.value)"></td>
@@ -781,11 +629,11 @@ function renderTable(type){
       <td><select class="t-select" style="width:50px;" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','tsumi',this.value)">${TSUMI.map(s=>`<option${r.tsumi===s?' selected':''}>${s}</option>`).join('')}</select></td>
       <td><input class="t-input" style="min-width:64px;" type="text" value="${e(r.biko||'')}" ${dis?'disabled':''} placeholder="メーカー名" oninput="upd('${type}','${r.id}','biko',this.value)"></td>
       <td><div class="time-wrap">
-        <input class="time-inp ${r.nyuuko?'done':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.nyuuko||''}" ${dis?'disabled':''} onblur="handleTimeInput('${type}','${r.id}','nyuuko',this.value);render()">
+        <input class="time-inp ${r.nyuuko?'done':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.nyuuko||''}" ${dis?'disabled':''} onblur="handleTimeInput('${type}','${r.id}','nyuuko',this.value);softRender()">
         <button class="stamp-btn${r.nyuuko?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('${type}','${r.id}','nyuuko')">今</button>
       </div></td>
       <td><div class="time-wrap">
-        <input class="time-inp ${r.shukko?'done':''} ${tErr?'err':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.shukko||''}" ${dis?'disabled':''} onblur="handleTimeInput('${type}','${r.id}','shukko',this.value);render()">
+        <input class="time-inp ${r.shukko?'done':''} ${tErr?'err':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.shukko||''}" ${dis?'disabled':''} onblur="handleTimeInput('${type}','${r.id}','shukko',this.value);softRender()">
         <button class="stamp-btn${r.shukko?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('${type}','${r.id}','shukko')">今</button>
       </div></td>
     </tr>${hasLog?`<tr class="edit-log-row"><td colspan="12">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
@@ -811,7 +659,7 @@ function renderLotte(){
   <div class="app-bar-title">ロッテ様専用受付</div>
   ${syncStatus==='live'?'<span class="bar-badge sync">同期中</span>':'<span class="bar-badge offline">オフライン</span>'}
   </div>
-  ${dateNavHtml('ロッテ様')}${modBarHtml()}${legendHtml()}
+  ${dateNavHtml('ロッテ様')}${modBarHtml()}
   ${alertRows.length>0&&ed?`<div class="alert-bar">⚠ 時間逆転または長時間滞留: ${alertRows.map(r=>`No.${r.no}`).join('、')}</div>`:''}
   <div class="tbl-wrap"><table>
   <thead><tr>
@@ -826,10 +674,10 @@ function renderLotte(){
   arr.forEach(r=>{
     const st=rowStatus(r,'lotte');const isDel=r.deleted;const dis=!ed||isDel;
     const tC=(a,b)=>a&&b&&toMin(a)>toMin(b)?'err':'';const hasLog=r.editLog&&r.editLog.length>0;
-    html+=`<tr class="${rowCls(st)}" id="row-${r.id}">
+    html+=`<tr class="${rowCls(st)}">
       <td style="text-align:center;padding:4px 2px;">${isDel
         ?`<button class="restore-btn" onclick="confirmRestore('lotte','${r.id}')">↩</button>`
-        :`<div class="rowact"><button class="del-btn" ${!ed?'disabled':''} onclick="confirmDelete('lotte','${r.id}')">×</button>${ed&&isToday()?`<button class="ins-btn" title="この行の下に空行を1行挿入" onclick="insertRowAfter('lotte','${r.id}')">＋</button>`:''}</div>`
+        :`<button class="del-btn" ${!ed?'disabled':''} onclick="confirmDelete('lotte','${r.id}')">×</button>`
       }</td>
       <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
       <td><input class="t-input" style="min-width:94px;" type="text" value="${e(r.company||'')}" ${dis?'disabled':''} placeholder="会社名" oninput="upd('lotte','${r.id}','company',this.value)"></td>
@@ -853,10 +701,10 @@ function renderLotte(){
              ${r.src==='その他'?`<div style="margin-top:3px;font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px;"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;">${e(r.srcOther||'（未入力）')}</span>${!dis?`<button style="font-size:10px;padding:2px 6px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);cursor:pointer;white-space:nowrap;" onclick="lotSrc('${r.id}','その他')">編集</button>`:''}</div>`:''}`
         }
       </td>
-      <td><div class="time-wrap"><input class="time-inp ${r.tochaku?'done':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.tochaku||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','tochaku',this.value);render()"><button class="stamp-btn${r.tochaku?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','tochaku')">今</button></div></td>
-      <td><div class="time-wrap"><input class="time-inp ${r.basu?'done':''} ${tC(r.tochaku,r.basu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.basu||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','basu',this.value);render()"><button class="stamp-btn${r.basu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','basu')">今</button></div></td>
-      <td><div class="time-wrap"><input class="time-inp ${r.sakuEnd?'done':''} ${tC(r.basu,r.sakuEnd)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.sakuEnd||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','sakuEnd',this.value);render()"><button class="stamp-btn${r.sakuEnd?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','sakuEnd')">今</button></div></td>
-      <td><div class="time-wrap"><input class="time-inp ${r.shuppatsu?'done':''} ${tC(r.sakuEnd,r.shuppatsu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.shuppatsu||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','shuppatsu',this.value);render()"><button class="stamp-btn${r.shuppatsu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','shuppatsu')">今</button></div></td>
+      <td><div class="time-wrap"><input class="time-inp ${r.tochaku?'done':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.tochaku||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','tochaku',this.value);softRender()"><button class="stamp-btn${r.tochaku?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','tochaku')">今</button></div></td>
+      <td><div class="time-wrap"><input class="time-inp ${r.basu?'done':''} ${tC(r.tochaku,r.basu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.basu||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','basu',this.value);softRender()"><button class="stamp-btn${r.basu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','basu')">今</button></div></td>
+      <td><div class="time-wrap"><input class="time-inp ${r.sakuEnd?'done':''} ${tC(r.basu,r.sakuEnd)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.sakuEnd||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','sakuEnd',this.value);softRender()"><button class="stamp-btn${r.sakuEnd?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','sakuEnd')">今</button></div></td>
+      <td><div class="time-wrap"><input class="time-inp ${r.shuppatsu?'done':''} ${tC(r.sakuEnd,r.shuppatsu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.shuppatsu||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','shuppatsu',this.value);softRender()"><button class="stamp-btn${r.shuppatsu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','shuppatsu')">今</button></div></td>
     </tr>${hasLog?`<tr class="edit-log-row"><td colspan="14">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
   });
   html+=`</tbody></table></div>
@@ -954,7 +802,7 @@ function renderDrivers(){
         <div style="font-size:14px;font-weight:700;">${e(d.name)}</div>
         <div style="font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e(d.company||'')} ／ ${e(d.tel)} ／ 車番:${e(d.car||'―')} ／ ${e(d.shakaku)}</div>
       </div>
-      <button class="fab" style="font-size:12px;padding:5px 10px;flex-shrink:0;" onclick="confirmDelDriver('${d.id}','${e(d.name)}')">削除</button>
+      <button class="fab" style="font-size:12px;padding:5px 10px;flex-shrink:0;" onclick="confirmDelDriver('${d.id}')">削除</button>
     </div>`).join('')}
   </div>`;
   if(q){const inp=document.querySelector('.driver-search-inp');if(inp){const len=inp.value.length;inp.focus();inp.setSelectionRange(len,len);}}
@@ -1114,7 +962,7 @@ function renderModal(){
 // ===== ACTIONS =====
 function confirmDelete(type,id){const day=S.db[S.viewDate];const r=day[type].find(x=>x.id===id);if(!r)return;S.modal='confirmDelete';S.modalData={type,id,r};render();}
 function confirmRestore(type,id){const day=S.db[S.viewDate];const r=day[type].find(x=>x.id===id);if(!r)return;S.modal='confirmRestore';S.modalData={type,id,r};render();}
-function confirmDelDriver(id,name){S.modal='confirmDelDriver';S.modalData={id,name};render();}
+function confirmDelDriver(id){const _d=S.drivers.find(x=>x.id===id);const name=_d?_d.name:'';S.modal='confirmDelDriver';S.modalData={id,name};render();}
 function doDelete(){const{type,id}=S.modalData;const r=S.db[S.viewDate][type].find(x=>x.id===id);if(r){r.deleted=true;if(!r.editLog)r.editLog=[];r.editLog.push(`${nowFull()} 削除`);save();}closeModal();}
 function doRestore(){const{type,id}=S.modalData;const r=S.db[S.viewDate][type].find(x=>x.id===id);if(r){r.deleted=false;if(!r.editLog)r.editLog=[];r.editLog.push(`${nowFull()} 削除取消`);save();}closeModal();}
 function doDelDriver(){S.drivers=S.drivers.filter(d=>d.id!==S.modalData.id);save();closeModal();go('drivers');}
@@ -1124,10 +972,7 @@ function upd(type,id,field,val){
   const r=day[type].find(x=>x.id===id);if(!r||r.deleted)return;
   const old=r[field];r[field]=val;
   if(!isToday()&&old!==val&&old!==undefined&&old!==''){if(!r.editLog)r.editLog=[];r.editLog.push(`${nowFull()} ${field}「${old||'空'}」→「${val}」`);}
-  const key=`${type}-${id}-${field}`;
-  _pendingVals[key]={date:S.viewDate,type:type,id:id,field:field,val:val};
-  clearTimeout(_updTimer[key]);
-  _updTimer[key]=setTimeout(()=>{delete _pendingVals[key];save();},600);
+  const key=`${type}-${id}-${field}`;clearTimeout(_updTimer[key]);_updTimer[key]=setTimeout(()=>save(),600);
 }
 function stamp(type,id,field){if(!isToday())return;const r=todayData()[type].find(x=>x.id===id);if(!r||r.deleted)return;r[field]=nowStr();save();render();}
 
@@ -1152,7 +997,7 @@ function renderTelModal(){
   const div=document.createElement('div');div.id='tel-modal-overlay';div.className='tel-modal-overlay';
   div.innerHTML=`<div class="tel-modal">
     <div class="tel-modal-header"><div class="tel-modal-title">電話番号を入力</div><button class="tel-modal-close" onclick="closeTelModal()">✕</button></div>
-    <div class="tel-display ${buf.length===0?'placeholder':''}">${buf.length===0?'090-0000-0000':dispBuf}</div>
+    <div class="tel-display">${telSlots(buf)}</div>
     ${resultHtml}
     <div class="tel-keypad">${keysHtml}<button class="tel-key" style="visibility:hidden;"></button><button class="tel-key" onclick="telKeyPress('0')">0</button><button class="tel-key tel-del" onclick="telKeyDel()">⌫</button></div>
     <div class="tel-fields ${showFields?'show':''}" id="tel-fields">
@@ -1204,22 +1049,6 @@ function addRows(type){
   if(!isToday())return;const day=todayData();const base=day[type].length;
   for(let i=0;i<5;i++)day[type].push(type==='lotte'?mkLRow(base+i+1):mkNRow(base+i+1));
   save();render();
-}
-function renumber(arr){arr.forEach(function(r,i){r.no=i+1;});}
-function insertRowAfter(type,rowId){
-  if(!isToday())return;
-  const day=todayData();if(!day||!day[type])return;
-  const arr=day[type];
-  const idx=arr.findIndex(function(r){return r.id===rowId;});
-  if(idx<0)return;
-  const nr=(type==='lotte')?mkLRow(idx+2):mkNRow(idx+2);
-  arr.splice(idx+1,0,nr);
-  renumber(arr);
-  save();render();
-  setTimeout(function(){
-    var el=document.getElementById('row-'+nr.id);
-    if(el){el.classList.add('row-flash');try{el.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}}
-  },80);
 }
 function submitModal(type){
   const g=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
@@ -1496,7 +1325,7 @@ function renderWizard(){
     let resultHtml='';
     if(buf.length>=10){resultHtml=driver?`<div style="background:#e8f5ea;border:1px solid #90c896;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;"><span style="font-size:20px;color:#2d7a3a;">✓</span><div><div style="font-size:15px;font-weight:800;color:#2d7a3a;">${e(driver.name)}</div><div style="font-size:12px;color:#666;">${e(driver.company||'')} ／ 車番:${e(driver.car||'―')}</div></div></div>`:`<div style="background:#fdf3d8;border:1px solid #e8c96a;border-radius:10px;padding:10px 14px;"><div style="font-size:14px;font-weight:700;color:#8a5c00;">新規ドライバー</div><div style="font-size:12px;color:#8a5c00;">次の画面で会社名・お名前を入力してください</div></div>`;}
     body=`<div class="wiz-section-title">電話番号を<br>入力してください</div>
-    <div class="wiz-tel-display"><div class="wiz-tel-number ${buf.length===0?'empty':''}">${buf.length===0?'090-0000-0000':disp}</div><div class="wiz-tel-hint">${buf.length}/11桁</div></div>
+    <div class="wiz-tel-display"><div class="wiz-tel-number">${telSlots(buf)}</div><div class="wiz-tel-hint">${buf.length}/11桁</div></div>
     <div class="wiz-keypad">${keysHtml}<button class="wiz-key" style="visibility:hidden;"></button><button class="wiz-key" onclick="wizTelKey('0')">0</button><button class="wiz-key wiz-del" onclick="wizTelDel()">⌫</button></div>
     <div style="padding:8px 0;min-height:70px;">${resultHtml}</div>`;
 
@@ -1613,7 +1442,7 @@ function renderWizard(){
       <div class="wiz-header-info"><div class="wiz-title">${label} 受付</div><div class="wiz-step-label">${stepLabels[WIZ.step]||''}</div></div>
     </div>
     <div class="wiz-progress"><div class="wiz-progress-bar" style="width:${prog}%;"></div></div>
-    <div class="wiz-body-wrap"><div class="wiz-body" id="wiz-body">${body}</div><div class="wiz-scroll-hint" id="wiz-scroll-hint">▼ 下にスクロールできます</div></div>
+    <div class="wiz-body">${body}</div>
     <div class="wiz-footer">
       ${isStampStep
         ?`<button class="wiz-next-btn stamp" id="wiz-complete-btn" onclick="wizComplete()">${WIZ.type==='lotte'?'受付完了 ＋ 到着打刻':'受付完了 ＋ 入庫打刻'}</button>`
@@ -1621,20 +1450,10 @@ function renderWizard(){
       }
     </div>
   </div>`;
-  wizScrollHintInit();
 }
 
-function wizScrollHintInit(){
-  var b=document.getElementById('wiz-body'),h=document.getElementById('wiz-scroll-hint');
-  if(!b||!h)return;
-  function chk(){var more=b.scrollHeight-b.clientHeight-b.scrollTop>24;h.classList.toggle('show',more);}
-  b.addEventListener('scroll',chk,{passive:true});
-  if(window.visualViewport){window.visualViewport.onresize=chk;}
-  setTimeout(chk,80);setTimeout(chk,400);
-}
-
-function wizTelKey(n){if(WIZ.tel.length>=11)return;WIZ.tel+=n;renderWizard();}
-function wizTelDel(){WIZ.tel=WIZ.tel.slice(0,-1);renderWizard();}
+function wizTelKey(n){if(WIZ.tel.length>=11)return;WIZ.tel+=n;wizTelRefresh();}
+function wizTelDel(){WIZ.tel=WIZ.tel.slice(0,-1);wizTelRefresh();}
 
 function wizNext(){
   const flow=wizFlow();const idx=flow.indexOf(WIZ.step);
@@ -1748,7 +1567,7 @@ function csvCell(v){if(v===null||v===undefined)return'';var s=String(v);if(s.ind
 function csvTel(tel){if(!tel)return'';return'="'+String(tel).replace(/"/g,'""')+'"';}
 function toCsvNS(arr,dateKey){
   const h='日付,No,番号札,会社名,氏名,電話番号,車番,車格,積み方,メーカー名,入庫時間,出庫時間,修正記録';const d=dateKey||'';
-  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[csvCell(d),r.no,csvCell(r.fuda||''),csvCell(r.company),csvCell(r.name||''),csvTel(r.tel),csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.tsumi),csvCell(r.nyuuko||''),csvCell(r.shukko||''),csvCell(r.biko||''),csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):'')),].join(','));
+  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[csvCell(d),r.no,csvCell(r.fuda||''),csvCell(r.company),csvCell(r.name||''),csvTel(r.tel),csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.tsumi),csvCell(r.biko||''),csvCell(r.nyuuko||''),csvCell(r.shukko||''),csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):'')),].join(','));
   return h+'\n'+rows.join('\n');
 }
 function toCsvL(arr,dateKey){
@@ -1789,22 +1608,10 @@ function printDay(){
   win.document.write(`</table><br><button onclick="window.print()">印刷</button></body></html>`);win.document.close();
 }
 
-// ===== キーボードで入力欄が隠れる対策 =====
-document.addEventListener('focusin',function(ev){
-  var t=ev.target;
-  if(t&&t.matches&&t.matches('input[type=text],input[type=tel],input[type=number],textarea')){
-    setTimeout(function(){try{t.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}},300);
-  }
-});
-
 // ===== BOOT =====
 initFirebase();
 render();
-setInterval(()=>{
-  if(S.modal||WIZ.active)return;
-  if(isTypingNow())return;
-  if(['nyuuka','shukka','lotte','home'].includes(S.screen))render();
-},30000);
+setInterval(()=>{if(!S.modal&&!WIZ.active&&!isEditingNow()&&['nyuuka','shukka','lotte','home'].includes(S.screen))render();},30000);
 </script>
 </body>
 </html>

@@ -295,6 +295,18 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;}
 .use-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:8px;font-size:13px;font-weight:600;}
 .use-toggle{padding:8px 16px;border-radius:999px;border:1px solid var(--border2);background:var(--surface2);font-size:12px;font-weight:700;cursor:pointer;}
 .use-toggle.on{background:#e8f5ea;border-color:#90c896;color:#2d7a3a;}
+
+/* ウィザード: 次へボタンを常に画面内に固定 */
+.wiz-screen{height:100vh;height:100dvh;min-height:0;overflow:hidden;}
+.wiz-header,.wiz-progress{flex-shrink:0;}
+.wiz-body{min-height:0;padding:14px 20px 10px;gap:10px;-webkit-overflow-scrolling:touch;}
+.wiz-footer{flex-shrink:0;padding:10px 20px max(12px,env(safe-area-inset-bottom));}
+.wiz-next-btn{padding:16px;}
+.wiz-key{height:clamp(50px,8.5vh,72px);}
+.wiz-keypad{gap:8px;}
+.wiz-tel-display{padding:10px 16px;}
+.wiz-tel-number{min-height:44px;}
+.wiz-section-title{font-size:20px;}
 </style>
 </head>
 <body>
@@ -1327,7 +1339,7 @@ function renderWizard(){
     body=`<div class="wiz-section-title">電話番号を<br>入力してください</div>
     <div class="wiz-tel-display"><div class="wiz-tel-number">${telSlots(buf)}</div><div class="wiz-tel-hint">${buf.length}/11桁</div></div>
     <div class="wiz-keypad">${keysHtml}<button class="wiz-key" style="visibility:hidden;"></button><button class="wiz-key" onclick="wizTelKey('0')">0</button><button class="wiz-key wiz-del" onclick="wizTelDel()">⌫</button></div>
-    <div style="padding:8px 0;min-height:70px;">${resultHtml}</div>`;
+    <div style="padding:4px 0;min-height:60px;">${resultHtml}</div>`;
 
   }else if(WIZ.step==='confirm_existing'){
     nextDisabled=!WIZ.shakaku;nextLabel='この内容で受付する　→';
